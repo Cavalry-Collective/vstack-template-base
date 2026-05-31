@@ -1,0 +1,30 @@
+# Node
+node_modules/
+dist/
+build/
+.output/
+.cache/
+*.tgz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Terraform
+.terraform/
+*.tfplan
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# macOS
+.DS_Store
+*.DS_Store
+
+# IDE
+.idea/
+*.iml
