@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: echo "TODO: replace with your install command (e.g. npm ci, pnpm install)"
+
+      - name: Lint
+        run: echo "TODO: replace with your lint command"
+
+      - name: Test
+        run: echo "TODO: replace with your test command"
+
+      - name: Build
+        run: echo "TODO: replace with your build command"
