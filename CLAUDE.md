@@ -130,4 +130,5 @@ Worktrees are the **default** here — most work runs in parallel with Claude ac
 
 Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it.
 
-_(none yet)_
+- 2026-06-06: CLAUDE.md overhaul shipped (`specs/2026-06-06-claude-md-overhaul.md`); 14 low-severity review findings deliberately deferred — the spec's *Out of scope* section is the backlog.
+- 2026-06-06: Claude Code rule files (`.claude/rules/`) do **not** resolve `@`-imports — only `CLAUDE.md` files do. Stack-pack activation therefore uses prepend-copies (frontmatter + appendix body); regenerate the rule file after editing an appendix.
