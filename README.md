@@ -2,18 +2,47 @@
 
 Cavalry Collective's full-stack SPA monorepo template. Every new project starts here.
 
-## Using this template
+## Day-1 checklist
 
-1. Click **Use this template** → **Create a new repository** on GitHub
-2. Clone your new repo
-3. Open `project.code-workspace` in VS Code for multi-root workspace support
-4. Read through the CLAUDE.md files — they are the architecture contract:
+Run this once, top to bottom, the first time you instantiate the template. Each step names the file and the marker to replace. The placeholders are grep-able: `<pm>` in the root `CLAUDE.md` command block, `FILL IN ON SETUP` in `apps/frontend/CLAUDE.md`, and `TODO: replace` in the `.github/workflows/` stubs. Step 9 checks they are all gone.
+
+1. **Create the repo.** Click **Use this template** → **Create a new repository** on GitHub.
+2. **Clone** your new repo.
+3. **Open the workspace.** Open `project.code-workspace` in VS Code for multi-root support.
+4. **Read the CLAUDE.md files** — they are the architecture contract:
    - [`CLAUDE.md`](CLAUDE.md) — root principles, workflow, coding standards
    - [`apps/backend/CLAUDE.md`](apps/backend/CLAUDE.md) — backend onion architecture
    - [`apps/frontend/CLAUDE.md`](apps/frontend/CLAUDE.md) — frontend layering and conventions
+   - [`db/CLAUDE.md`](db/CLAUDE.md) — database & migration contract
    - [`infra/CLAUDE.md`](infra/CLAUDE.md) — Terraform authoring style and guardrails
-5. Choose your toolchain and fill in the `TODO` commands in root `CLAUDE.md` and `.github/workflows/ci.yml`
-6. Copy any runtime config (`.env`, secrets) into your local checkout — it is gitignored and not carried over from the template
+5. **Choose a stack pack — or stay agnostic.**
+   - **Pack path (fast):** pick the pack under `stacks/` matching your stack (e.g. `nextjs-nestjs-postgres`), then:
+     - `rm -rf` every other `stacks/*` directory.
+     - Create the three path-scoped activation rules so the pack loads exactly when matching files are touched. Rule files do **not** resolve `@`-imports (only `CLAUDE.md` files do), so each rule is self-contained: the appendix body with `paths:` frontmatter prepended. Build them with the pack README's block (substituting your pack name):
+
+       ```bash
+       PACK=stacks/<pack-name>; mkdir -p .claude/rules
+       { printf -- '---\npaths: ["apps/backend/**"]\n---\n'; cat "$PACK/backend.md"; } > .claude/rules/stack-backend.md
+       { printf -- '---\npaths: ["apps/frontend/**"]\n---\n'; cat "$PACK/frontend.md"; } > .claude/rules/stack-frontend.md
+       { printf -- '---\npaths: ["db/**", "apps/backend/**/repo/**"]\n---\n'; cat "$PACK/db.md"; } > .claude/rules/stack-db.md
+       ```
+       The appendix files under `stacks/<pack-name>/` stay the source of truth — if you later edit one, regenerate its rule file (rerun the line above for it).
+     - Copy the pack README **dev** command block into the root `CLAUDE.md` "Common commands" placeholder (delete the banner); copy its **CI** block into `.github/workflows/ci.yml`. They are different blocks — never paste a dev-only migration command into CI.
+     - Record the choice in root `CLAUDE.md` **Learnings**: `Stack: <pack-name>; appendices under stacks/<pack-name>/, activated via .claude/rules/stack-*.md`.
+   - **Agnostic path:** keep `stacks/` for reference (or delete it) and fill in the toolchain yourself — see step 6.
+6. **Fill the toolchain placeholders** (agnostic path; the pack does this for you in step 5):
+   - Root `CLAUDE.md` "Common commands" — replace the six `<pm>`/`TODO` commands and delete the PLACEHOLDER banner.
+   - `.github/workflows/ci.yml` — replace the TODO steps with real install/lint/typecheck/test/build, plus the i18n key-parity check and migration up/down round-trip.
+   - `.github/workflows/deploy.yml` — replace the TODO step.
+   - Add a real `.env.example` (already whitelisted in `.gitignore`).
+7. **Declare the primary form factor.** In `apps/frontend/CLAUDE.md`, fill in the form-factor line:
+   ```markdown
+   **Primary form factor (FILL IN ON SETUP):** `<mobile-first | desktop-first | responsive-equal>`
+   ```
+8. **Copy runtime config.** Copy any gitignored runtime config (`.env`, secrets) into your local checkout — it is not carried over from the template.
+9. **Confirm green.** Push and watch the first CI run pass. Then confirm no placeholder survives — both must return nothing: `grep -rn 'FILL IN ON SETUP\|TODO: replace' . --exclude-dir=stacks --exclude-dir=specs --exclude-dir=.git --exclude=README.md` and `grep -n '^<pm> ' CLAUDE.md`. (This README's own checklist names the markers, so it is excluded; delete it once instantiation is done if you prefer a clean tree.)
+
+> If you chose the server-first `nextjs-nestjs-postgres` pack, soften the SPA framing the base ships agnostic: root `CLAUDE.md` "the single-page app" → "the web frontend", and the **What's included** "Frontend SPA" row below → "Frontend (server-first Next.js)". The repo name still encodes "spa" and is immutable — accepted as stale.
 
 ## What's included
 
@@ -22,10 +51,11 @@ Cavalry Collective's full-stack SPA monorepo template. Every new project starts 
 | `CLAUDE.md` | Root architecture principles and workflow |
 | `apps/backend/` | Backend app — onion architecture (Domain → Service → Repo → Controller) |
 | `apps/frontend/` | Frontend SPA — layered store / services / pages / components |
-| `db/migrations/` | Reversible DB migrations |
-| `infra/` | Terraform infrastructure (cloud-agnostic authoring conventions) |
+| `db/` | Database & migration contract (`db/CLAUDE.md`) with reversible migrations under `db/migrations/` |
+| `infra/` | Terraform infrastructure (GCP-first conventions; adaptable) |
 | `design/` | UI mockups and design reference (not part of the build) |
 | `specs/` | Feature specs — written before implementation |
+| `stacks/` | Optional stack packs — appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. See [`stacks/README.md`](stacks/README.md) |
 | `.github/workflows/` | CI and deploy stubs — fill in your toolchain commands |
 | `project.code-workspace` | VS Code multi-root workspace |
 
@@ -40,3 +70,5 @@ The template is intentionally framework-agnostic. You choose:
 - Database client
 
 Pick what fits the project. The CLAUDE.md files tell you where things go and how to structure them — not which library to use.
+
+Or choose a stack pack under `stacks/` (e.g. `nextjs-nestjs-postgres`) for a vetted set of these choices plus copy-paste commands; the base CLAUDE.md files stay framework-agnostic. The pack is opt-in, not a mandate — see [`stacks/README.md`](stacks/README.md).
