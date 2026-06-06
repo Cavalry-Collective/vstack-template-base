@@ -1,3 +1,9 @@
+# Infra
+
+The infrastructure contract — read before touching anything under `infra/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs the Terraform under `infra/`. Agent instructions for this folder are here; there is no separate AGENTS.md.
+
+> **This template's blessed cloud is GCP.** Sections marked **(GCP)** apply when using it; on AWS/Azure follow the equivalent context, auth, and discovery tooling for that provider.
+
 ## Purpose
 Agents working in this folder will typically do one of two things:
 1. inspect and explain the current infrastructure, or
@@ -10,15 +16,15 @@ Agents working in this folder will typically do one of two things:
 - Prefer stable, maintainable patterns over clever abstractions.
 - Preserve existing repository conventions unless there is a strong reason to change them.
 - Treat all infrastructure changes as potentially high impact until proven otherwise.
-- Run Terraform commands from the target environment directory, never from the repository root.
+- Run Terraform commands from inside the target workload directory (`infra/<workload>/`), never from `infra/` itself or the git root.
 - Do not assume a change applies to all environments.
 - Always make the target environment explicit in summaries and approvals.
 
 ## Default Execution Mode
-- At the start of each new chat, verify the active gcloud authentication context before making any changes.
-- Run `gcloud config configurations list` outside the sandbox and show the available configurations to the user.
-- Ask the user which configuration to use before running commands that depend on GCP credentials or project context.
-- Do not assume the previously used gcloud configuration is correct.
+- At the start of each new chat, verify the active cloud auth/credential and project context before making any changes.
+- Run the provider's context command outside the sandbox and show the available contexts to the user **(GCP:** `gcloud config configurations list`**)**.
+- Ask the user which account/project/configuration to use before running commands that depend on cloud credentials or project context.
+- Do not assume the previously used context is correct.
 
 ### Read-only workflows
 For read-only and non-destructive tasks, continue automatically until a meaningful stopping point or a clear approval boundary is reached.
@@ -67,9 +73,9 @@ Importing existing infrastructure is a controlled migration workflow for bringin
 - Prefer the smallest import scope that solves the task.
 - Do not bulk-import an entire project, folder, or organization unless the user explicitly requests that scope.
 - For small or targeted migrations, prefer Terraform import workflows tied to explicit destination `resource` blocks.
-- For larger Google Cloud migrations, `gcloud beta resource-config bulk-export` may be used as a bootstrap tool to discover and generate initial Terraform for existing resources.
+- For larger migrations, a provider discovery/export tool may be used as a bootstrap to generate initial Terraform for existing resources **(GCP:** `gcloud beta resource-config bulk-export`**; other providers have analogous tooling).**
 
-### Using Google Cloud bulk export
+### Using Google Cloud bulk export (GCP)
 - Treat `gcloud beta resource-config bulk-export` output as migration scaffolding, not final repository-ready Terraform.
 - Do not commit raw bulk-export output without review and cleanup.
 - Normalize generated configuration into repository conventions before considering the migration complete.
@@ -93,7 +99,7 @@ Importing existing infrastructure is a controlled migration workflow for bringin
 - Do not apply imported configuration without explicit user approval.
 
 ### Repository expectations
-- Imported resources must be reshaped to match this repository’s file layout, naming, and guardrails.
+- Imported resources must be reshaped to match this folder’s file layout, naming, and guardrails.
 - Generated code is a starting point only.
 - Final committed Terraform should read like intentionally authored infrastructure, not tool output.
 
@@ -154,47 +160,33 @@ or describe relevant impact, such as:
 - likely spend increase or decrease
 - sizing, replication, retention, or traffic-related cost changes
 
-## Standard Repository Layout
-This repository is organized **per workload**. Each top-level directory is a self-contained Terraform root module that maps to a single project.
+## Standard Layout
+The `infra/` folder is organized **per workload**. Each subdirectory of `infra/` is a self-contained Terraform root module that maps to a single project.
 
 ```
-/
-├── AGENTS.md
-├── README.md
+infra/
 ├── <workload-a>/
 │   ├── backend.tf
 │   ├── providers.tf
 │   ├── versions.tf
 │   ├── variables.tf
 │   ├── terraform.tfvars
-│   ├── networking.tf
-│   ├── compute.tf
-│   ├── storage.tf
-│   ├── databases.tf
-│   ├── iam.tf
-│   ├── observability.tf
-│   └── ... (other concern-grouped .tf files)
-├── <workload-b>/
-└── .github/
-    └── workflows/
+│   └── ... (concern-grouped .tf files: networking, compute, storage, databases, iam, observability)
+└── <workload-b>/
 ```
 
 ### Workload directories
 - Each workload directory is a Terraform root module with its own `backend.tf` and `terraform.tfvars`.
-- Run all Terraform commands from inside the target workload directory, never from the repository root.
+- Run all Terraform commands from inside the target workload directory (`infra/<workload>/`), never from `infra/` itself or the git root.
 - Do not introduce cross-workload references or shared local modules without explicit approval — workloads are intentionally independent.
-- New workloads should follow the same self-contained pattern as existing ones in the repository.
+- New workloads should follow the same self-contained pattern as existing ones under `infra/`.
 
 ### When a shared `modules/` directory becomes appropriate
 - The flat per-workload layout is preferred while workloads are one-of-a-kind and share little or no infrastructure shape.
-- If two or more workloads genuinely need the same shape (for example identical networking, identical bucket conventions, the same compute pattern across environments), a small `modules/` directory at the repository root may be introduced and called by the affected workload root modules.
+- If two or more workloads genuinely need the same shape (for example identical networking, identical bucket conventions, the same compute pattern across environments), a small `infra/modules/` directory may be introduced and called by the affected workload root modules.
 - Do not preemptively introduce shared modules in anticipation of future reuse. Wait until concrete duplication exists across at least two workloads.
 - When introducing a shared module, keep it focused on the genuinely shared concern only. Do not collapse unrelated workload-specific resources into it.
 - Shared modules must still follow the explicit, repetition-friendly authoring style in this document — submodules are not a license to use `for_each`/`count`/`dynamic` to generate resources.
-
-### AGENTS.md
-- Store agent instructions in `AGENTS.md` at the repository root.
-- Keep this document aligned with actual repository conventions and workflows.
 
 ### Naming guidance
 - Prefer grouping by concern, not by resource count.
@@ -213,11 +205,12 @@ This repository is organized **per workload**. Each top-level directory is a sel
 ## Infrastructure Conventions
 Opinions on how to set up specific infrastructure concerns. These guide authoring choices when adding or changing resources of these types.
 
-### Networking
+### Networking (GCP)
 - Do not use the default VPC or default subnets for managed infrastructure.
 - Prefer a custom-mode VPC with explicitly defined subnets, secondary ranges, firewall rules, and NAT.
 - Default VPCs typically come with auto-created subnets and permissive default firewall rules (broadly open SSH, RDP, ICMP from `0.0.0.0/0`) that are not an acceptable security posture.
 - If existing resources are found on the default VPC, call it out and propose a migration path rather than extending usage.
+- On AWS/Azure the same intent holds: define the network, subnets, and security-group/firewall rules explicitly; never rely on a provider's default network or default-open ingress.
 
 ## Guardrails
 
