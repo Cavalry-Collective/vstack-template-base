@@ -5,5 +5,18 @@
     { "name": "frontend", "path": "apps/frontend" },
     { "name": "infra", "path": "infra" }
   ],
-  "settings": {}
+  "settings": {
+    // Hide subtrees that are mounted as their own workspace roots above, so no
+    // file shows up twice in the Explorer, Quick Open, or search. (Patterns are
+    // evaluated relative to each root; they only match inside "root".)
+    // Also hide parallel-work git worktrees — their files are copies by design.
+    "files.exclude": {
+      "apps": true,
+      "infra": true,
+      ".claude/worktrees": true
+    },
+    "files.watcherExclude": {
+      "**/.claude/worktrees/**": true
+    }
+  }
 }
