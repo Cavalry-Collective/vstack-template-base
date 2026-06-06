@@ -1,5 +1,10 @@
 name: CI
 
+# Enforcement point for the Definition of Done (root CLAUDE.md). Every gate below is a
+# convention already stated in the CLAUDE.md files; CI is where it stops being prose.
+# Fill in each TODO with your stack's command. RULE: a failing check FAILS the build —
+# never `|| true`, never "warn". Wire the gates in the order listed; cheapest first.
+
 on:
   pull_request:
   push:
@@ -11,14 +16,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: echo "TODO: replace with your install command (e.g. npm ci, pnpm install)"
+      # - name: Install dependencies
+      #   run: # TODO: install command (e.g. pnpm install --frozen-lockfile)
 
-      - name: Lint
-        run: echo "TODO: replace with your lint command"
+      # - name: Lint
+      #   run: # TODO: lint all apps — root CLAUDE.md "Coding standards"
 
-      - name: Test
-        run: echo "TODO: replace with your test command"
+      # - name: Typecheck
+      #   run: # TODO: typecheck all apps (skip if the project is plain JS)
 
-      - name: Build
-        run: echo "TODO: replace with your build command"
+      # - name: Test
+      #   run: # TODO: run all test suites — root CLAUDE.md "Testing".
+      #   # Most coverage lives in the fast inner rings; this gate must be red on any failure.
+
+      # - name: Build
+      #   run: # TODO: production build of every app — root CLAUDE.md "Definition of Done"
+
+      # - name: i18n key parity
+      #   run: # TODO: fail on any key missing from a locale — apps/frontend/CLAUDE.md "Internationalisation"
+
+      # - name: Migration round-trip
+      #   run: # TODO: apply up → down → up on a scratch DB, fail on drift — db/CLAUDE.md
+
+      # - name: Accessibility scan
+      #   run: # TODO: run the a11y scanner against built pages — apps/frontend/CLAUDE.md "Accessibility baseline"
+
+      # Optional structural checks — wire only if cheaply scriptable in your stack
+      # (closer to custom lint rules than CI one-liners; candidates, not mandates):
+      #   - no hardcoded colour/spacing literals outside the token source
+      #   - no network calls outside services/
+      #   - route-registry completeness (no page without a route entry)
+      - name: Placeholder
+        run: 'echo "TODO: replace this job''s steps with the gates commented above"'
