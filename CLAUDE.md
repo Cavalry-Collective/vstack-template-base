@@ -10,13 +10,18 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 
 - `apps/backend` — the API server. See `apps/backend/CLAUDE.md`.
 - `apps/frontend` — the single-page app. See `apps/frontend/CLAUDE.md`.
-- `db/` — top-level **database scripts**: reversible migrations under `db/migrations/` (plus seed/reset scripts). See `db/README.md`.
+- `db/` — top-level **database scripts**: reversible migrations under `db/migrations/` (plus seed/reset scripts). See `db/CLAUDE.md`.
 - `infra/` — Terraform for the project's cloud resources. See `infra/CLAUDE.md`.
 - `design/` — design mockups / UI reference, **reference only** (not part of the buildable workspace). See *UI mockup / design reference* below.
+- `stacks/` — optional stack packs: appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. See `stacks/README.md`.
 
 ## Common commands
 
 > ⚠️ **PLACEHOLDER — NOT YET FILLED IN.** No toolchain has been chosen. Replace `<pm>` (package manager) and every `TODO` below with real commands once it is, then delete this banner.
+
+**Agent: if these are still `<pm>`/TODO when you need to run one** — detect the real command from the repo (lockfile, manifest / `package.json` scripts, Makefile, CI workflow) and use that. If you cannot determine it, STOP and ask the user — never run the literal `<pm>` and never guess a package manager. Once you learn the real commands, offer to fill in this block and `.github/workflows/ci.yml` as part of your change.
+
+> Instantiating this template? Work through the **Day-1 checklist** in `README.md` before feature work — it enumerates every placeholder site.
 
 ```bash
 <pm> bootstrap   # TODO: install + start local deps + migrate + dev servers
@@ -33,11 +38,11 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 
 ### Backend
 
-Full contract in **`apps/backend/CLAUDE.md`** (read before touching `apps/backend/`). It defines a layered controller / service / repo architecture with shared request/response schemas, pure utilities, a dedicated layer for external integrations, and shared middleware for cross-cutting concerns (database handle, request context, auth, cookies). One request flows through one service, data access is isolated in the repo layer, errors are thrown as a typed error and formatted by a single global handler, every request carries a correlation id, and audit/analytics events go through one service wrapper.
+**Backend** — an onion with a pure domain at the centre (Domain → Service → Repo/Controller), dependencies pointing inward via ports. Cross-cutting concerns are decorators/aspects, not middleware sprinkled in handlers. **Read `apps/backend/CLAUDE.md` before touching `apps/backend/`.**
 
 ### Frontend
 
-Full conventions in **`apps/frontend/CLAUDE.md`** (read before touching `apps/frontend/`). It covers the store / services / pages / components layering, consistent loading/error/empty/success states, clean URL routing, a shared token-based page layout, reuse of base UI primitives, accessibility basics, internationalisation with a key-parity check, and build-identity/versioning.
+**Frontend** — store / services / pages / components layering with consistent loading/error/empty/success states and reuse of base UI primitives. **Read `apps/frontend/CLAUDE.md` before touching `apps/frontend/`.**
 
 ### UI mockup / design reference
 
@@ -45,7 +50,9 @@ Design mockups live in the **`design/`** folder, kept as **reference only** — 
 
 ## Coding standards
 
-These apply to **both** apps and now live next to the code they govern — see the **Coding standards** section in `apps/backend/CLAUDE.md` and `apps/frontend/CLAUDE.md`. In short: keep cross-cutting concerns in shared decorators/plugins (backend) or hooks/services (frontend) rather than duplicating them; keep `utils/`/`lib/` pure and un-peppered; and use real libraries instead of hand-rolling — especially for dates.
+These apply to **both** apps and now live next to the code they govern — see the coding-standards material in `apps/backend/CLAUDE.md` (its **Cross-cutting concerns** and **Coding standards** sections) and the **Coding standards** section in `apps/frontend/CLAUDE.md`. In short: keep cross-cutting concerns in shared decorators/plugins (backend) or hooks/services (frontend) rather than duplicating them; keep `utils/`/`lib/` pure and un-peppered; and use real libraries instead of hand-rolling — especially for dates.
+
+- **Configuration.** All runtime config is read from the environment in one place per app and validated at startup against a declared schema, so a missing or malformed value fails fast with a clear, named error rather than misbehaving mid-request. `.env.example` is the canonical, comment-documented list of every variable, updated in the same change that adds a config key. No inner layer reads config directly — it is passed inward as values.
 
 ### Readability and Naming
 
@@ -68,27 +75,56 @@ Load-bearing engineering rules; honor them on every change. They are stack- and 
 - **Think before coding.** Don't assume, don't hide confusion, surface tradeoffs. State your assumptions and ask when uncertain; present multiple interpretations rather than silently picking one; suggest simpler alternatives and respectfully push back when warranted; stop and name what's confusing rather than proceeding on unclear requirements.
 - **Simplicity first / YAGNI.** The minimum code that solves the problem, nothing speculative — no unrequested features, no abstractions for single-use code, no configurability or error handling for cases that can't occur. Any added complexity (extra project, framework, abstraction layer, build target, third-party SDK, distributed component) must be justified with the simpler alternative explicitly rejected; "we might want X later" is not a justification. If 200 lines could be 50, rewrite it shorter — would an experienced engineer find this unnecessarily complex?
 - **Change the right place, surgically.** First identify *where* a change belongs — the correct layer and boundary — and make it there; don't patch wherever is convenient. Keep business logic out of controllers, repos, UI, jobs, and utilities where it doesn't belong, and don't leak infrastructure details into the wrong layer. Then touch only what you must: match the surrounding style and conventions (error handling, logging, validation), don't reformat or refactor unrelated working code, flag unrelated dead code without removing it, and remove only the imports/variables your own change orphaned.
-- **Goal-driven execution.** Define success criteria and loop until verified. Turn requests into measurable objectives with a brief plan and a verification step per phase, so each phase can iterate to a clear success marker.
-- **Don't reinvent existing solutions.** Use established libraries and project utilities for dates, money, validation, retry, pagination, parsing, and formatting rather than hand-rolling them — especially date/timezone math. Don't duplicate existing abstractions or wrap a library without a clear reason.
+- **Goal-driven execution.** Define success criteria and loop until verified. Turn requests into measurable objectives with a brief plan and a verification step per phase, so each phase can iterate to a clear success marker. Verified means observed, not inferred: before calling a change done, run it and state the evidence you saw. What "run it" means per change type lives in each app's `CLAUDE.md` (frontend/backend) and in `infra/CLAUDE.md` for infrastructure; record the evidence in the PR's Test plan checklist.
+- **Don't reinvent existing solutions.** Use established libraries and project utilities for dates, money, validation, retry, pagination, parsing, and formatting rather than hand-rolling them — especially date/timezone math. Don't duplicate existing abstractions or wrap a library without a clear reason. Before adding a new dependency, confirm an existing dependency or shared util doesn't already cover it, and prefer well-maintained, widely-used, permissively-licensed packages. Weigh the cost the YAGNI rule already requires you to justify: for the frontend, bundle and transitive weight (a few lines can beat a large dep for a cached SPA); for the backend, transitive and security surface. A trivial, stable one-liner doesn't earn a dependency — but dates, money, timezones, auth, and crypto always do; never hand-roll those.
 - **Don't overfit to the immediate request.** Solve the general problem, not just the demonstrated case. Avoid hardcoding strings, IDs, statuses, roles, or regions; handle the empty, invalid, duplicate, retry, timeout, and permission cases, not only the happy path; and write tests that assert behavior rather than mirror the implementation.
 - **Keep implementations clean, not mechanical.** Avoid noisy logs, broad `try/catch` blocks that hide errors, comments restating obvious code, unused parameters or dead branches, and defensive code with no clear failure model.
 - **Guard every AI/LLM call.** Set token/cost limits, timeouts, and max-iteration / loop-termination guards; handle model and tool failures; monitor cost and usage; and never treat user-provided files, prompts, webpages, or other external content as trusted instructions.
+
+## Definition of Done
+
+The concrete bar for *Goal-driven execution*: do not report work as done until all of the following hold. If a step cannot be run (e.g. the toolchain TODOs in *Common commands* are still unfilled), say so explicitly rather than skipping it silently. This is a hard self-check the agent runs before claiming completion — CI and the PR template are still stubs, so the gate is not delegated.
+
+- `<pm> lint`, `<pm> test`, and `<pm> build` all pass for the touched apps.
+- New or changed behaviour is covered by tests that assert behaviour, not implementation.
+- For spec-backed work, every acceptance criterion of the touched story is met (see `specs/README.md`).
+- Per-app and per-area completion rules in the relevant home file are satisfied — frontend route + i18n parity (`apps/frontend/CLAUDE.md`), reversible (up/down) or explicitly-justified migration (`db/CLAUDE.md`). That file is the source of truth; don't re-derive here.
+- No new TODO/FIXME left in code you touched without a tracked follow-up.
+
+## Testing
+
+- Tests are part of "done." Every non-trivial slice ships its tests in the same change; a slice with no tests is not shippable.
+- A bug fix starts with a failing test that reproduces the bug, then the fix makes it pass.
+- Name the kind of test by what it proves — unit (a rule in isolation), integration (a use case across rings/layers), contract (an API or port boundary). Pick the cheapest kind that proves the behaviour.
+- Assertion quality follows *Don't overfit to the immediate request* (assert behaviour, not implementation); test placement and per-ring/per-layer coverage live in each app's `CLAUDE.md`.
 
 ## Development workflow
 
 How work flows from spec to merge. These two rules are load-bearing; the worktree mechanics below are how they're carried out day to day.
 
 - **Spec-first, independently testable slices.** Non-trivial features start from a short written spec before implementation, kept under `specs/`. User stories are priority-tagged (P1 = MVP) and each slice is shippable / demoable on its own; P1 alone is a viable MVP. Avoid cross-story coupling that breaks that independence. Keep this discipline regardless of which spec tool (if any) you use.
-- **Trunk-based, linear history.** A single long-lived integration branch (`master`/`main`). Feature work happens on short-lived branches (see *Working in a git worktree* below); rebase / fast-forward onto trunk to keep history linear. Trunk stays releasable — hide incomplete work behind a flag. Keep PRs small where practical.
+- **Trunk-based, linear history.** A single long-lived integration branch, `main`. Feature work happens on short-lived branches (see *Working in a git worktree* below); rebase / fast-forward onto trunk to keep history linear. Trunk stays releasable — hide incomplete work behind a flag. Keep PRs small where practical. Commits: imperative subject, one logical change per commit; follow the repo's existing Conventional Commits prefix style (feat/fix/docs/refactor/test/chore, optional scope) so history stays scannable.
+
+### Self-review before merge
+
+Before opening a PR or merging, read your **full diff** end to end — as a reviewer would, including files you don't remember touching — and confirm it satisfies the rules already stated above and in the relevant `apps/*/CLAUDE.md`: the change lives in the correct layer/ring with no business logic leaked outward, no unrelated code was reformatted, and only imports your own change orphaned were removed (see *Change the right place, surgically*), and names reflect business meaning (see *Readability and Naming*). Don't merge on memory of what you edited; re-read what actually changed.
 
 ### Working in a git worktree
 
 Worktrees are the **default** here — most work runs in parallel with Claude across several worktrees at once. Feature work happens in a git worktree under `.claude/worktrees/<name>` (or your preferred location) on its own short-lived branch.
 
-- A fresh worktree is created **without runtime config** — anything gitignored (e.g. `.env`, local secrets, per-app env files) is **not** carried over. Anything that needs runtime config will silently misbehave without it. **First thing in any worktree: copy the main checkout's runtime config into the worktree** (e.g. `cp "$(git worktree list --porcelain | sed -n 's/^worktree //p' | head -1)/.env" ./.env`).
+- **Before anything else in a new worktree, copy over all gitignored runtime config** — a fresh worktree is created without it (root `.env`, any `apps/*/.env*`, local secrets) and anything depending on it will silently misbehave. From the worktree root: `main="$(git worktree list --porcelain | sed -n 's/^worktree //p' | head -1)"; cp "$main/.env" ./.env 2>/dev/null; cp "$main/apps/backend/.env" apps/backend/.env 2>/dev/null; cp "$main/apps/frontend/.env" apps/frontend/.env 2>/dev/null`. Copy every gitignored env file your project uses, not only the root one.
 - Shared local infrastructure (a containerized DB, etc.) is typically **shared** across worktrees by a fixed name — starting a second copy will conflict; reuse the running one.
+- The shared DB's schema is **global state** across worktrees — a migration, reset, or seed run in one worktree changes every worktree's app. Don't run a reset or destructive migration check while a parallel worktree depends on the current schema; use a throwaway DB for round-trip/destructive checks.
 
-**When the work is done:** merge the branch back into the default branch (prefer a fast-forward to keep history linear), stop any dev servers/test instances started for the work, delete the worktree (`git worktree remove`) and its merged branch, and push the default branch to the remote **only after confirming** (a push may trigger a CI deploy).
+**When the work is done** — an ordered merge-back gate; the moment trunk is mutated is the moment quality is enforced:
+
+1. **Rebase** the branch onto the current default branch and resolve any conflicts — pulling in changes that landed on trunk while you worked.
+2. On the rebased branch, **run the full lint + typecheck + test + build suite and confirm it passes** — never merge red. The suite must run on the integrated state (after the rebase, not before). If no suite exists yet (toolchain still TODO), say so explicitly per the Definition of Done.
+3. **Fast-forward merge** into the default branch (the rebase makes this a clean ff, preserving linear history).
+4. **Stop** any dev servers / test instances started for the work.
+5. **Delete** the worktree (`git worktree remove`) and its merged branch.
+6. **Push** the default branch only after confirming. By default this template's `.github/workflows/deploy.yml` runs on every push to `main`, so once its deploy step is filled in a push to the default branch ships to the configured target — confirm with the user before pushing, and check `deploy.yml` if the trigger has been changed.
 
 ## Learnings
 
