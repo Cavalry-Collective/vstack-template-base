@@ -11,7 +11,7 @@ Upgrade the template's convention files so projects instantiated from it come ou
 | Base files | Stay fully framework/toolchain-agnostic |
 | Form factor | Responsive baseline + per-project primary-form-factor declaration (`mobile-first \| desktop-first \| responsive-equal`), filled in on setup |
 | Stack guidance | Separate appendix files under `stacks/<pack>/`, never merged into base; each ends with an explicit conflict register ("base says X → in this stack Y → because Z → concretely: one checkable DO/DON'T") |
-| Pack activation | Path-scoped `.claude/rules/stack-*.md` files (`paths:` frontmatter) that `@import` the appendix — auto-loads exactly when matching files are touched |
+| Pack activation | Path-scoped `.claude/rules/stack-*.md` files (`paths:` frontmatter) carrying a prepend-copy of the appendix body — auto-loads exactly when matching files are touched. (Amended during implementation: rule files don't resolve `@`-imports per current docs, so the originally chosen `@import` form would silently never load.) |
 | Language | Pack is language-neutral: TS or plain JS, no TS mandate; JS deltas documented (Nest Babel decorators, `@Inject(TOKEN)`) |
 | Pack defaults | pnpm workspaces · Zod on both sides (no class-validator) · Radix UI blessed as headless lib · Prisma with `migrations.path → ../db/migrations` |
 | Scope | All 20 high + 23 medium findings; 14 lows deferred (recorded under Out of scope) |
