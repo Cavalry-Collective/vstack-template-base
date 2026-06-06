@@ -1,6 +1,6 @@
 # Backend
 
-The backend contract — read before touching anything under `apps/backend/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`. Stack: **Node.js, plain JavaScript** with a lightweight HTTP layer (Express/Fastify-style).
+The backend contract — read before touching anything under `apps/backend/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`. Stack: not yet chosen (see the root `CLAUDE.md`). The examples below use JS-style filenames (`container.js`) and an Express/Fastify-style HTTP layer **illustratively**; treat file extensions and framework specifics as examples, not mandates — the same way `apps/frontend/CLAUDE.md` does.
 
 The backend is an **onion**: a pure domain at the centre, wrapped by rings that depend inward toward it. Everything below follows from that.
 
@@ -9,7 +9,7 @@ The backend is an **onion**: a pure domain at the centre, wrapped by rings that 
 **Dependencies point inward. Nothing in an inner ring knows anything about an outer ring.**
 
 - The domain depends on nothing; each outer ring depends only on the rings inside it.
-- When an inner ring needs an outer capability (load data, send mail), it defines the **contract** — a "port" — and an outer ring provides the implementation. JavaScript has no language-level interfaces, so a port is just an agreed shape: a documented set of method signatures, honoured by duck typing (and optionally pinned with a JSDoc `@typedef`). The implementation is supplied from outside (see *Wiring*), so the dependency is inverted and the arrow still points inward.
+- When an inner ring needs an outer capability (load data, send mail), it defines the **contract** — a "port" — and an outer ring provides the implementation. A port is a documented set of method signatures: in a language with first-class interfaces (e.g. TypeScript) express it as an interface; in one without (e.g. plain JS) express it as an agreed shape honoured by duck typing and optionally pinned with a JSDoc `@typedef`. Either way the implementation is supplied from outside (see *Wiring*), so the dependency is inverted and the arrow still points inward.
 - Data crosses in translated form: DTOs at the edge, domain objects inside. Outer-ring types — HTTP requests, database rows, SDK objects — never travel inward; the domain neither imports nor names them.
 
 Test any boundary: can you swap what's outside (the database, the delivery mechanism) without touching what's inside? If not, something has leaked. If a change wants to point a dependency outward, reshape the change, not the rule.
@@ -75,11 +75,30 @@ A module never imports another module's inner rings — cross-module use goes th
 
 ## Wiring
 
-Ports are defined inside, implemented outside, and connected in one place — the **composition root** (`container.js`). This is how JavaScript does dependency inversion without language-level interfaces: the contract is the agreed method shape, and the concrete implementation is supplied at boot.
+Ports are defined inside, implemented outside, and connected in one place — the **composition root** (`container.js`). This is how the backend does dependency inversion (see *The dependency rule* for the typed/untyped port forms): the contract is the agreed method shape, and the concrete implementation is supplied at boot.
 
 - An inner ring receives its dependencies (a constructor argument or factory parameter); it never `import`s a concrete adapter directly.
 - The composition root is the only place that knows both a port and its implementation. Swapping an adapter (real database → in-memory for a test) is a change there and nowhere else.
 - Keep wiring out of the rings — it is glue, not logic. Manual constructor wiring is enough; reach for a DI container (e.g. Awilix) only once the graph grows unwieldy.
+
+## Testing the rings
+
+The architecture exists to make testing cheap — exploit it. Each ring maps to a kind of test; **most coverage sits in the fast inner rings**, thinning outward.
+
+- **Domain — pure unit tests.** No mocks, no I/O (the ring forbids I/O, so its tests need none). Assert the invariants and rules directly.
+- **Service — use-case tests.** Drive the use case with in-memory fakes of the ports (the composition-root swap described in *Wiring*); assert orchestration and transaction boundaries, not the database.
+- **Repo — integration tests.** Run against a real database / external sandbox; assert the mapper round-trips and the queries behave.
+- **Controller — contract tests.** Assert status codes, validation rejection, auth guards, and request/response schema (see *Endpoint contract* and *Status codes*).
+
+## Verifying a change
+
+Before calling a backend change done (the root's *verified means observed* gate):
+
+- Run the test suite for the touched module.
+- Exercise the actual endpoint over HTTP — the happy path plus at least one error path.
+- Confirm the status code, error shape, and correlation id match the *Endpoint contract* and *Cross-cutting* error rules already defined here.
+
+State what you observed (which paths you exercised, what you saw), not just that you ran it.
 
 ## RESTful conventions
 
@@ -129,7 +148,7 @@ Concerns that touch every request — auth, context, logging, transactions, erro
 - **Auth:** guards at the controller ring reject unauthenticated requests at the edge; rule-level authorisation that depends on domain state lives in the domain or use case.
 - **Request context / identity:** established at the edge, passed inward as an argument — never read from a global by an inner ring.
 - **Transactions:** the boundary wraps the use case (see Service).
-- **Logging & audit:** one shared path carrying the request's correlation id, so a request traces end to end. Keep it out of the domain.
+- **Logging & audit:** one shared path carrying the request's correlation id, so a request traces end to end. Keep it out of the domain. Emit **structured records** (key/value fields, not concatenated strings) at meaningful **levels** — `error` for handled failures, `warn` for recoverable anomalies, `info` for state changes, `debug` behind a flag for diagnostics. **Never log secrets, tokens, credentials, auth headers, or PII; redact at the logging boundary** and log identifiers (e.g. a user id) rather than payloads. Log a failure **once**, where it is handled — not at every ring on the way out (re-logging the same error is the noise the root Principles forbid).
 - **Errors:** the domain raises failures in domain terms; the controller ring is the single place that maps them onto transport responses.
 
 ## Standards reference
@@ -149,6 +168,15 @@ Treat every external API, callback, webhook, queue, and event as untrusted and u
 - **Failure handling:** classify failures as transient, permanent, invalid, unsupported, duplicate, or unknown. Retry only transient ones, with bounded retries and backoff, and a defined final-failure path.
 - **Unclear outcomes:** never treat a timeout, transport error, malformed or unexpected response, or ambiguous result as success. Preserve existing valid data and route the outcome to reconciliation or manual recovery.
 
-## Conventions
+### Security baseline
 
-- **Don't reinvent libraries — especially dates.** Date and timezone maths is the canonical failure mode (DST, month-end, locale); use an established library and a single shared helper. The same goes for phone canonicalisation, identifiers, CSV, and schema validation. (Echoes the root `CLAUDE.md` coding standards.)
+The edge already validates input (the handler validates input; *Endpoint contract* defines validation rules) and places authorisation (edge guards reject unauthenticated requests; rule-level authz that depends on domain state lives in the domain / use case — see *Cross-cutting → Auth*). Add the rules that aren't yet stated:
+
+- **Parameterised data access:** pass query parameters as bound values; never interpolate request data into a query/filter string.
+- **Secrets from the environment:** secrets and config come from the environment, never hardcoded, committed, or echoed in errors/logs; inner rings receive config as injected values, not by reading globals.
+- **Ownership:** verify ownership on every client-supplied id before acting on the record — make this explicit for ordinary requests, not just the webhooks the *Integrations* rules already cover.
+
+## Coding standards
+
+- **Don't reinvent libraries** (full rule: root `CLAUDE.md` Principles, *Don't reinvent existing solutions*). Backend specifics worth repeating in-context: dates/timezones, phone canonicalisation, identifiers, CSV, and schema validation all use an established library and a single shared helper — never a hand-rolled one.
+- **Schema changes are reversible migrations under `db/`** — never issue DDL or alter schema from application code; the repo ring's adapters read the schema, they don't mutate it. See `db/CLAUDE.md`.
