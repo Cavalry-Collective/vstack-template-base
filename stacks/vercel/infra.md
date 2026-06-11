@@ -1,0 +1,30 @@
+# Vercel platform — infra appendix
+
+> Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
+
+Binds `infra/CLAUDE.md` to the **Vercel Terraform provider** (`vercel/vercel`): the product runs entirely on Vercel — two projects (web + api), Vercel Blob, and marketplace Postgres (Neon). Read the base first; its workflow, risk-review format, and approval guardrails apply unchanged.
+
+## Workload shape
+
+- One self-contained workload directory per product under `infra/<workload>/` (base layout stands): `versions.tf` (provider `vercel/vercel`), `providers.tf` (`api_token` from `TF_VAR_vercel_api_token` — never committed), `variables.tf`, plus concern files — `web.tf` (frontend project + its env vars), `api.tf` (backend project + its env vars), `storage.tf` (Blob store + project connection).
+- **Two `vercel_project` resources:** web (`framework = "nextjs"`, `root_directory = "apps/frontend"`) and api (`root_directory = "apps/backend"`). Pin `node_version` (keep in sync with the workspace `engines`) and the function region per project via `resource_config`.
+- **One explicit resource block per environment variable** (`vercel_project_environment_variable`), `sensitive = true` for secrets — the base explicit-over-DRY authoring style, bound. Store connections inject their own variables — the Neon marketplace integration injects `DATABASE_URL`, the Blob store connection injects `BLOB_READ_WRITE_TOKEN` — don't duplicate those as Terraform-managed variables.
+- **The state file holds the secret env-var values.** A gitignored local backend is acceptable while the project is single-operator; move to a remote backend the moment a second operator appears.
+
+## Auth / context
+
+The base's start-of-session context check, bound: the provider authenticates with a team API token. Verify identity and team with `vercel whoami` (CLI authenticated via `VERCEL_TOKEN`) and confirm the target team/project with the user before any plan or apply — the base "don't assume the previous context" rule stands.
+
+## Deploy seam
+
+- **Deploys are Vercel's GitHub integration — "CI/CD" is merging code.** Both `vercel_project` resources declare `git_repository` (`type = "github"`, the repo, `production_branch = "main"`); Vercel listens to the repo and runs its own build-and-deploy pipeline: every PR gets a preview deployment, every push to `main` deploys production. Day-1: grant the Vercel GitHub App access to the repo before enabling.
+- **`ci.yml` is the merge gate, not the deploy pipeline.** Vercel ships whatever lands on `main`, so protect `main`: PRs merge only on green CI. The trunk-stays-releasable rule and the root merge-back gate carry the deploy weight.
+- **`deploy.yml` is never filled in** — see the conflict register. A push to `main` still ships (via Vercel, not a workflow), so the root "confirm before pushing the default branch" rule applies with full force.
+- Point Playwright at a PR's preview deployment URL via `E2E_BASE_URL`.
+- **`.vercelignore`** keeps non-deploy material out of uploads: `.env*`, `infra/`, `design/`, `docs/`, `.claude/`.
+- A local token `vercel deploy` (`VERCEL_TOKEN`) is the emergency path the root contract permits — not normal work.
+
+## Conflict register
+
+- **Base says:** this template's blessed cloud is GCP — the **(GCP)** sections (gcloud context commands, bulk export) and the networking convention (custom-mode VPC, explicit subnets/firewalls) apply, with AWS/Azure equivalents. **In this stack:** the cloud is Vercel (+ Neon via the marketplace). The context check maps to `vercel whoami` + the API token; the VPC/networking convention has no binding — Vercel is a managed platform exposing no VPC, subnet, or firewall surface to author. **Because:** this pack's identity is everything-on-Vercel. **Concretely:** DO author `vercel_*` resources per the workload shape above; DON'T scaffold a GCP provider, network `.tf` files, or gcloud-based context checks in this stack's workloads.
+- **Base says:** deployment goes through CI/CD with workflows under `.github/workflows/`; `deploy.yml` runs on every push to `main`, and once its deploy step is filled in, a push ships to the configured target (root `CLAUDE.md`). **In this stack:** the deploy pipeline is Vercel's GitHub integration, declared in Terraform (`git_repository` on each project) — `deploy.yml`'s deploy step is never filled in; on day 1 delete the stub (or reduce it to a one-line pointer at this appendix) so no second deploy path exists. **Because:** Vercel's native git pipeline *is* the CI/CD for this platform; a token-driven workflow would duplicate it, and two deploy mechanisms race. **Concretely:** DO enable `git_repository` and protect `main` so PRs merge only on green `ci.yml`; DON'T add a `vercel deploy` step to GitHub Actions. A push to `main` still deploys production — the root confirm-before-push rule stands unchanged.
