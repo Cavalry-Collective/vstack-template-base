@@ -14,16 +14,7 @@ Each appendix opens with the verbatim precedence line and ends with its conflict
 
 ## Day-1 wiring
 
-Run as part of the root `README.md` `## Day-1 checklist`. Create three **path-scoped rule files** so each appendix loads only when its files are touched. The `paths:` frontmatter is the documented "load only for matching files" mechanism; the appendix content is the rule **body** (rule files do not resolve `@`-imports — only `CLAUDE.md` files do, per `code.claude.com/docs/en/memory`, so each rule must be self-contained). Build each by prepending the frontmatter to a copy of its appendix:
-
-```bash
-PACK=stacks/nextjs-nestjs-postgres; mkdir -p .claude/rules
-{ printf -- '---\npaths: ["apps/backend/**"]\n---\n'; cat "$PACK/backend.md"; } > .claude/rules/stack-backend.md
-{ printf -- '---\npaths: ["apps/frontend/**"]\n---\n'; cat "$PACK/frontend.md"; } > .claude/rules/stack-frontend.md
-{ printf -- '---\npaths: ["db/**", "apps/backend/**/repo/**"]\n---\n'; cat "$PACK/db.md"; } > .claude/rules/stack-db.md
-```
-
-The copy is the cost of staying within documented behaviour: if you later edit an appendix, regenerate its rule file. (Symlinking a rule to an appendix also works — the docs support symlinks under `.claude/rules/` — but the symlinked appendix carries no `paths:` frontmatter, so it would load unconditionally instead of path-scoped; prefer the prepend-frontmatter copy above when you want scoping.) Confirm what loaded with the `InstructionsLoaded` hook.
+Run as part of the root `README.md` `## Day-1 checklist`: `scripts/activate-stack.sh nextjs-nestjs-postgres` builds the three **path-scoped rule files** under `.claude/rules/` — one per appendix, each loading only when its files are touched (mechanism, `paths:` scopes, and why prepend-copies rather than symlinks or `@`-imports: `../README.md` *Activation*). If you later edit an appendix, rerun the script; CI's **Stack rule drift** step catches a stale copy. Confirm what loaded with the `InstructionsLoaded` hook.
 
 Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and the **CI** block into `.github/workflows/ci.yml` — never the same block in both, and never `prisma migrate dev` in CI.
 
@@ -35,12 +26,13 @@ Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" pl
 pnpm bootstrap   # install; start local Postgres (TODO: name the docker-compose Postgres service — reuse the shared container across worktrees); prisma generate; prisma migrate dev; run both dev servers
 pnpm dev         # Nest watch + Next dev server
 pnpm lint        # workspace lint, both apps
+pnpm typecheck   # tsc --noEmit per app (explicit no-op in a plain-JS app)
 pnpm test        # both suites
 pnpm build       # prisma generate, then next build + nest build
 pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
 ```
 
-**CI block → `.github/workflows/ci.yml` (non-interactive):** spin up a Postgres service container; `pnpm install --frozen-lockfile`; `prisma generate`; `prisma migrate deploy` (**never `prisma migrate dev` in CI — it can reset the DB or prompt**); `next build` + `nest build`; non-watch `pnpm test`. Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
+**CI block → `.github/workflows/ci.yml` (non-interactive):** spin up a Postgres service container; `pnpm install --frozen-lockfile`; `prisma generate`; `prisma migrate deploy` (**never `prisma migrate dev` in CI — it can reset the DB or prompt**); `pnpm typecheck`; `next build` + `nest build`; non-watch `pnpm test`. Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
 
 **Validation:** **Zod** is the schema library at the NestJS controller edge and for Next form/response schemas; a shape shared across the two is defined once and reused (no class-validator). Details in `backend.md` / `frontend.md`.
 

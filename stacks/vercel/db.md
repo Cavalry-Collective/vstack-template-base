@@ -39,7 +39,7 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **Postgres** — **Ne
 
 - **Local Postgres is one fixed-name Docker container** (`postgres:16`), started by the root `db:up`/`bootstrap` script with start-or-run semantics, shared across worktrees per the root `CLAUDE.md` — reuse it, never start a second copy.
 - **Seed:** `db/seed-dev.<ext>`, idempotent (upsert by business key), run explicitly via a root script with `--env-file` — non-production only (base rule stands).
-- Worktrees: the base shared-DB global-state rules stand unchanged; run round-trip and destructive checks against a scratch database created on the same server, never the shared one.
+- **One shared Postgres container, one database per worktree.** Reuse the fixed-name container, but give each worktree its own database on it: derive the name deterministically (sanitize the branch to `[a-z0-9_]`, truncate to Postgres's 63-byte identifier limit, prefix `app_` — `feature/x` → `app_feature_x`), re-point the db-name segment of `DATABASE_URL` after copying `.env` in, and have `bootstrap`/`db:up` create the database if missing (`CREATE DATABASE` — node-pg-migrate does not auto-create it). Drop it on worktree teardown. Round-trip and destructive checks run against your own worktree database — scratch by construction; never run `migrate`/`migrate:down`/reset against another worktree's database.
 
 ## CI checks (drop into `.github/workflows/ci.yml`)
 
@@ -47,4 +47,4 @@ Against a scratch `postgres:16` service container: migrations apply from zero (`
 
 ## Conflict register
 
-_No conflicts — this appendix only adds bindings; the base contract is unchanged._
+- **Base says:** Shared local infrastructure (a containerized DB) is shared across worktrees by a fixed name, and the shared DB's schema is **global state** across worktrees — destructive checks go to a throwaway DB (root `CLAUDE.md`; `db/CLAUDE.md`). **In this stack:** the *server* stays shared by its fixed name, but each worktree migrates its own `app_<sanitized-branch>` database, created on bootstrap and dropped on teardown. **Because:** parallel worktrees applying different branches' migrations to one schema break each other; per-worktree databases remove the hazard and make the up→down→up round-trip safe by construction, with no second container. **Concretely:** after copying `.env` in, re-point the db-name segment of `DATABASE_URL` at this worktree's database; DON'T run `migrate`/`migrate:down`/reset against the shared default database or another worktree's.

@@ -10,13 +10,13 @@ section in the root `CLAUDE.md`.
 
 Keep mockups findable so "point the relevant mockup at the spec" is mechanical, not a hunt.
 
-- **Inventory table (below) is the index — keep it current** as screens are added. Columns: **screen** (semantic name) · **mockup file/folder** · **route** · **owning spec**. The *screen* and *route* columns must match the central route registry file in `apps/frontend/CLAUDE.md`, so a screen, its mockup, and its URL are cross-referenceable.
+- **Inventory table (below) is the index — keep it current** as screens are added. Columns: **screen** (semantic name) · **mockup file/folder** · **owning spec**. The *screen* name must match its name in the central route registry (`apps/frontend/CLAUDE.md`), so a screen, its mockup, and its URL cross-reference through the registry — which stays the **only** route→URL surface (the frontend file forbids a second list, so this table carries no route column).
 - **One file or folder per screen, named by the screen's semantic name** (matching the route registry) — never by tool export names like `screen-3-final-v2`.
 - **Flows** are shown by mockup ordering/links or an optional flow file — don't mandate separate flow diagrams.
 
-| Screen | Mockup file/folder | Route | Owning spec |
-|---|---|---|---|
-| _(example) dashboard_ | `dashboard/` | `/dashboard` | `specs/2026-01-01-dashboard.md` |
+| Screen | Mockup file/folder | Owning spec |
+|---|---|---|
+| _(example) dashboard_ | `dashboard/` | `specs/2026-01-01-dashboard.md` |
 
 ## Building from a mockup
 

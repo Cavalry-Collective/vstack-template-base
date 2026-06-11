@@ -16,6 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Real gate, not a stub: if a stack pack is active, every .claude/rules/stack-*.md
+      # must match its source appendix under stacks/ (stacks/README.md "Activation").
+      # No-op until a pack is activated. Regenerate with: scripts/activate-stack.sh <pack>
+      - name: Stack rule drift
+        run: bash scripts/activate-stack.sh --check
+
       # - name: Install dependencies
       #   run: # TODO: install command (e.g. pnpm install --frozen-lockfile)
 

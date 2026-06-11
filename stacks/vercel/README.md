@@ -1,8 +1,8 @@
 # Stack pack: vercel
 
-Frontend **Next.js** (App Router, TypeScript) · Backend **Fastify** (plain JavaScript, ESM) · DB **Postgres** — **Neon** (serverless) in production, Docker locally — via **node-pg-migrate** + **`pg`**. The whole product deploys to **Vercel**: two Vercel projects (the Next app, and the Fastify API as a serverless function), Vercel Blob for object storage, Terraform (Vercel provider) as IaC. Validated end to end by a shipped production project (`cavalry-pmlbmw-campaign`). This is the **manifest** — it wires the pack onto a project; bindings and conflict registers live in the appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
+Frontend **Next.js** (App Router, TypeScript) · Backend **Fastify** (plain JavaScript, ESM) · DB **Postgres** — **Neon** (serverless) in production, Docker locally — via **node-pg-migrate** + **`pg`**. The whole product deploys to **Vercel**: two Vercel projects (the Next app, and the Fastify API as a serverless function), Vercel Blob for object storage, Terraform (Vercel provider) as IaC. Validated end to end by a shipped production project. This is the **manifest** — it wires the pack onto a project; bindings and conflict registers live in the appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
 
-> **Naming.** Named for its distinguishing choice — the everything-on-Vercel platform — instead of the `../README.md` `<frontend>-<backend>-<database>` convention (that triple would be `nextjs-fastify-postgres`). If a second Vercel-platform pack ever appears, rename this one to the convention form.
+> **Naming.** Named for its distinguishing choice — the everything-on-Vercel platform — under the platform exception in `../README.md` (the convention triple would be `nextjs-fastify-postgres`). If a second Vercel-platform pack ever appears, rename this one to the convention form.
 
 ## Appendix → base mapping
 
@@ -17,17 +17,7 @@ This pack ships the optional `infra.md` (permitted by `../README.md`): the deplo
 
 ## Day-1 wiring
 
-Run as part of the root `README.md` `## Day-1 checklist`. This pack creates **four** path-scoped rule files — one more than the checklist's three-rule example, because of `infra.md`. Rule files do not resolve `@`-imports (only `CLAUDE.md` files do), so each rule is self-contained: the appendix body with `paths:` frontmatter prepended:
-
-```bash
-PACK=stacks/vercel; mkdir -p .claude/rules
-{ printf -- '---\npaths: ["apps/backend/**"]\n---\n'; cat "$PACK/backend.md"; } > .claude/rules/stack-backend.md
-{ printf -- '---\npaths: ["apps/frontend/**"]\n---\n'; cat "$PACK/frontend.md"; } > .claude/rules/stack-frontend.md
-{ printf -- '---\npaths: ["db/**", "apps/backend/**/repo/**"]\n---\n'; cat "$PACK/db.md"; } > .claude/rules/stack-db.md
-{ printf -- '---\npaths: ["infra/**"]\n---\n'; cat "$PACK/infra.md"; } > .claude/rules/stack-infra.md
-```
-
-The appendices under `stacks/vercel/` stay the source of truth — if you later edit one, regenerate its rule file. Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Finally record in root `CLAUDE.md` **Learnings**: `Stack: vercel; appendices under stacks/vercel/, activated via .claude/rules/stack-*.md (4 rules incl. infra)`.
+Run as part of the root `README.md` `## Day-1 checklist`: `scripts/activate-stack.sh vercel` builds **four** path-scoped rule files under `.claude/rules/` — one per appendix, `infra.md` included automatically (mechanism: `../README.md` *Activation*). If you later edit an appendix, rerun the script; CI's **Stack rule drift** step catches a stale copy. Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Finally record in root `CLAUDE.md` **Learnings**: `Stack: vercel; appendices under stacks/vercel/, activated via scripts/activate-stack.sh (4 rules incl. infra)`.
 
 ## Suggested toolchain (pnpm workspaces, ESM, Node 22)
 
@@ -39,7 +29,8 @@ pnpm workspaces over `apps/*`; root `"type": "module"`; pin `packageManager` in 
 pnpm bootstrap   # install + start local Postgres (fixed-name docker container, shared across worktrees) + migrate
 pnpm dev         # both dev servers in parallel: Fastify watch (:4000) + Next dev (:3000)
 pnpm lint        # ESLint (flat config) in both apps
-pnpm test        # backend node --test suite + frontend typecheck (Playwright e2e is separate: pnpm test:e2e)
+pnpm typecheck   # frontend tsc --noEmit (backend is plain JS — explicit no-op script)
+pnpm test        # backend node --test suite (Playwright e2e is separate: pnpm test:e2e)
 pnpm build       # next build (backend is plain JS — its build/typecheck scripts are explicit no-ops)
 pnpm migrate     # node-pg-migrate up (rollback: pnpm --filter backend migrate:down)
 ```

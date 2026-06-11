@@ -4,7 +4,7 @@ Cavalry Collective's full-stack SPA monorepo template. Every new project starts 
 
 ## Day-1 checklist
 
-Run this once, top to bottom, the first time you instantiate the template. Each step names the file and the marker to replace. The placeholders are grep-able: `<pm>` in the root `CLAUDE.md` command block, `FILL IN ON SETUP` in `apps/frontend/CLAUDE.md`, and `TODO: replace` in the `.github/workflows/` stubs. Step 9 checks they are all gone.
+Run this once, top to bottom, the first time you instantiate the template. Each step names the file and the marker to replace. The placeholders are grep-able: `<pm>` in the root `CLAUDE.md` command block, `FILL IN ON SETUP` in `apps/frontend/CLAUDE.md`, and `TODO: replace` in the `.github/workflows/` stubs. Step 10 checks they are all gone.
 
 1. **Create the repo.** Click **Use this template** → **Create a new repository** on GitHub.
 2. **Clone** your new repo.
@@ -18,20 +18,12 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
 5. **Choose a stack pack — or stay agnostic.**
    - **Pack path (fast):** pick the pack under `stacks/` matching your stack (e.g. `nextjs-nestjs-postgres`), then:
      - `rm -rf` every other `stacks/*` directory.
-     - Create the three path-scoped activation rules so the pack loads exactly when matching files are touched. Rule files do **not** resolve `@`-imports (only `CLAUDE.md` files do), so each rule is self-contained: the appendix body with `paths:` frontmatter prepended. Build them with the pack README's block (substituting your pack name):
-
-       ```bash
-       PACK=stacks/<pack-name>; mkdir -p .claude/rules
-       { printf -- '---\npaths: ["apps/backend/**"]\n---\n'; cat "$PACK/backend.md"; } > .claude/rules/stack-backend.md
-       { printf -- '---\npaths: ["apps/frontend/**"]\n---\n'; cat "$PACK/frontend.md"; } > .claude/rules/stack-frontend.md
-       { printf -- '---\npaths: ["db/**", "apps/backend/**/repo/**"]\n---\n'; cat "$PACK/db.md"; } > .claude/rules/stack-db.md
-       ```
-       The appendix files under `stacks/<pack-name>/` stay the source of truth — if you later edit one, regenerate its rule file (rerun the line above for it).
+     - Run `scripts/activate-stack.sh <pack-name>`. It writes one path-scoped rule file per appendix to `.claude/rules/` — the appendix body with `paths:` frontmatter prepended (rule files do **not** resolve `@`-imports, so each rule is self-contained; mechanism and rationale: `stacks/README.md` *Activation*). The appendices stay the source of truth: rerun the script after editing one — CI's **Stack rule drift** step fails on a stale copy.
      - Copy the pack README **dev** command block into the root `CLAUDE.md` "Common commands" placeholder (delete the banner); copy its **CI** block into `.github/workflows/ci.yml`. They are different blocks — never paste a dev-only migration command into CI.
-     - Record the choice in root `CLAUDE.md` **Learnings**: `Stack: <pack-name>; appendices under stacks/<pack-name>/, activated via .claude/rules/stack-*.md`.
+     - Record the choice in root `CLAUDE.md` **Learnings**: `Stack: <pack-name>; appendices under stacks/<pack-name>/, activated via scripts/activate-stack.sh`.
    - **Agnostic path:** keep `stacks/` for reference (or delete it) and fill in the toolchain yourself — see step 6.
 6. **Fill the toolchain placeholders** (agnostic path; the pack does this for you in step 5):
-   - Root `CLAUDE.md` "Common commands" — replace the six `<pm>`/`TODO` commands and delete the PLACEHOLDER banner.
+   - Root `CLAUDE.md` "Common commands" — replace the seven `<pm>`/`TODO` commands and delete the PLACEHOLDER banner.
    - `.github/workflows/ci.yml` — replace the TODO steps with real install/lint/typecheck/test/build, plus the i18n key-parity check and migration up/down round-trip.
    - `.github/workflows/deploy.yml` — replace the TODO step.
    - Add a real `.env.example` (already whitelisted in `.gitignore`).
@@ -40,7 +32,8 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
    **Primary form factor (FILL IN ON SETUP):** `<mobile-first | desktop-first | responsive-equal>`
    ```
 8. **Copy runtime config.** Copy any gitignored runtime config (`.env`, secrets) into your local checkout — it is not carried over from the template.
-9. **Confirm green.** Push and watch the first CI run pass. Then confirm no placeholder survives — both must return nothing: `grep -rn 'FILL IN ON SETUP\|TODO: replace' . --exclude-dir=stacks --exclude-dir=specs --exclude-dir=.git --exclude=README.md` and `grep -n '^<pm> ' CLAUDE.md`. (This README's own checklist names the markers, so it is excluded; delete it once instantiation is done if you prefer a clean tree.)
+9. **Protect `main`.** Add a branch protection rule / ruleset requiring the CI workflow to pass before merge. Trunk must stay releasable — and on packs whose pipeline ships whatever lands on `main` (e.g. `vercel`), green-CI-before-merge *is* the deploy gate.
+10. **Confirm green.** Push and watch the first CI run pass. Then confirm no placeholder survives — both must return nothing: `grep -rn 'FILL IN ON SETUP\|TODO: replace' . --exclude-dir=stacks --exclude-dir=specs --exclude-dir=.git --exclude=README.md` and `grep -n '^<pm> ' CLAUDE.md`. (This README's own checklist names the markers, so it is excluded; delete it once instantiation is done if you prefer a clean tree.)
 
 > If you chose the server-first `nextjs-nestjs-postgres` pack, soften the SPA framing the base ships agnostic: root `CLAUDE.md` "the single-page app" → "the web frontend", and the **What's included** "Frontend SPA" row below → "Frontend (server-first Next.js)". The repo name still encodes "spa" and is immutable — accepted as stale.
 

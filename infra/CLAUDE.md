@@ -9,7 +9,7 @@ Agents working in this folder will typically do one of two things:
 1. inspect and explain the current infrastructure, or
 2. propose and implement scoped infrastructure changes.
 
-## Core Principles
+## Core principles
 - Prefer the smallest change that solves the request.
 - Keep changes scoped to the requested environment and outcome.
 - Optimize for readability and straightforward rollback.
@@ -20,7 +20,7 @@ Agents working in this folder will typically do one of two things:
 - Do not assume a change applies to all environments.
 - Always make the target environment explicit in summaries and approvals.
 
-## Default Execution Mode
+## Default execution mode
 - At the start of each new chat, verify the active cloud auth/credential and project context before making any changes.
 - Run the provider's context command outside the sandbox and show the available contexts to the user **(GCP:** `gcloud config configurations list`**)**.
 - Ask the user which account/project/configuration to use before running commands that depend on cloud credentials or project context.
@@ -47,19 +47,17 @@ For any change that could modify infrastructure or configuration behavior, follo
 3. make the smallest reasonable change
 4. run formatting and validation
 5. run `terraform plan`
-6. before asking for approval, present the target environment, planned resource actions, and risk summary using the format defined in the Risk Review Checklist section below
-7. ask for approval before `terraform apply`
+6. before asking for approval, present the target environment, planned resource actions, and risk summary using the format defined in the *Risk review checklist* section below
+7. ask for approval before `terraform apply` (see *Guardrails → Safety* — the approval rule lives there)
 
-Never run `terraform apply` without explicit user approval.
-
-## Terraform Authoring Style
+## Terraform authoring style
 - Prefer explicit Terraform resource declarations over DRY abstractions when managing multiple infrastructure objects.
 - Define each infrastructure object as its own individually named `resource` block by default.
 - Do not use `for_each`, `count`, `dynamic` blocks, or `locals` collections to generate multiple resources unless the user explicitly requests that pattern or there is a clear repository convention requiring it.
 - Favor repetition over abstraction when it improves readability, reviewability, importability, and rollback clarity.
 - Do not use `lifecycle.ignore_changes` unless the diff is confirmed by the user to be noisy and intentionally acceptable.
 
-## Importing Existing Resources
+## Importing existing resources
 
 Importing existing infrastructure is a controlled migration workflow for bringing real infrastructure under Terraform management.
 
@@ -87,8 +85,7 @@ Importing existing infrastructure is a controlled migration workflow for bringin
 - Do not keep generated `for_each`, `count`, `dynamic` blocks, or `locals`-driven resource generation unless that pattern is explicitly requested or already established in that part of the repository.
 - Prefer explicit naming, straightforward review diffs, and easy rollback over generated abstractions.
 - Remove generated noise, provider-default churn, and repository-inconsistent structure before merging.
-- Do not use `lifecycle.ignore_changes` to hide drift found during import.
-- Only use `lifecycle.ignore_changes` if the specific diff is confirmed by the user to be noisy and intentionally acceptable to ignore.
+- Do not use `lifecycle.ignore_changes` to hide drift found during import — the authoring-style rule above applies unchanged.
 
 ### Required review before approval
 - Identify the exact target environment and exact resources being imported.
@@ -96,17 +93,16 @@ Importing existing infrastructure is a controlled migration workflow for bringin
 - Run `terraform plan` after import-related changes.
 - Review all drift before approval.
 - Explicitly call out additions, changes, replacements, deletions, IAM changes, networking changes, and any stateful resource risk.
-- Do not apply imported configuration without explicit user approval.
 
 ### Repository expectations
 - Imported resources must be reshaped to match this folder’s file layout, naming, and guardrails.
 - Generated code is a starting point only.
 - Final committed Terraform should read like intentionally authored infrastructure, not tool output.
 
-## Risk Review Checklist
+## Risk review checklist
 Before asking for approval to apply, present the change in this format:
 
-### Plan Summary
+### Plan summary
 - Environment: `<environment name>`
 
 ### Planned resource actions
@@ -121,7 +117,7 @@ Before asking for approval to apply, present the change in this format:
 
 If any section is empty, skip.
 
-### Risk Checklist
+### Risk checklist
 
 #### Security
 State either:
@@ -160,7 +156,7 @@ or describe relevant impact, such as:
 - likely spend increase or decrease
 - sizing, replication, retention, or traffic-related cost changes
 
-## Standard Layout
+## Standard layout
 The `infra/` folder is organized **per workload**. Each subdirectory of `infra/` is a self-contained Terraform root module that maps to a single project.
 
 ```
@@ -198,11 +194,12 @@ infra/
   - security_secrets.tf
 
 ### Local artifacts and git hygiene
+- **Commit `.terraform.lock.hcl`.** The dependency lock file pins provider versions for every machine and CI run; use `terraform providers lock -platform=<os_arch>` to add the platforms teammates and CI use. Only `.terraform/` directories and plan artifacts stay out of version control.
 - Always keep Terraform plan artifacts such as `tfplan` and `*.tfplan` gitignored and out of version control.
 - Treat plan files as local ephemeral artifacts for review or apply only.
 - Do not commit generated local execution artifacts created during planning, validation, or debugging.
 
-## Infrastructure Conventions
+## Infrastructure conventions
 Opinions on how to set up specific infrastructure concerns. These guide authoring choices when adding or changing resources of these types.
 
 ### Networking (GCP)
@@ -237,7 +234,7 @@ Opinions on how to set up specific infrastructure concerns. These guide authorin
 - If a plan cannot be run, explain why clearly.
 - Always state the environment being planned or applied.
 
-### Secrets and Sensitive Data
+### Secrets and sensitive data
 - Never commit secrets, credentials, keys, tokens, certificates, or private data.
 - Do not hardcode secrets in `.tf` files or checked-in `.tfvars` files.
 - Prefer injecting sensitive values through:
@@ -250,7 +247,7 @@ Opinions on how to set up specific infrastructure concerns. These guide authorin
 - Mark Terraform input variables as `sensitive = true` where appropriate.
 - Avoid exposing sensitive outputs unless absolutely necessary.
 
-## Out of Scope by Default
+## Out of scope by default
 Do not perform these unless explicitly requested:
 - broad architecture migrations
 - provider or platform switches

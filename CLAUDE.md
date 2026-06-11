@@ -27,6 +27,7 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 <pm> bootstrap   # TODO: install + start local deps + migrate + dev servers
 <pm> dev         # TODO: run backend + frontend dev servers
 <pm> lint        # TODO: lint all apps
+<pm> typecheck   # TODO: typecheck all apps (an explicit no-op in a plain-JS app — the verb still exists and stays green)
 <pm> test        # TODO: run all test suites
 <pm> build       # TODO: production build for every app
 <pm> migrate     # TODO: run db/ migrations
@@ -85,7 +86,7 @@ Load-bearing engineering rules; honor them on every change. They are stack- and 
 
 The concrete bar for *Goal-driven execution*: do not report work as done until all of the following hold. If a step cannot be run (e.g. the toolchain TODOs in *Common commands* are still unfilled), say so explicitly rather than skipping it silently. This is a hard self-check the agent runs before claiming completion — CI and the PR template are still stubs, so the gate is not delegated.
 
-- `<pm> lint`, `<pm> test`, and `<pm> build` all pass for the touched apps.
+- `<pm> lint`, `<pm> typecheck`, `<pm> test`, and `<pm> build` all pass for the touched apps.
 - New or changed behaviour is covered by tests that assert behaviour, not implementation.
 - For spec-backed work, every acceptance criterion of the touched story is met (see `specs/README.md`).
 - Per-app and per-area completion rules in the relevant home file are satisfied — frontend route + i18n parity (`apps/frontend/CLAUDE.md`), reversible (up/down) or explicitly-justified migration (`db/CLAUDE.md`). That file is the source of truth; don't re-derive here.
@@ -103,7 +104,7 @@ The concrete bar for *Goal-driven execution*: do not report work as done until a
 How work flows from spec to merge. These two rules are load-bearing; the worktree mechanics below are how they're carried out day to day.
 
 - **Spec-first, independently testable slices.** Non-trivial features start from a short written spec before implementation, kept under `specs/`. User stories are priority-tagged (P1 = MVP) and each slice is shippable / demoable on its own; P1 alone is a viable MVP. Avoid cross-story coupling that breaks that independence. Keep this discipline regardless of which spec tool (if any) you use.
-- **Trunk-based, linear history.** A single long-lived integration branch, `main`. Feature work happens on short-lived branches (see *Working in a git worktree* below); rebase / fast-forward onto trunk to keep history linear. Trunk stays releasable — hide incomplete work behind a flag. Keep PRs small where practical. Commits: imperative subject, one logical change per commit; follow the repo's existing Conventional Commits prefix style (feat/fix/docs/refactor/test/chore, optional scope) so history stays scannable.
+- **Trunk-based, linear history.** A single long-lived integration branch, `main`. Feature work happens on short-lived branches (see *Working in a git worktree* below); rebase / fast-forward onto trunk to keep history linear. Trunk stays releasable — hide incomplete work behind a flag. A flag here is a boolean key in the app's validated config schema (see *Configuration*), default off — no flag service or SDK unless a project explicitly adopts one and records the choice. Keep PRs small where practical. Commits: imperative subject, one logical change per commit; follow the repo's existing Conventional Commits prefix style (feat/fix/docs/refactor/test/chore, optional scope) so history stays scannable.
 
 ### Self-review before merge
 
@@ -113,7 +114,7 @@ Before opening a PR or merging, read your **full diff** end to end — as a revi
 
 Worktrees are the **default** here — most work runs in parallel with Claude across several worktrees at once. Feature work happens in a git worktree under `.claude/worktrees/<name>` (or your preferred location) on its own short-lived branch.
 
-- **Before anything else in a new worktree, copy over all gitignored runtime config** — a fresh worktree is created without it (root `.env`, any `apps/*/.env*`, local secrets) and anything depending on it will silently misbehave. From the worktree root: `main="$(git worktree list --porcelain | sed -n 's/^worktree //p' | head -1)"; cp "$main/.env" ./.env 2>/dev/null; cp "$main/apps/backend/.env" apps/backend/.env 2>/dev/null; cp "$main/apps/frontend/.env" apps/frontend/.env 2>/dev/null`. Copy every gitignored env file your project uses, not only the root one.
+- **Before anything else in a new worktree, copy over all gitignored runtime config** — a fresh worktree is created without it (root `.env`, any `apps/*/.env*`, local secrets) and anything depending on it will silently misbehave. From the worktree root: `main="$(git worktree list --porcelain | sed -n 's/^worktree //p' | head -1)"; for f in .env apps/backend/.env apps/frontend/.env; do if [ -f "$main/$f" ]; then cp "$main/$f" "./$f" && echo "copied $f"; else echo "not in main checkout (skipped): $f"; fi; done` — it reports each file so a missing one is visible, not silent. Copy every gitignored env file your project uses, not only the three listed.
 - Shared local infrastructure (a containerized DB, etc.) is typically **shared** across worktrees by a fixed name — starting a second copy will conflict; reuse the running one.
 - The shared DB's schema is **global state** across worktrees — a migration, reset, or seed run in one worktree changes every worktree's app. Don't run a reset or destructive migration check while a parallel worktree depends on the current schema; use a throwaway DB for round-trip/destructive checks.
 
@@ -124,7 +125,7 @@ Worktrees are the **default** here — most work runs in parallel with Claude ac
 3. **Fast-forward merge** into the default branch (the rebase makes this a clean ff, preserving linear history).
 4. **Stop** any dev servers / test instances started for the work.
 5. **Delete** the worktree (`git worktree remove`) and its merged branch.
-6. **Push** the default branch only after confirming. By default this template's `.github/workflows/deploy.yml` runs on every push to `main`, so once its deploy step is filled in a push to the default branch ships to the configured target — confirm with the user before pushing, and check `deploy.yml` if the trigger has been changed.
+6. **Push** the default branch only after confirming. By default this template's `.github/workflows/deploy.yml` runs after a green CI run on `main` (a `workflow_run` trigger), so once its deploy step is filled in a push to the default branch ships to the configured target — confirm with the user before pushing, and check `deploy.yml` if the trigger has been changed.
 
 ## Learnings
 
@@ -132,3 +133,4 @@ Durable, cross-session notes go here instead of the memory system (see the note 
 
 - 2026-06-06: CLAUDE.md overhaul shipped (`specs/2026-06-06-claude-md-overhaul.md`); 14 low-severity review findings deliberately deferred — the spec's *Out of scope* section is the backlog.
 - 2026-06-06: Claude Code rule files (`.claude/rules/`) do **not** resolve `@`-imports — only `CLAUDE.md` files do. Stack-pack activation therefore uses prepend-copies (frontmatter + appendix body); regenerate the rule file after editing an appendix.
+- 2026-06-12: instructions-hardening pass shipped (`specs/2026-06-12-instructions-hardening.md`) — backend error/list envelopes pinned; stack activation centralized in `scripts/activate-stack.sh` (CI runs `--check` as the drift gate); `.claude/settings.json` ask-rules + migration-immutability hook added; the feature-flag and `.claude/`-artifacts items from the deferred-lows backlog are closed.

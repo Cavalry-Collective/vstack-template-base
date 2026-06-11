@@ -29,7 +29,7 @@ Binds `apps/backend/CLAUDE.md` (the onion) and the root `CLAUDE.md` to **Fastify
 | Config | `env.js` — one Zod schema, parsed once at boot (`loadEnv()`), **fail fast** on missing/invalid keys; values passed inward — no `process.env` reads in rings |
 | DB access | `db.js` — creates the single `pg.Pool` and exports `withTransaction` (mechanics in `./db.md`) |
 | Request context | `request-context.js` — correlation id seeded per request at the edge, passed inward as a plain value |
-| Errors | `errors.js` — **one** `setErrorHandler` mapping domain errors (plain error helpers in `shared/utils/`) → the `{ error: { code, message } }` envelope + base status codes + correlation id; inner rings never shape an HTTP response |
+| Errors | `errors.js` — **one** `setErrorHandler` mapping domain errors (plain error helpers in `shared/utils/`) → the base *Error responses* envelope (`error.code` / `error.message` / `error.correlationId` + the `x-correlation-id` header); inner rings never shape an HTTP response |
 | Auth | `auth.js` — cookie-session guards as `preHandler` hooks on the route scopes that need them |
 
 **Scope-to-subtree = Fastify plugin encapsulation.** Register an aspect on the route scope that needs it; only the error handler, request context, cookie plugin, and DB pool register app-wide at bootstrap.

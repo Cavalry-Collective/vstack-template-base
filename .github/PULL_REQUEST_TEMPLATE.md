@@ -16,14 +16,14 @@ Spec: specs/<file>
 
 ## Database (delete if no schema change)
 
-- [ ] migration up → down → up round-trips cleanly on a scratch DB, or the irreversible change is justified in the spec
+- [ ] migration verified per `db/CLAUDE.md`'s merge gate — up → down → up on a scratch DB by default; if the active stack pack binds a different gate, that one (see its conflict register) — or the irreversible change is justified in the spec
 
 ## UI checklist (if UI changed)
 
 - [ ] all four data states verified (loading / error / empty / success) — see `apps/frontend/CLAUDE.md`
 - [ ] keyboard-only pass done (reachable, visible focus, modals trap/restore)
 - [ ] mockup linked and compared, or noted "no mockup" — see `design/README.md`
-- [ ] all user-facing strings via i18n, keys added to every locale — see `apps/frontend/CLAUDE.md`
+- [ ] all user-facing strings via i18n (keys added to every locale) or the project's single strings/copy module — see `apps/frontend/CLAUDE.md`
 - [ ] before/after screenshots attached at the primary form factor (add the off-axis breakpoint if layout changed)
 
 ## Notes

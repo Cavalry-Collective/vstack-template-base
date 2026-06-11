@@ -124,18 +124,35 @@ These govern the **controller** ring — the default API contract; prefer a more
 
 ### Methods
 
-- `GET` retrieve · `POST` create · `PUT` update · `DELETE` remove.
+- `GET` retrieve · `POST` create · `PUT` update (full-resource replace) · `DELETE` remove.
+- No `PATCH` by default — `PUT` replaces the whole resource. Introduce `PATCH` only as a project-wide decision with documented merge semantics, never per-endpoint.
 - Flag method/intent mismatches — `GET` that mutates, `POST` for plain retrieval without a clear reason.
 
 ### Pagination
 
 - List endpoints use `page`, `recordsPerPage`, `sortBy`, `sortOrder` (`sortOrder` is `asc` or `desc`).
+- List responses use one envelope: `{ "data": [<items>], "page": <n>, "recordsPerPage": <n>, "totalRecords": <total matching the filters> }`. `data` is always an array — an empty result is `200` with `[]`, never `404`.
 - Place pagination and sorting parameters after resource-specific filters.
 - Flag any endpoint that can return an unbounded collection with no pagination.
 
 ### Status codes
 
-Use standard codes: `200` retrieved/updated, `201` created, `400` invalid request, `401` unauthenticated, `403` unauthorized, `404` not found, `409` conflict, `500` unexpected server error. Flag unclear or misleading codes.
+Use standard codes: `200` retrieved/updated, `201` created, `204` deleted (no body), `400` invalid request, `401` unauthenticated, `403` unauthorized, `404` not found, `409` conflict, `429` rate-limited (where limiting exists), `500` unexpected server error. Flag unclear or misleading codes.
+
+### Error responses
+
+Every error response uses one envelope, produced only by the single error-mapping site (see *Cross-cutting → Errors*):
+
+```json
+{ "error": { "code": "ORDER_NOT_FOUND", "message": "Order 123 was not found.", "correlationId": "<id>" } }
+```
+
+- **`code`** — stable, machine-readable, `SCREAMING_SNAKE_CASE`, named in domain terms. Clients branch on `code`; they never parse `message`.
+- **`message`** — human-readable and safe: no stack traces, SQL, or internal identifiers (what users actually read is governed by the frontend's error-copy rules).
+- **`correlationId`** — the request's correlation id. It also travels as the **`x-correlation-id` response header on every response**, success or failure; the body field is the copy the frontend surfaces (see *Cross-app conventions* in `apps/frontend/CLAUDE.md`).
+- Validation failures (`400`) may add `error.details`: a list of `{ "field": <name>, "message": <why> }` entries.
+
+Success shapes for symmetry: a single resource is returned as the object itself (no wrapper); lists use the pagination envelope above.
 
 ### Endpoint contract
 
@@ -149,7 +166,7 @@ Concerns that touch every request — auth, context, logging, transactions, erro
 - **Request context / identity:** established at the edge, passed inward as an argument — never read from a global by an inner ring.
 - **Transactions:** the boundary wraps the use case (see Service).
 - **Logging & audit:** one shared path carrying the request's correlation id, so a request traces end to end. Keep it out of the domain. Emit **structured records** (key/value fields, not concatenated strings) at meaningful **levels** — `error` for handled failures, `warn` for recoverable anomalies, `info` for state changes, `debug` behind a flag for diagnostics. **Never log secrets, tokens, credentials, auth headers, or PII; redact at the logging boundary** and log identifiers (e.g. a user id) rather than payloads. Log a failure **once**, where it is handled — not at every ring on the way out (re-logging the same error is the noise the root Principles forbid).
-- **Errors:** the domain raises failures in domain terms; the controller ring is the single place that maps them onto transport responses.
+- **Errors:** the domain raises failures in domain terms; the controller ring is the single place that maps them onto transport responses, using the *Error responses* envelope — one shape app-wide.
 
 ## Standards reference
 

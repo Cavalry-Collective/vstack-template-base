@@ -14,12 +14,11 @@ yarn-error.log*
 .env.*
 !.env.example
 
-# Terraform
+# Terraform — .terraform.lock.hcl is committed on purpose (provider pinning; infra/CLAUDE.md)
 .terraform/
 *.tfplan
 *.tfstate
 *.tfstate.backup
-.terraform.lock.hcl
 
 # macOS
 .DS_Store
@@ -28,3 +27,6 @@ yarn-error.log*
 # IDE
 .idea/
 *.iml
+
+# Claude Code worktrees (root CLAUDE.md "Working in a git worktree")
+.claude/worktrees/
