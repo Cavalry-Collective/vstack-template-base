@@ -4,7 +4,7 @@ Cavalry Collective's full-stack SPA monorepo template. Every new project starts 
 
 ## Day-1 checklist
 
-Run this once, top to bottom, the first time you instantiate the template. Each step names the file and the marker to replace. The placeholders are grep-able: `<pm>` in the root `CLAUDE.md` command block, `FILL IN ON SETUP` in `apps/frontend/CLAUDE.md`, and `TODO: replace` in the `.github/workflows/` stubs. Step 10 checks they are all gone.
+Run this once, top to bottom, the first time you instantiate the template. Each step names the file and the marker to replace. The placeholders are grep-able: `<pm>` in the root `CLAUDE.md` command block, `FILL IN ON SETUP` in `apps/frontend/CLAUDE.md`, and `TODO: replace` in the `.github/workflows/` stubs. Step 11 checks they are all gone.
 
 1. **Create the repo.** Click **Use this template** → **Create a new repository** on GitHub.
 2. **Clone** your new repo.
@@ -33,7 +33,8 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
    ```
 8. **Copy runtime config.** Copy any gitignored runtime config (`.env`, secrets) into your local checkout — it is not carried over from the template.
 9. **Protect `main`.** Add a branch protection rule / ruleset requiring the CI workflow to pass before merge. Trunk must stay releasable — and on packs whose pipeline ships whatever lands on `main` (e.g. `vercel`), green-CI-before-merge *is* the deploy gate.
-10. **Confirm green.** Push and watch the first CI run pass. Then confirm no placeholder survives — both must return nothing: `grep -rn 'FILL IN ON SETUP\|TODO: replace' . --exclude-dir=stacks --exclude-dir=specs --exclude-dir=.git --exclude=README.md` and `grep -n '^<pm> ' CLAUDE.md`. (This README's own checklist names the markers, so it is excluded; delete it once instantiation is done if you prefer a clean tree.)
+10. **Stand up staging (if your pack defines one).** Bring up the persistent preview/staging environment your stack pack specifies before feature work — for the `vercel` pack that is the `develop` branch plus its dedicated Neon branch (`stacks/vercel/infra.md` → *Staging environment*), migrated with the same manual runbook as prod (`stacks/vercel/db.md` → *Production & staging migrations*).
+11. **Confirm green.** Push and watch the first CI run pass. Then confirm no placeholder survives — both must return nothing: `grep -rn 'FILL IN ON SETUP\|TODO: replace' . --exclude-dir=stacks --exclude-dir=specs --exclude-dir=.git --exclude=README.md` and `grep -n '^<pm> ' CLAUDE.md`. (This README's own checklist names the markers, so it is excluded; delete it once instantiation is done if you prefer a clean tree.)
 
 > If you chose the server-first `nextjs-nestjs-postgres` pack, soften the SPA framing the base ships agnostic: root `CLAUDE.md` "the single-page app" → "the web frontend", and the **What's included** "Frontend SPA" row below → "Frontend (server-first Next.js)". The repo name still encodes "spa" and is immutable — accepted as stale.
 

@@ -192,6 +192,9 @@ The edge already validates input (the handler validates input; *Endpoint contrac
 - **Parameterised data access:** pass query parameters as bound values; never interpolate request data into a query/filter string.
 - **Secrets from the environment:** secrets and config come from the environment, never hardcoded, committed, or echoed in errors/logs; inner rings receive config as injected values, not by reading globals.
 - **Ownership:** verify ownership on every client-supplied id before acting on the record — make this explicit for ordinary requests, not just the webhooks the *Integrations* rules already cover.
+- **Security response headers:** send the standard HTTP hardening headers — transport security, content-type and framing protections, a referrer policy, and (where the app serves HTML) a **Content-Security-Policy** — from one shared place. Roll out a new or tightened CSP in **report-only** mode first, then promote it to enforcing once the violation reports are clean; an enforcing CSP shipped blind breaks inline styles and third-party embeds. (Exact header set + mechanism: the active stack pack.)
+- **Guard server-side requests to user-supplied URLs (SSRF):** when the app fetches a URL a user or admin configured (a webhook target, an import source), restrict it to allowed schemes and **public** hosts and reject internal targets (loopback, private, link-local, cloud-metadata) **before** the request leaves — validated when the URL is saved *and* re-checked at call time. (Concrete check: the active stack pack.)
+- **Secrets stored through the API are write-only:** never return a stored secret on read — expose only a "configured" indicator — and treat a blank value on update as "keep the existing secret", so re-saving a form never clears one the user didn't retype. (Concrete masking/merge: the active stack pack.)
 
 ## Coding standards
 

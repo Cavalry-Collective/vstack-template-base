@@ -2,7 +2,7 @@
 
 The frontend contract. Read this before touching anything under `apps/frontend/`. Repo-wide rules (principles, worktree workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs how the single-page app itself is structured.
 
-The frontend is organised along **two axes that never blur**: horizontal **layers** (what a piece of code *is* — store, service, page, component) and vertical **feature slices** (what business capability it serves).
+The frontend is organised along **two axes that never blur**: horizontal **layers** (what a piece of code *is* — store, service, page, component) and vertical **feature slices** (what business capability it serves). Components themselves follow **atomic design** — see *Component structure* below.
 
 ## Project structure
 
@@ -12,17 +12,20 @@ Mirror this shape under `apps/frontend/src/`. It is **illustrative**: the toolch
 src/
   store/               # state layer — one slice per domain
   services/            # API clients — each domain mirrors a backend route group
-  pages/               # screens — compose feature components, hold no business logic
+  pages/               # screens (atomic "pages" tier) — compose organisms, no business logic
   components/
-    ui/                # shared base primitives (built ON TOP of the UI library)
-    <feature>/         # feature components, grouped by business capability
+    atoms/             # smallest primitives, by type — Button, Input, Icon (on the headless lib)
+    molecules/         # small compositions of atoms, by type — FormField, SearchBar, Card
+    organisms/
+      <feature>/       # feature-meaningful sections, grouped by feature — BidTable, SiteHeader
+    templates/         # page-level layout scaffolds — the shared layout, page chrome
   i18n/                # one dictionary per language
   lib/                 # genuinely shared, side-effect-light helpers
   routes.<ext>         # the single central route registry
   tokens.<ext>         # the single design-token source
 ```
 
-Group by **business capability first** inside `components/` and `store/`: a feature's components, state, and styles live together so a slice can be understood, changed, and removed as a unit. Promote code into `ui/` or `lib/` only once it is genuinely shared across features — not in anticipation of reuse.
+**Grouping is set by the tier, not by preference** (full rule in *Component structure*): `atoms/` and `molecules/` are grouped **by type** and shared globally — they carry no business vocabulary; `organisms/` are grouped **by feature** — they do. A feature's vertical slice therefore spans `store/<feature>` + `services/<feature>` + `components/organisms/<feature>`, so it can still be understood, changed, and removed as a unit. Promote code into `atoms/`/`molecules/` or `lib/` only once it is genuinely shared — not in anticipation of reuse.
 
 ## Layering
 
@@ -33,9 +36,10 @@ Each layer has one job, may depend only on the layers beneath it, and must never
   - **API contract.** The backend endpoint contract (see *Endpoint contract* in `apps/backend/CLAUDE.md`) is the single source of truth for request/response shapes and status codes; the service mirrors it and never invents its own shape.
   - **Prefer a generated or shared contract artifact** over hand-copying when the toolchain supports it (e.g. an OpenAPI/JSON-schema document the backend emits and the frontend types against). When it doesn't, every contract change is one PR touching the backend endpoint *and* its mirroring frontend service together.
   - **Validate responses against the declared shape** rather than trusting them, so a contract break surfaces as a typed error (feeding the `error` state) instead of an undefined-field render.
-- **Pages (`src/pages/`)** — compose feature components into a screen. **Hold no business logic;** they wire data from store/services into components. Must never fetch directly or embed reusable UI inline.
-- **Feature components (`src/components/<feature>/`)** — compose smaller primitives into a capability. May use `ui/` and `lib/`. Must never be imported by a primitive.
-- **Shared primitives (`src/components/ui/`)** — the reusable base. May depend only on the UI library and the design tokens. Must never know about a specific feature or page.
+- **Pages (`src/pages/`)** — compose organisms into a screen (the atomic *pages* tier). **Hold no business logic;** they wire data from store/services into components. Must never fetch directly or embed reusable UI inline.
+- **Templates (`src/components/templates/`)** — page-level layout scaffolds (the one shared layout, page chrome) that arrange organisms with no real data. May use organisms and primitives; hold no business logic. See *Page layout & design tokens*.
+- **Organisms / feature components (`src/components/organisms/<feature>/`)** — compose atoms and molecules into a feature-meaningful section. May use `atoms/`, `molecules/`, and `lib/`. Must never be imported by a primitive.
+- **Shared primitives (`src/components/atoms/`, `src/components/molecules/`)** — the reusable base. May depend only on the UI library and the design tokens. Must never know about a specific feature or page.
 
 Cross-cutting rules for every layer:
 
@@ -82,7 +86,7 @@ Tokens say *where* values come from; this says *which* values are good. Checkabl
 
 ## Interaction feedback & perceived performance
 
-- **Every actionable control shows its state from tokens.** Pressed / active, focus-visible, and disabled states are defined on the shared `components/ui/` primitives (not per page) and driven by semantic tokens. Hover is a pointer-device affordance; on a touch-primary form factor the pressed / active state carries the feedback — never leave the touch path without visible press feedback. (Keyboard focus-visible is owed by the Foundation tier; surface it, don't suppress it.)
+- **Every actionable control shows its state from tokens.** Pressed / active, focus-visible, and disabled states are defined on the shared `atoms/`/`molecules/` primitives (not per page) and driven by semantic tokens. Hover is a pointer-device affordance; on a touch-primary form factor the pressed / active state carries the feedback — never leave the touch path without visible press feedback. (Keyboard focus-visible is owed by the headless foundation; surface it, don't suppress it.)
 - **In-flight feedback stays on the control that triggered the action.** A local action disables its own control and shows an inline busy indicator there — never blank the whole screen with a top-level spinner for a local action. Reserve full-screen / section loading for a screen's initial data fetch (the `loading` state above).
 - **Prefer optimistic updates for low-risk mutations** (toggles, reorders, favourites) with rollback + an error message on failure; reserve blocking spinners for genuinely blocking waits.
 - **Initial content load uses skeletons that match the final layout;** short indeterminate waits use a spinner. Don't layout-shift from spinner to content.
@@ -105,17 +109,28 @@ Tokens say *where* values come from; this says *which* values are good. Checkabl
 - **Empty / loading / success copy is concise and human** — paired with the four-state rule above; the states already exist, this governs their wording.
 - **Keep user-facing copy centralized and reviewable** — out of component bodies, so all product copy can be audited in one place. In multilingual projects this is the i18n dictionaries; in single-language projects, a single strings / copy module serves the same purpose. No hardcoded display literals scattered through components. (Planned-screen copy still comes from the design mockups; these rules govern the microcopy agents would otherwise invent ad hoc — errors, empties, confirmations, labels.)
 
-## Shared primitives — never build one-offs
+## Component structure — atomic design
 
-Visual and behavioural consistency comes from **reuse**, not from discipline repeated per screen. Build the UI in three tiers and never skip one:
+Visual and behavioural consistency comes from **reuse**, not from discipline repeated per screen. Structure every component into one of five atomic tiers, over a headless foundation you never skip — the foundation is a **dependency, not a folder**: unstyled, behavioural primitives from a headless UI library that solves focus management, keyboard handling, and widget-level ARIA for the components routed through it (not page-level a11y; see *Accessibility baseline*), with atoms built *on top of* it.
 
-1. **Foundation** — unstyled, behavioural primitives from a headless UI library (it solves focus management, keyboard handling, and widget-level ARIA for the components routed through it — not page-level a11y; see *Accessibility baseline*).
-2. **Wrapper** — a thin layer mapping the project's tokens and conventions onto that foundation: `<Button>`, `<Input>`, `<Modal>`, `<PageHeader>`. This is `components/ui/`.
-3. **Composition** — feature components assembled from the wrappers above.
+1. **Atoms** (`components/atoms/`) — the smallest indivisible primitives, each mapping the project's tokens and conventions onto the foundation: `<Button>`, `<Input>`, `<Icon>`, `<Label>`.
+2. **Molecules** (`components/molecules/`) — small, still-generic compositions of atoms: `<FormField>` (label + input + error), `<SearchBar>`, `<Card>`.
+3. **Organisms** (`components/organisms/<feature>/`) — larger, **feature-meaningful** sections assembled from atoms and molecules: `<BidTable>`, `<RegistrationForm>`, `<SiteHeader>`.
+4. **Templates** (`components/templates/`) — page-level layout scaffolds that arrange organisms without real data: the one shared layout, page chrome.
+5. **Pages** (`src/pages/`) — a template filled with real data; holds no business logic (see *Layering*).
 
-- **Use the shared primitive for every page that needs it.** A page that needs a nav bar uses `<PageHeader>`. **Never build a one-off header** — or button, input, modal, table, or icon button; reach for `components/ui/`.
-- **A shared primitive must be genuinely reusable** (decoupled from any one page); a page-specific component must not be prematurely generalised.
-- **Wrap from the start; don't defer.** Route every screen through the wrapper layer even before a component is widely reused, so a later change to behaviour or tokens lands everywhere at once.
+**Grouping is decided by the tier, not by taste:**
+
+- **Atoms and molecules are grouped by *type* and live globally** — they carry **no business vocabulary**, so a "billing button" is a smell.
+- **Organisms are grouped by *feature*** (`organisms/<feature>/`) — they **do** carry domain meaning, so this is where the "a slice can be removed as a unit" property lives. This mirrors the backend's `shared/` (cross-cutting) + `modules/<feature>/` (feature-owned) shape.
+- **The crossover is business meaning.** Ask: does the component speak the business's language? No → atom or molecule (shared). Yes → organism (feature-owned). Atomic design just names, and subdivides, the shared-vs-feature line the UI already had.
+
+**The DRY gate — the whole point is that the UI is *actually* DRY:**
+
+- **Reuse-first.** Before building any component, search `atoms/` and `molecules/` for one that exists. A second variant of something already there is the canonical failure this structure prevents.
+- **Never build a one-off.** A page that needs a nav bar uses the shared `<SiteHeader>` organism; never hand-roll a header — or button, input, modal, table, or icon button. Wrap from the start, even before a component is widely reused, so a later token/behaviour change lands everywhere at once.
+- **No feature-specific atoms or molecules.** If you are tempted to make one, it is a fork: either it is genuinely generic → put it in global `molecules/`, or it carries business meaning → it is an organism. This one rule is what stops the shared tiers re-fragmenting per feature.
+- **Audit for duplication periodically** (in the spirit of the i18n key-parity check): two components that render the same thing are a defect to merge, not a style.
 
 ## Accessibility baseline
 
@@ -143,7 +158,7 @@ Treat one language as the **reference** and keep every other language in exact p
 
 ## Coding standards
 
-- **Never reimplement what the UI library already gives you.** Typography, buttons, inputs, and the like are **built on top of the chosen UI library** — wrapped through `components/ui/`, never hand-rolled from scratch. A bespoke `<Button>` that duplicates the library's is the canonical mistake: it fragments styling, drops the widget-level accessibility the library solved, and drifts over time. Build on the foundation; don't rebuild it.
+- **Never reimplement what the UI library already gives you.** Typography, buttons, inputs, and the like are **built on top of the chosen UI library** — wrapped through the shared `atoms/`/`molecules/` tier, never hand-rolled from scratch. A bespoke `<Button>` that duplicates the library's is the canonical mistake: it fragments styling, drops the widget-level accessibility the library solved, and drifts over time. Build on the foundation; don't rebuild it.
 - **Cross-cutting concerns belong in shared hooks / services**, not duplicated per screen. Wrap repeated API / auth / error-reporting plumbing once and reuse it; don't copy-paste it into every page.
 - **Don't accumulate one-off helpers in `src/lib/`.** Co-locate a helper with its only caller until reuse actually appears; `src/lib/` is for genuinely shared, side-effect-light code.
 - **Use libraries instead of hand-rolling — especially for dates.** See *Don't reinvent existing solutions* in the root `CLAUDE.md` Principles (the canonical statement of this rule).
@@ -153,6 +168,7 @@ Security baseline:
 - **No secrets in the bundle.** Secrets and API keys never live in the SPA bundle — it ships to the client and is fully readable. Anything secret stays server-side; the frontend calls a backend endpoint that holds the credential.
 - **Treat rendered data as untrusted.** Treat all rendered server- and user-supplied data as untrusted: rely on the framework's default escaping and never bypass it (no raw-HTML injection with unsanitised input).
 - **Auth tokens live in one place.** Keep auth tokens in the one agreed store/service (see *Layering*), never scattered across components or hand-read from storage in views.
+- **Security response headers are part of the app.** The app sends the standard hardening headers and a **Content-Security-Policy** at the framework's header layer; ship a new or tightened CSP **report-only first**, then promote to enforcing. Allow-list only the origins the app actually loads; never fall back to `unsafe-inline`/`*` to silence a report. (Exact headers + config: the active stack pack.)
 
 ## Versioning / build identity
 
@@ -173,7 +189,7 @@ These bind the frontend to the backend's cross-cutting machinery. All three live
 
 - **Store slices & `lib/` helpers** — test as plain units.
 - **Services** — test with the network mocked at the edge: assert request shape + response / error mapping, never by stubbing internal methods.
-- **Feature components** — test for behaviour and the four required states (loading / error / empty / success), not markup. The four-state contract in *Layering* is itself a test checklist for every data-backed screen.
+- **Organisms (feature components)** — test for behaviour and the four required states (loading / error / empty / success), not markup. The four-state contract in *Layering* is itself a test checklist for every data-backed screen.
 - **No broad DOM snapshots.** Snapshot the data a component receives, not its rendered output — markup snapshots lock in structure and produce noise on every refactor.
 
 ## Verifying a change

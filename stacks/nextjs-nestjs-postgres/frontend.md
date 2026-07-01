@@ -18,10 +18,10 @@ Each base layer keeps its meaning; only its home moves. Feature-slice grouping i
 
 | Base layer | Here |
 |---|---|
-| `pages/` | `src/app/` route segments — `page`, `layout`, `loading`, `error`, `not-found`, `global-error`. The base "pages hold no business logic, compose feature components" rule applies to `page.*`. |
+| `pages/` | `src/app/` route segments — `page`, `layout`, `loading`, `error`, `not-found`, `global-error`. The base "pages hold no business logic, compose organisms" rule applies to `page.*`. |
 | `store/` | `src/store/` — **client state only** (see *Data access*). |
 | `services/` | `src/services/{server,client}/` — split by execution context. Server Actions live in dedicated `_actions`/`action.*` files, separate from `server/` data-access. |
-| `components/ui/`, `components/<feature>/` | unchanged. An interactive primitive is a client leaf; a presentational one may stay a Server Component. |
+| `components/atoms/`, `components/molecules/`, `components/organisms/<feature>/`, `components/templates/` | unchanged (atomic tiers per base *Component structure*). An interactive atom/molecule is a client leaf; a presentational one may stay a Server Component. |
 | `i18n/`, `lib/`, `tokens.<ext>` | unchanged source; tokens consumed via a server-safe mechanism (see *Layout & tokens*). |
 | `routes.<ext>` | replaced by the `app/` tree + a `routes` link-helper module (see *Routing*). |
 
@@ -44,7 +44,7 @@ The base's central `routes.<ext>` registry is replaced by the `app/` tree; the b
 
 ## Four data states → App Router files
 
-The base owns *why* each of loading/error/empty/success matters; this only adds the file binding. Segment files stay thin and delegate to `components/ui/`.
+The base owns *why* each of loading/error/empty/success matters; this only adds the file binding. Segment files stay thin and delegate to the shared `atoms/`/`molecules/` primitives.
 
 - **Loading** → `loading.*` + `<Suspense>` streaming, falling back to a shared `<Skeleton>`/`<Spinner>`. Don't hand-roll spinner state where a `loading.*` boundary belongs.
 - **Error** → `error.*` boundary — **must be a Client Component**; catches errors from its own segment + children (put a boundary at the parent segment to catch a sibling `layout.*`), and wires `reset()` into the shared `<ErrorState>` retry. Throw on a failed fetch/action so the boundary catches it; never catch-and-render an error string inline. Surface the correlation id from the failed call in the error UI (base cross-app rule).
@@ -53,8 +53,8 @@ The base owns *why* each of loading/error/empty/success matters; this only adds 
 
 ## Primitives, layout & tokens
 
-- **Headless lib: Radix UI is blessed** as the base's Foundation tier; wrap it in `components/ui/` (base three-tier rule unchanged). A project may swap to another headless lib (Headless UI, Ark, React Aria) only by recording the choice in `apps/frontend/CLAUDE.md` — don't mix two.
-- **Interactive Foundation/Wrapper primitives are client leaves, and that is correct** — Radix and most headless libs are client-only, so `<Button>`-with-handler, `<Modal>`, `<Menu>`, `<Combobox>` carry `'use client'`. **Do NOT hand-roll a server-only control to dodge `'use client'`** — that re-drops the accessibility the base requires (the canonical base mistake). Purely-presentational wrappers (`<Badge>`, `<Card>`, layout chrome) may stay Server Components.
+- **Headless lib: Radix UI is blessed** as the base's headless foundation; wrap it as **atoms** in `components/atoms/` (base *Component structure* unchanged). A project may swap to another headless lib (Headless UI, Ark, React Aria) only by recording the choice in `apps/frontend/CLAUDE.md` — don't mix two.
+- **Interactive atoms/molecules are client leaves, and that is correct** — Radix and most headless libs are client-only, so `<Button>`-with-handler, `<Modal>`, `<Menu>`, `<Combobox>` carry `'use client'`. **Do NOT hand-roll a server-only control to dodge `'use client'`** — that re-drops the accessibility the base requires (the canonical base mistake). Purely-presentational atoms/molecules (`<Badge>`, `<Card>`, layout chrome) may stay Server Components.
 - **Tokens must be consumable by Server Components without a client runtime** — use CSS variables / a Tailwind theme / a static token module. A runtime CSS-in-JS lib that forces `'use client'` at the token boundary is disallowed. Map the base shared layout onto Next root/segment `layout` files; declare global tokens once on `:root` in the root layout. The primary-form-factor declaration (project-local, `apps/frontend/CLAUDE.md`) selects which base layout tokens the root layout applies (e.g. `--bottom-nav-clearance` for mobile-first); responsive stays the baseline.
 - **Boundary hygiene:** only RSC-serializable props cross into a client leaf (primitives, plain objects, `Date`/`Map`/`Set`/`BigInt`, Server Action refs) — not functions or class instances. Format a date on **one** side via the shared date helper with timezone/locale pinned; an unpinned date format is the canonical App-Router hydration bug. On navigation, move focus to the main landmark / page `<h1>` and announce via a shared live-region primitive — App-Router route changes don't move focus by default (the base a11y rule, bound to server-first).
 

@@ -26,7 +26,7 @@ Binds `apps/frontend/CLAUDE.md` to **Next.js (App Router, TypeScript)**, deploye
 | `pages/` | `src/app/` route segments (`page`, `layout`, `loading`, `error`, `not-found`); "pages hold no business logic" applies to `page.tsx` |
 | `store/` | `src/store/` — React Context providers + hooks |
 | `services/` | `src/services/` — `http.ts` (browser), `server-api.ts` (RSC), one module per backend route group |
-| `components/ui/`, `components/<feature>/` | unchanged |
+| `components/atoms/`, `components/molecules/`, `components/organisms/<feature>/`, `components/templates/` | unchanged (atomic tiers per the base *Component structure*) |
 | `lib/`, `i18n/` | unchanged |
 | `routes.<ext>` | the `app/` tree + a `routes` link-helper module (see *Routing*) |
 | `tokens.<ext>` | CSS variables declared via Tailwind 4 `@theme` in the global stylesheet (see *Styling*) |
@@ -37,17 +37,30 @@ The `app/` tree replaces the central `routes.<ext>` registry; the surviving base
 
 ## Four data states → App Router files
 
-Binding only — the base owns the why. **Loading** → `loading.tsx` / `<Suspense>` with shared skeletons. **Error** → `error.tsx` (must be a Client Component), wiring `reset()` into the shared `<ErrorState>` and surfacing the correlation id from the failed call; root-layout failures need `global-error.tsx`. **Empty** → the shared `<EmptyState>` primitive. **Missing resource** → `not-found.tsx` + `notFound()`. Segment files stay thin and delegate to `components/ui/`.
+Binding only — the base owns the why. **Loading** → `loading.tsx` / `<Suspense>` with shared skeletons. **Error** → `error.tsx` (must be a Client Component), wiring `reset()` into the shared `<ErrorState>` and surfacing the correlation id from the failed call; root-layout failures need `global-error.tsx`. **Empty** → the shared `<EmptyState>` primitive. **Missing resource** → `not-found.tsx` + `notFound()`. Segment files stay thin and delegate to the shared `atoms/`/`molecules/` primitives.
 
 ## Styling & primitives
 
 - **Tailwind CSS 4** (CSS-first config): design tokens are CSS variables declared in `@theme` in the global stylesheet — that declaration **is** the base's single token source; components consume semantic tokens through Tailwind utilities.
-- **Foundation tier: Radix UI primitives**, wrapped in `components/ui/` (base three-tier rule unchanged). Wrapper variants via `class-variance-authority`; class composition via `clsx` + `tailwind-merge` (one `cn()` helper in `lib/`). Icons: `lucide-react`. Fonts via `next/font`.
-- Don't import a prebuilt styled component kit on top — compose Radix + tokens in `components/ui/`. Swapping the headless library is allowed only by recording the choice in `apps/frontend/CLAUDE.md`; don't mix two.
+- **Foundation: Radix UI primitives**, wrapped as **atoms** in `components/atoms/` (base *Component structure* unchanged). Atom/molecule variants via `class-variance-authority`; class composition via `clsx` + `tailwind-merge` (one `cn()` helper in `lib/`). Icons: `lucide-react`. Fonts via `next/font`.
+- Don't import a prebuilt styled component kit on top — compose Radix + tokens in `components/atoms/`/`molecules/`. Swapping the headless library is allowed only by recording the choice in `apps/frontend/CLAUDE.md`; don't mix two.
 
 ## Versioning / build identity
 
 Inline the version at build time — `next.config` sets `env.NEXT_PUBLIC_APP_VERSION` from `npm_package_version` — and render the unobtrusive `v<version>` tag from it. Vercel + App Router handle deployment skew (deployment ids, asset versioning, RSC re-fetch on navigation) — see the conflict register; no `version.json` poll.
+
+## Analytics & Speed Insights
+
+Wire Vercel's product analytics in from day 1 — both are drop-in for the App Router and stream to the project dashboard:
+
+- **Web Analytics** — add `@vercel/analytics` and render `<Analytics />` in the root layout (`app/layout.tsx`).
+- **Speed Insights** — add `@vercel/speed-insights` and render `<SpeedInsights />` in the root layout, for real-user Core Web Vitals.
+
+Enable Web Analytics + Speed Insights on the **frontend** project in the Vercel dashboard (the API serves only JSON — the browser scripts are a no-op there). This is the frontend half of the observability story whose backend/log-drain half lives in `infra.md`.
+
+## Security headers (binding)
+
+The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`next.config` `async headers()`**: emit `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and a **`Content-Security-Policy-Report-Only`** to start. Allow-list the origins this app actually loads — the Vercel Analytics / Speed Insights endpoints and any payment drop-in or embed — then promote the report-only header to the enforcing `Content-Security-Policy` once violation reports are clean.
 
 ## Testing — typecheck + build + Playwright e2e
 

@@ -19,6 +19,7 @@ Agents working in this folder will typically do one of two things:
 - Run Terraform commands from inside the target workload directory (`infra/<workload>/`), never from `infra/` itself or the git root.
 - Do not assume a change applies to all environments.
 - Always make the target environment explicit in summaries and approvals.
+- **Set up observability from day 1** — metrics, logs, and (for user-facing apps) product analytics, retained and queryable — as part of bringing a workload online, not deferred. Where your platform's IaC owns observability, give it its own concern file; the platform-specific wiring (log drains, retention, dashboards) lives in the active stack pack — which may own none of it in Terraform (e.g. an integration-managed drain).
 
 ## Default execution mode
 - At the start of each new chat, verify the active cloud auth/credential and project context before making any changes.

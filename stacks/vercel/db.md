@@ -45,6 +45,18 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **Postgres** — **Ne
 
 Against a scratch `postgres:16` service container: migrations apply from zero (`up`); **round-trip `up → down → up`** — the base gate, mechanically possible in this stack, so keep the base `ci.yml` round-trip TODO's wording; run the seed twice (idempotency).
 
+## Production & staging migrations (Neon)
+
+**Deploys do not run migrations.** Vercel builds and ships the function; nothing runs `migrate`. A migration is therefore a **manual step you run before the push that needs it**, against the target Neon branch:
+
+```bash
+DATABASE_URL="<neon-prod-direct-connection-string>" pnpm migrate
+```
+
+- A **shell-set `DATABASE_URL` wins over `--env-file`**, so this overrides the local `.env` without editing it. Use the **direct** (non-pooled) connection string (per *Migrations* above). Confirm the target first — this writes the live DB — then verify the `pgmigrations` table and the affected tables.
+- **Run it before you push the code that reads the new schema.** A push deploys the API + frontend together (see `infra.md` → *Deploy seam*), and neither waits for a migration — so migrate, *then* push. Keep each migration **backward-compatible** (expand → migrate → contract, base `db/CLAUDE.md`) so the brief window where old code meets the new schema — or new code meets the old schema — never breaks.
+- **Staging (`develop`) is the same runbook against its own Neon branch** — migrate it before pushing `develop`. **Gotcha:** `vercel env pull --git-branch=develop` does **not** export the branch-scoped `DATABASE_URL` (it comes back empty) — pull the develop branch's connection string from **Terraform state** (or the Neon console) instead. Do not migrate through the Neon-injected `POSTGRES_URL`; it points at the **production** branch.
+
 ## Conflict register
 
 - **Base says:** Shared local infrastructure (a containerized DB) is shared across worktrees by a fixed name, and the shared DB's schema is **global state** across worktrees — destructive checks go to a throwaway DB (root `CLAUDE.md`; `db/CLAUDE.md`). **In this stack:** the *server* stays shared by its fixed name, but each worktree migrates its own `app_<sanitized-branch>` database, created on bootstrap and dropped on teardown. **Because:** parallel worktrees applying different branches' migrations to one schema break each other; per-worktree databases remove the hazard and make the up→down→up round-trip safe by construction, with no second container. **Concretely:** after copying `.env` in, re-point the db-name segment of `DATABASE_URL` at this worktree's database; DON'T run `migrate`/`migrate:down`/reset against the shared default database or another worktree's.

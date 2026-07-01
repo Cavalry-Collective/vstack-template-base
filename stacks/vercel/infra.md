@@ -20,9 +20,29 @@ The base's start-of-session context check, bound: the provider authenticates wit
 - **Deploys are Vercel's GitHub integration — "CI/CD" is merging code.** Both `vercel_project` resources declare `git_repository` (`type = "github"`, the repo, `production_branch = "main"`); Vercel listens to the repo and runs its own build-and-deploy pipeline: every PR gets a preview deployment, every push to `main` deploys production. Day-1: grant the Vercel GitHub App access to the repo before enabling.
 - **`ci.yml` is the merge gate, not the deploy pipeline.** Vercel ships whatever lands on `main`, so protect `main`: PRs merge only on green CI. The trunk-stays-releasable rule and the root merge-back gate carry the deploy weight.
 - **`deploy.yml` is never filled in** — see the conflict register. A push to `main` still ships (via Vercel, not a workflow), so the root "confirm before pushing the default branch" rule applies with full force.
+- **A push deploys the API and frontend together — so releases must be backward-compatible.** A single push can't stage "API first, then frontend", and the config contract between them is strict (Zod). Ship schema/config changes **expand-first**: run the Neon migration manually **before** the push (`db.md` → *Production & staging migrations*), and never introduce a field whose absence breaks the other side during the seconds the two deploy out of step. Migrate → then push.
 - Point Playwright at a PR's preview deployment URL via `E2E_BASE_URL`.
 - **`.vercelignore`** keeps non-deploy material out of uploads: `.env*`, `infra/`, `design/`, `docs/`, `.claude/`.
 - A local token `vercel deploy` (`VERCEL_TOKEN`) is the emergency path the root contract permits — not normal work.
+
+## Staging environment (`develop`)
+
+Stand up a persistent staging environment on day 1 — a shipped project wants a stable URL to demo and to smoke-test a release before it reaches `main`:
+
+- **Both `vercel_project` resources get a `develop`-branch preview environment** (branch-scoped env vars); pushing `develop` deploys both as Preview at the stable branch alias, while `main` stays production. The web preview's `BACKEND_URL` points at the API preview alias.
+- **A dedicated long-lived Neon branch** — a copy-on-write fork of prod, on its own endpoint — backs the develop API, Terraform-authored alongside the projects. Preview reads/writes never touch prod data.
+- **Migrations for `develop` are manual too**, run before the push, with its own connection string — see `db.md` → *Production & staging migrations* (including the `vercel env pull` gotcha).
+- Pushing `develop` is a safe staging release; pushing `main` is the production release. Per-PR previews (the git integration's default) still exist for isolated review — `develop` is the shared, always-on one.
+
+## Observability
+
+Bringing a project online includes its observability — treat it as part of go-live, not an afterthought (base `infra/CLAUDE.md`):
+
+- **Enable Vercel Observability** on both projects (requests, function invocations, and runtime logs retained and queryable in the dashboard).
+- **Ship runtime logs off-platform via a log drain**, so the backend's structured log lines (correlation id, handled errors, integration/webhook results) stay searchable beyond Vercel's short retention.
+- **⚠️ The log drain is integration-owned, NOT Terraform.** Wire it through a marketplace integration (e.g. Sentry) that owns the drain on the API project. The Terraform `vercel` provider **cannot import an integration-owned drain**, so **do not** author a `vercel_log_drain` / `observability.tf` resource for it — `terraform apply` would create a **second, duplicate drain**. The integration keeps it live; Terraform simply doesn't track it. Widen coverage (frontend logs, preview/`develop` logs) in the integration's settings, not Terraform.
+- **Frontend product analytics** — Vercel Web Analytics + Speed Insights — are wired in `frontend.md`.
+- **When prod misbehaves**, outcomes that are *log-only* (e.g. OTP attempts, webhook deliveries — not persisted) are still recoverable from the request logs: query the project's request-logs filtered by `environment=production`, path, status, and a content substring, rather than `vercel logs`, which only live-tails the last ~2 minutes.
 
 ## Conflict register
 
