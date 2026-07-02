@@ -7,12 +7,22 @@
     2. SEMANTIC   — role-named aliases. Components use THESE, nothing deeper.
     3. COMPONENT  — per-component overrides, only where genuinely needed.
 
+  Default palette: the Cavalry brand (cavalry.sg) — Cavalry red primary,
+  purple-cast neutrals, violet/green/amber support; Space Grotesk display
+  over Inter body. Swap the primitive tier for another brand's ramps.
+
   Deliberately small: 5 steps per colour family, 5 type sizes, 6 space steps.
   If a screen needs a value that isn't here, extend the scale — never the screen.
 
   One light theme. Dark is a later remap of the SEMANTIC tier only, if a
   project needs it. Intent formula: subtle bg = 50 · border = 200 ·
-  interactive/content = 400 · hover = 500 · active / text-on-tint = 600.
+  interactive/content = 400 (holds ≥ 4.5:1 on white — verified) ·
+  hover = 500 · active / text-on-tint = 600. Brand-vivid values that can't
+  hold 4.5:1 (pure Cavalry red, amber) sit at 300/400 for graphics and large
+  accents only, never body-size text on white.
+
+  Note: accent and danger share the brand-red family in this palette —
+  destructive actions are disambiguated by wording and confirmation, not hue.
 
   Breakpoints can't be custom properties in media queries — keep in sync by
   convention: sm 640 · lg 1024. Author from the smallest width up.
@@ -23,43 +33,46 @@
 
   /* ════════════════ 1 · PRIMITIVE ════════════════ */
 
-  /* Colour — one neutral, one accent, three intents. 5 steps each. */
+  /* Colour — purple-cast neutral, Cavalry red, violet / green / amber */
   --white: #ffffff;
 
-  --gray-50:  #f6f6f6;
-  --gray-200: #e2e2e2;
-  --gray-300: #cbcbcb;
-  --gray-400: #afafaf;
-  --gray-600: #545454;
-  --gray-900: #141414;
+  --gray-50:  #f6f4f8;
+  --gray-200: #e6e2ec;
+  --gray-300: #cfc9d8;
+  --gray-400: #aaa2b3;
+  --gray-600: #665e72;
+  --gray-900: #171320;
 
-  --blue-50:  #eff3fe;
-  --blue-200: #a0bff8;
-  --blue-400: #276ef1;
-  --blue-500: #1e54b7;
-  --blue-600: #174291;
+  --red-50:  #fff1f0;
+  --red-200: #ffb3ad;
+  --red-300: #ff3b30;  /* the brand red — graphics & large accents (3.5:1 on white) */
+  --red-400: #e02b20;  /* interactive Cavalry red — 4.6:1 on white */
+  --red-500: #b8231a;
+  --red-600: #8f1b14;
 
-  --green-50:  #e6f2ed;
-  --green-200: #66d19e;
-  --green-400: #05944f;
-  --green-500: #03703c;
-  --green-600: #03582f;
+  --violet-50:  #f4effe;
+  --violet-200: #c9b0f8;
+  --violet-400: #7c3aed;  /* brand-exact */
+  --violet-500: #6527cc;
+  --violet-600: #4f1fa3;
 
-  --yellow-50:  #fffaf0;
-  --yellow-200: #ffe3ac;
-  --yellow-400: #ffc043;
-  --yellow-500: #bc8b2c;
-  --yellow-600: #997328;
+  --green-50:  #e9f9f2;
+  --green-200: #7fe0bd;
+  --green-400: #0b8157;
+  --green-500: #0a7351;
+  --green-600: #085c41;
 
-  --red-50:  #ffefed;
-  --red-200: #f1998e;
-  --red-400: #e11900;
-  --red-500: #ab1300;
-  --red-600: #870f00;
+  --amber-50:  #fef5e6;
+  --amber-200: #fbd38d;
+  --amber-400: #f59e0b;  /* brand-exact — graphics only (2.2:1 on white) */
+  --amber-500: #b57407;
+  --amber-600: #8a5c06;
 
-  /* Type — Inter if the app loads it, else the system stack. 5 sizes. */
+  /* Type — Space Grotesk for titles/headings, Inter for everything else;
+     both fall back to the system stack when not loaded */
   --font-family-base: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
+  --font-family-display: "Space Grotesk", var(--font-family-base);
   --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --font-size-100: 0.75rem;   /* 12 — caption, overline          */
@@ -96,9 +109,9 @@
   --border-2: 2px;   /* selected, focus  */
 
   /* Elevation — shadow and z-band travel together */
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.08);    /* raised: cards            */
-  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.12);   /* overlay: menus, popovers */
-  --shadow-3: 0 16px 48px rgba(0, 0, 0, 0.22);  /* modal: dialogs, sheets   */
+  --shadow-1: 0 1px 2px rgba(23, 19, 32, 0.08);    /* raised: cards            */
+  --shadow-2: 0 4px 16px rgba(23, 19, 32, 0.12);   /* overlay: menus, popovers */
+  --shadow-3: 0 16px 48px rgba(23, 19, 32, 0.22);  /* modal: dialogs, sheets   */
 
   --z-chrome: 100;   /* sticky header / bottom nav */
   --z-popover: 200;  /* menus, dropdowns           */
@@ -135,7 +148,7 @@
   --color-bg: var(--white);
   --color-bg-subtle: var(--gray-50);
   --color-surface: var(--white);
-  --color-scrim: rgba(20, 20, 20, 0.4);
+  --color-scrim: rgba(23, 19, 32, 0.4);
 
   --color-content: var(--gray-900);
   --color-content-subtle: var(--gray-600);
@@ -144,29 +157,29 @@
 
   --color-border: var(--gray-200);
   --color-border-strong: var(--gray-300);
-  --color-focus-ring: var(--blue-400);
+  --color-focus-ring: var(--red-400);
 
   /* Accent — the single primary action per view; links share the hue */
-  --color-accent: var(--blue-400);
-  --color-accent-hover: var(--blue-500);
-  --color-accent-active: var(--blue-600);
-  --color-accent-subtle: var(--blue-50);
+  --color-accent: var(--red-400);
+  --color-accent-hover: var(--red-500);
+  --color-accent-active: var(--red-600);
+  --color-accent-subtle: var(--red-50);
   --color-on-accent: var(--white);
-  --color-link: var(--blue-400);
+  --color-link: var(--red-400);
 
   /* Intent — never colour alone; pair with text or an icon */
   --color-success: var(--green-400);
   --color-success-subtle: var(--green-50);
   --color-success-border: var(--green-200);
-  --color-warning: var(--yellow-600);
-  --color-warning-subtle: var(--yellow-50);
-  --color-warning-border: var(--yellow-200);
+  --color-warning: var(--amber-600);
+  --color-warning-subtle: var(--amber-50);
+  --color-warning-border: var(--amber-200);
   --color-danger: var(--red-400);
   --color-danger-subtle: var(--red-50);
   --color-danger-border: var(--red-200);
-  --color-info: var(--blue-400);
-  --color-info-subtle: var(--blue-50);
-  --color-info-border: var(--blue-200);
+  --color-info: var(--violet-400);
+  --color-info-subtle: var(--violet-50);
+  --color-info-border: var(--violet-200);
 
   --text-body: var(--font-size-300);
   --text-caption: var(--font-size-100);
