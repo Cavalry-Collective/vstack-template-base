@@ -1,6 +1,6 @@
 # Frontend
 
-The frontend contract. Read this before touching anything under `apps/frontend/`. Repo-wide rules (principles, worktree workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs how the single-page app itself is structured.
+The frontend contract. Read this before touching anything under `apps/frontend/`. Repo-wide rules (principles, worktree workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs how the single-page app itself is structured. **If a stack pack is adopted (a single directory kept under `stacks/`), also read its `frontend.md` appendix before working here** — it adds the concrete bindings, and its conflict register resolves any disagreement with this file, for that stack only.
 
 The frontend is organised along **two axes that never blur**: horizontal **layers** (what a piece of code *is* — store, service, page, component) and vertical **feature slices** (what business capability it serves). Components themselves follow **atomic design** — see *Component structure* below.
 
@@ -51,19 +51,16 @@ Cross-cutting rules for every layer:
 
 A route is part of the app's public contract; an internal file path is an implementation detail. **Keep the two separate.** Browser URLs stay clean and human-meaningful and **never expose internal build/source paths** (no `/src/` or `/pages/` prefix in the address bar).
 
-- **One central registry.** Every route lives in a single routing config (`routes.<ext>`), registered the moment its page is created — never ship a page without its route entry. One place to read the whole routing surface, one place to change it — so reading `routes.<ext>` is the way to audit routing; do not maintain a second route→URL list anywhere else (including this file).
+- **One central registry.** Every route lives in a single routing config (`routes.<ext>`), registered the moment its page is created — never ship a page without its route entry. Reading `routes.<ext>` is the way to audit routing; do not maintain a second route→URL list anywhere else (including this file). A CI check in the spirit of the i18n key-parity check can enforce completeness.
 - **Build URLs through the registry, never by hand.** Resolve links and redirects from named routes, not by concatenating path strings — so internal structure can never leak into a URL, and renaming a route updates every link at once.
-
-The route registry file is the auditable routing surface — keep it complete; never ship a page without its route entry. Better still: add a CI check (in the same spirit as the i18n key-parity check) that fails if any page lacks a registry entry, so the surface stays current automatically instead of by diligence.
 
 ## Design guide — the visual keystone (confirm before building UI)
 
 **Lock the visual system before building any screen.** The project's visual system lives in a **design guide**: a rendered, browsable page (`design/design-guide.html`) showing every foundation (colour, type, spacing, radius, elevation, motion) and every core component in its states, driven by the single design-token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`) — a live mirror of the tokens, not a stale screenshot.
 
-- **Generate and *confirm* the design guide before building screens.** It is a gate: for a new project (or a rebrand) no screen or component work starts until the guide is **generated (by the Fable 5 model)**, reviewed in a browser, and signed off. Once the system is established small additions don't re-gate — but a new foundational token or component variant lands in the guide first.
-- **Customise by editing tokens, not screens.** A rebrand edits the **primitive** token block; the semantic tier and the whole guide re-derive. This is the "one token source, three tiers" rule below — the guide is its human-reviewable face.
-- **The guide is the source; `atoms/` implement it.** Every atom/molecule matches its specimen in the guide; a component that drifts from it is the defect (the DRY-gate audit under *Component structure* catches this). Foundations map to tokens, atoms to the guide's component specimens — atomic design, ordered for review.
-- **The template ships a placeholder; the Fable 5 model generates the actual guide** (`design/design-guide.html` + `design/tokens.css`) for the project — standalone, token-driven specimens (neutral defaults, or the project's brand). A stack pack may later add a Storybook that renders the *real* framework components against the same tokens (optional upgrade).
+- ***Confirm* the design guide before building screens.** It is a gate: for a new project (or a rebrand) no screen or component work starts until the guide reflects the project's brand, has been reviewed in a browser, and signed off. Once the system is established small additions don't re-gate — but a new foundational token or component variant lands in the guide first.
+- **Customise by editing tokens, not screens.** The template ships a neutral guide (structured after Uber's Base design system); a rebrand edits the **primitive** token block — or has your AI assistant regenerate it from the brand — and the semantic tier and the whole guide re-derive. This is the "one token source, three tiers" rule below — the guide is its human-reviewable face.
+- **The guide is the source; `atoms/` implement it.** Every atom/molecule matches its specimen in the guide; a component that drifts from it is the defect (the DRY-gate audit under *Component structure* catches this). A stack pack may later add a Storybook that renders the *real* framework components against the same tokens (optional upgrade).
 
 ## Page layout & design tokens
 
@@ -71,7 +68,7 @@ Consistency is a system, not a per-page effort. Two things make every screen fee
 
 **Primary form factor (FILL IN ON SETUP):** `<mobile-first | desktop-first | responsive-equal>` plus the supported viewport range. This choice drives the default navigation pattern and which furniture the shared layout carries.
 
-**One shared layout.** Every page builds on common layout components that supply the standing furniture — header / navigation, page chrome, consistent gutters and background, and the navigation pattern for the declared form factor (sidebar / top-nav for desktop-first; bottom-nav with safe-area clearance for mobile-first). The page provides its content; the layout owns the frame. Don't hand-roll a page shell. **The layout owns every clearance and inset; pages never re-derive them.** Each piece of fixed/sticky chrome reserves its space through the layout via one clearance token, composed with its safe-area inset and counted **once** — `max(clearance, bar-height + safe-area-inset)`, never re-declared per page and never double-counting the inset. The top-spacing variants the layout supports are a **prop, not a per-page CSS choice** — e.g. a full-gutter *tab* screen vs. a hug-the-top *navigated/back* screen; a page picks the variant, it never re-decides the padding.
+**One shared layout.** Every page builds on common layout components that supply the standing furniture — header / navigation, page chrome, consistent gutters and background, and the navigation pattern for the declared form factor. The page provides its content; the layout owns the frame — don't hand-roll a page shell. **The layout owns every clearance and inset; pages never re-derive them:** fixed/sticky chrome reserves its space through one clearance token (composed once with its safe-area inset), and top-spacing variants are a **prop the layout offers** — a page picks one, it never re-decides the padding.
 
 **Layouts are responsive by default** — content reflows without horizontal scroll or clipping across the declared viewport range; no fixed pixel widths that break it.
 
@@ -87,28 +84,25 @@ Pages and components consume **semantic** tokens; they never reach past them to 
 
 ## Responsive layout
 
-"Responsive by default" (above) is a promise; these rules keep it. They are **form-factor-independent** — they prevent failures common to *any* fluid layout, whatever primary form factor you declared. Each names the failure it prevents. The through-line: **fix each with a primitive or token applied once, never a per-page tweak.**
+"Responsive by default" (above) is a promise; these rules keep it, whatever primary form factor you declared. Fix each failure with a primitive or token applied **once** — never a per-page tweak. (The concrete idioms per CSS toolchain live in the active stack pack.)
 
-- **Author from the smallest supported width up.** Base styles target the narrowest viewport in the declared range; scale *up* with min-width breakpoints. The floor is the WCAG **Reflow** target — no sideways scroll or lost content at **320 CSS px** (≈ 400% zoom), and the layout survives **200% text zoom**.
-- **Prefer intrinsic sizing; reach for breakpoints last.** Let content size itself — fluid type and space (`clamp()`), grids and rows that wrap on their own (`auto-fit`/`minmax`, `flex-wrap`) — so layout adapts *between* breakpoints, not only at them. A reusable component adapts to **its container's** width (a container query), not the viewport's, so one primitive works in a wide main *and* a narrow sidebar. Add a viewport breakpoint only for a genuine page-level layout change.
-- **No horizontal overflow at the minimum width.** The page never scrolls sideways and nothing clips. Three usual culprits, each with its fix:
-  - **Atomic values never wrap mid-token.** Phone numbers, emails, IDs, codes, currency amounts are single units — keep them on one line and let the *container* size to them. Bake the no-wrap into the shared inline-value / link primitive so every occurrence inherits it. (The exception is a string too long for any width — a raw URL: let it break with `overflow-wrap`, don't force the page to scroll.)
-  - **Long free text wraps or truncates — it never pushes width.** Prose wraps; a single-line cell that can't wrap (a table column) truncates and exposes the full value accessibly. A flex/grid child only shrinks if it (or its parent) allows it — give it `min-width: 0`, or the "unbreakable child" silently forces the row wider.
-  - **Wide content scrolls inside its own box.** Data tables and code blocks live in a horizontally scrollable wrapper so *they* scroll, not the page.
-- **Reserve space for fixed / sticky chrome with a token, in the layout.** Express each bar's height as one semantic token (`--header-clearance`) applied by the shared layout — not re-measured or re-padded per page. Top-anchor a full-bleed first section (hero) by that clearance so its content position stays deterministic however tall its (variable-length) copy renders.
-- **Size full-bleed sections to content, not the viewport.** Give a hero a content-driven **min-height plus responsive vertical padding** — not `100vh` (ignores mobile browser UI) or an aspect-ratio on a flex child (sizes inconsistently across engines). Where an element genuinely must fill the viewport (a mobile sheet or overlay), use `svh` (the *small* viewport unit, stable) — never `vh`, and `dvh` only when you deliberately want it to track the URL bar.
-- **Treat configurable copy as variable-length.** Any admin/CMS-editable string (headline, tagline, label) has no fixed length; the layout must survive a one-word *and* a three-line value without clipping or colliding with neighbouring chrome. Balance headings (avoid an orphaned last word) as the default, not a later fix.
-- **Multi-field rows collapse to full-width below the breakpoint.** A row of inputs/controls that sits side-by-side on wide screens stacks full-width on narrow ones, and each field keeps a sensible min-width so its content (e.g. a date *and* a time) stays legible instead of being squeezed.
-- **Adapt by disclosure, never by hiding meaning.** Swapping a short label for a full one across a breakpoint is fine; *removing* an actionable control on small screens is not — if navigation doesn't fit, collapse it into a menu, don't drop destinations.
+- **Author from the smallest supported width up.** The floor is WCAG **Reflow**: no sideways scroll or lost content at **320 CSS px**, and the layout survives **200% text zoom**.
+- **Prefer intrinsic sizing; reach for breakpoints last.** Fluid type/space and self-wrapping grids adapt *between* breakpoints; a reusable component adapts to **its container's** width, not the viewport's. Add a viewport breakpoint only for a genuine page-level layout change.
+- **No horizontal overflow at the minimum width.** Atomic values (phone numbers, IDs, amounts) never wrap mid-token — bake no-wrap into the shared inline-value primitive; long free text wraps or truncates, never pushes width (a flex/grid child needs `min-width: 0` to be allowed to shrink); wide tables and code blocks scroll inside their own box, never the page.
+- **Reserve space for fixed / sticky chrome with one semantic token** (`--header-clearance`) applied by the shared layout — never re-measured or re-padded per page.
+- **Size full-bleed sections to content, not the viewport** — a content-driven min-height plus vertical padding, never `100vh`; where something must truly fill the viewport prefer `svh` over `vh`, and `dvh` only to deliberately track the browser chrome.
+- **Treat configurable copy as variable-length.** Any admin/CMS-editable string must survive a one-word *and* a three-line value without clipping or colliding with chrome; balance headings by default.
+- **Multi-field rows collapse to full-width below the breakpoint,** each field keeping a min-width that leaves its content legible.
+- **Adapt by disclosure, never by hiding meaning** — if navigation doesn't fit, collapse it into a menu; don't drop destinations or actions on small screens.
 
 ## Navigation chrome, overlays & scroll
 
-Persistent chrome (a bottom nav, a sticky header), overlays, and client-side route changes recur as rework in an SPA — fix each at the root, not per screen. (Companion to *Responsive layout* above, which owns overflow and viewport sizing; and to *One shared layout*, which owns clearance.)
+Persistent chrome (a bottom nav, a sticky header), overlays, and client-side route changes recur as rework in an SPA — fix each at the root, not per screen. (Companion to *Responsive layout*, which owns overflow and viewport sizing; and to *One shared layout*, which owns clearance.)
 
-- **Render overlays and fixed chrome in a top-level portal** — never nested inside a page or shell that establishes a stacking or `transform` context. A `transform` (e.g. a page-slide transition) becomes the containing block for `position: fixed` descendants and drags the fixed nav along with the page; a low `z-index` on an ancestor traps every descendant beneath sibling chrome. *Prevents:* fixed bars sliding during transitions, and sheets rendering under the nav.
-- **Reset or restore scroll in an effect keyed on the actual route/view change (before paint)** — not synchronously at the navigation call, which fires before the view swaps and is therefore nondeterministic. A keep-alive tab surface has **one explicit scroll owner**; if panes share a scroll container, reset it on pane change. *Prevents:* a newly-shown view inheriting the previous one's scroll offset.
-- **Global-nav visibility is a denylist of chrome-less routes, not an allowlist of the main ones.** A new deep screen keeps the nav by default; only auth/legal/full-screen-editor routes opt out — and a full-screen editor with its own sticky action bar hides the global nav so its primary action isn't clipped beneath it. *Prevents:* every new screen silently losing its nav, or a Save button clipped under a fixed bar.
-- **Under the soft keyboard, a flex column scrolls — it does not squeeze.** The scroll region is `overflow-y: auto` and non-shrinkable panels are `flex-shrink: 0`; a bottom-pinned footer in a `min-height` container grows the content with `flex: 1 0 auto` rather than an `auto` margin (which some engines won't resolve without a definite container height). *Prevents:* panels collapsing to a clipped sliver when the keyboard opens, and a footer that pins in one browser but floats in another.
+- **Render overlays and fixed chrome in a top-level portal** — an ancestor's `transform` or low `z-index` otherwise drags or buries them (fixed bars sliding with page transitions; sheets rendering under the nav).
+- **Reset or restore scroll in an effect keyed on the actual route/view change**, not synchronously at the navigation call; a keep-alive surface has **one explicit scroll owner**. Otherwise a newly-shown view inherits the previous one's scroll offset.
+- **Global-nav visibility is a denylist of chrome-less routes, not an allowlist** — a new screen keeps the nav by default; only auth/legal/full-screen-editor routes opt out (an editor with its own sticky action bar hides the global nav so its primary action isn't clipped).
+- **Under the soft keyboard, a flex column scrolls — it does not squeeze:** the scroll region is `overflow-y: auto`, non-shrinkable panels are `flex-shrink: 0`. Otherwise panels collapse to a clipped sliver when the keyboard opens.
 
 ## Visual quality bar
 
@@ -221,6 +215,7 @@ These bind the frontend to the backend's cross-cutting machinery. All three live
 - **Correlation id is never discarded.** The backend returns a correlation id on every response (`x-correlation-id` header; errors also carry `error.correlationId` — the envelope is pinned in *Error responses*, `apps/backend/CLAUDE.md`). The shared error-handling path reads it from a failed response, shows it unobtrusively in the user-visible error UI ("Error reference: `<id>`") so it can be quoted in a support report, and attaches it to any client-side error / telemetry report.
 - **Session & auth UX.** A single shared services-layer interceptor handles auth responses — no page implements its own 401 redirect. On **401**, send the user to login, preserve the originally requested URL, and return them there after sign-in. On **403**, render the shared "forbidden" error state — don't bounce to login. Guard against redirect loops (never redirect the login route itself; cap repeated redirects). On explicit sign-out, clear client / store state so no stale authenticated data lingers. Treat token / session refresh as one shared concern, not duplicated per request. (Tie 401 / 403 back to the backend status-code contract.)
 - **Analytics & events (if the project ships product analytics).** Emit client analytics through a single shared service / hook, never via inline tracking calls scattered in components. Event names follow a documented by-meaning taxonomy (`order.checkout_started`, not `page3.click`), mirroring the i18n name-by-meaning rule so events survive a redesign. A UI story that emits analytics names its key events in the spec, the same way it names its loading / error / empty / success states. Stay vendor-agnostic; don't pin an analytics SDK.
+
 ## Testing
 
 - **Store slices & `lib/` helpers** — test as plain units.
@@ -233,6 +228,7 @@ These bind the frontend to the backend's cross-cutting machinery. All three live
 
 Run it; don't infer from reading the code.
 
+- **A new screen's initial build is verified against its `design/` mockup** — render it and *look* (a screenshot or equivalent); don't declare it done from the code. No mockup? Sketch the screen in the feature's spec and get it approved there first — never invent UI for a non-trivial new screen silently. Later iterations verify against the running app, not the mockup. (Full loop + mockup inventory: `design/README.md`.)
 - Start the dev server and load the touched screen.
 - Confirm all four states (loading / error / empty / success) actually render — force the error and empty paths, don't just read the code.
 - Do one keyboard-only pass: tab order sane, focus visible, Esc / Enter work on any modal or dialog.

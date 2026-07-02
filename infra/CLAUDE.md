@@ -1,6 +1,6 @@
 # Infra
 
-The infrastructure contract — read before touching anything under `infra/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs the Terraform under `infra/`. Agent instructions for this folder are here; there is no separate AGENTS.md.
+The infrastructure contract — read before touching anything under `infra/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs the Terraform under `infra/`. Agent instructions for this folder are here; there is no separate AGENTS.md. **If a stack pack is adopted (a single directory kept under `stacks/`) and it ships an `infra.md` appendix, also read that before working here** — it adds the concrete bindings, and its conflict register resolves any disagreement with this file, for that stack only.
 
 > **This template's blessed cloud is GCP.** Sections marked **(GCP)** apply when using it; on AWS/Azure follow the equivalent context, auth, and discovery tooling for that provider.
 
@@ -60,45 +60,12 @@ For any change that could modify infrastructure or configuration behavior, follo
 
 ## Importing existing resources
 
-Importing existing infrastructure is a controlled migration workflow for bringing real infrastructure under Terraform management.
+A controlled migration workflow for bringing already-running infrastructure under Terraform management.
 
-### Default approach
-- Prefer importing existing resources instead of replacing them when the goal is to bring already-running infrastructure under Terraform.
-- Avoid replacement of existing resources unless the user explicitly requests it or replacement is clearly safer than import.
-- Treat replacement of existing infrastructure as higher risk by default because it may affect availability, data durability, naming continuity, external integrations, or rollback complexity.
-- After import, Terraform becomes the source of truth for that resource.
-
-### Scope and tool choice
-- Prefer the smallest import scope that solves the task.
-- Do not bulk-import an entire project, folder, or organization unless the user explicitly requests that scope.
-- For small or targeted migrations, prefer Terraform import workflows tied to explicit destination `resource` blocks.
-- For larger migrations, a provider discovery/export tool may be used as a bootstrap to generate initial Terraform for existing resources **(GCP:** `gcloud beta resource-config bulk-export`**; other providers have analogous tooling).**
-
-### Using Google Cloud bulk export (GCP)
-- Treat `gcloud beta resource-config bulk-export` output as migration scaffolding, not final repository-ready Terraform.
-- Do not commit raw bulk-export output without review and cleanup.
-- Normalize generated configuration into repository conventions before considering the migration complete.
-- Check that the exported resource types are actually supported for export before relying on the generated output.
-- Prefer using bulk export to accelerate discovery and drafting, then rewrite or reshape the result into explicit repository-managed Terraform.
-
-### Authoring requirements after import
-- Represent each real infrastructure object with its own individually named Terraform `resource` block unless the user explicitly requests a different pattern.
-- Do not keep generated `for_each`, `count`, `dynamic` blocks, or `locals`-driven resource generation unless that pattern is explicitly requested or already established in that part of the repository.
-- Prefer explicit naming, straightforward review diffs, and easy rollback over generated abstractions.
-- Remove generated noise, provider-default churn, and repository-inconsistent structure before merging.
-- Do not use `lifecycle.ignore_changes` to hide drift found during import — the authoring-style rule above applies unchanged.
-
-### Required review before approval
-- Identify the exact target environment and exact resources being imported.
-- Confirm the import IDs and destination resource addresses are correct.
-- Run `terraform plan` after import-related changes.
-- Review all drift before approval.
-- Explicitly call out additions, changes, replacements, deletions, IAM changes, networking changes, and any stateful resource risk.
-
-### Repository expectations
-- Imported resources must be reshaped to match this folder’s file layout, naming, and guardrails.
-- Generated code is a starting point only.
-- Final committed Terraform should read like intentionally authored infrastructure, not tool output.
+- **Prefer import over replacement.** Replacing existing infrastructure risks availability, data durability, naming continuity, external integrations, and rollback complexity — replace only when the user explicitly requests it or it is clearly safer than import. After import, Terraform is the source of truth for that resource.
+- **Smallest scope that solves the task.** Never bulk-import an entire project, folder, or organization unless explicitly requested. Small migrations import into explicit destination `resource` blocks; larger ones may bootstrap drafts with a provider discovery/export tool **(GCP:** `gcloud beta resource-config bulk-export`**; other providers have analogous tooling)**.
+- **Generated output is scaffolding, never repository-ready Terraform.** Reshape it to this folder's conventions before merging: one individually named `resource` block per real object; no generated `for_each`/`count`/`dynamic`/`locals` collections; no `lifecycle.ignore_changes` to hide drift; provider-default churn removed. Final committed Terraform reads like intentionally authored infrastructure, not tool output.
+- **Before approval:** identify the exact environment and resources, confirm import IDs and destination addresses, run `terraform plan`, review all drift, and explicitly call out additions, changes, replacements, deletions, IAM changes, networking changes, and any stateful-resource risk.
 
 ## Risk review checklist
 Before asking for approval to apply, present the change in this format:
@@ -120,42 +87,12 @@ If any section is empty, skip.
 
 ### Risk checklist
 
-#### Security
-State either:
-- `no material security impact`
+For each dimension, state `no material impact` or describe the impact:
 
-or describe relevant impact, such as:
-- public exposure changes
-- IAM or permission changes
-- network policy changes
-- secrets or encryption impact
-
-#### Availability
-State either:
-- `no expected availability impact`
-
-or describe relevant impact, such as:
-- downtime risk
-- restart or replacement risk
-- dependency or ordering risk
-- load balancer, DNS, or failover impact
-
-#### Data durability
-State either:
-- `no expected data durability impact`
-
-or describe relevant impact, such as:
-- risk to databases, buckets, disks, queues, or stateful services
-- deletion or recreation of persistent resources
-- backup, retention, or recovery impact
-
-#### Cost
-State either:
-- `no material cost impact`
-
-or describe relevant impact, such as:
-- likely spend increase or decrease
-- sizing, replication, retention, or traffic-related cost changes
+- **Security** — public exposure, IAM/permission, network policy, secrets/encryption changes.
+- **Availability** — downtime, restart/replacement, dependency/ordering, load-balancer/DNS/failover impact.
+- **Data durability** — risk to databases, buckets, disks, queues, or stateful services; deletion or recreation of persistent resources; backup/retention/recovery impact.
+- **Cost** — likely spend increase or decrease; sizing, replication, retention, or traffic-related changes.
 
 ## Standard layout
 The `infra/` folder is organized **per workload**. Each subdirectory of `infra/` is a self-contained Terraform root module that maps to a single project.
@@ -174,7 +111,6 @@ infra/
 
 ### Workload directories
 - Each workload directory is a Terraform root module with its own `backend.tf` and `terraform.tfvars`.
-- Run all Terraform commands from inside the target workload directory (`infra/<workload>/`), never from `infra/` itself or the git root.
 - Do not introduce cross-workload references or shared local modules without explicit approval — workloads are intentionally independent.
 - New workloads should follow the same self-contained pattern as existing ones under `infra/`.
 
