@@ -62,6 +62,14 @@ A route is part of the app's public contract; an internal file path is an implem
 - **Customise by editing tokens, not screens.** A rebrand edits the **primitive** token tier — or has your AI assistant regenerate it from the brand — and the semantic tier and the whole guide re-derive. This is the "one token source, three tiers" rule below — the guide is its human-reviewable face.
 - **The guide binds components without prescribing them.** Every component consumes semantic tokens, answers with the guide's state ladder and focus spec, and meets its accessibility floor; a component that violates a foundation is the defect (the DRY-gate audit under *Component structure* catches duplicates). A pattern that recurs across projects earns a specimen in the guide; a stack pack may add a Storybook against the same tokens (optional upgrade).
 
+**Never-violate gates** — the build-time digest; the named guide chapter is canonical:
+
+1. Every colour, size, space, and duration resolves to a semantic token — a hex or px literal in a screen is the defect (guide → *Tokens*).
+2. Pick the screen archetype before building any screen — its zones, page rhythm, and width are fixed, never re-derived per page (guide → *Screen archetypes*).
+3. Surfaces follow the ladder: no card-like container inside another; separate in order whitespace → background shift → border → divider (tables/dense rows only) (guide → *Surfaces & elevation*).
+4. Reuse first: archetype → documented pattern → existing screens/primitives → extend a primitive → only then new, with the PR recording why nothing fit (guide → *Components & reuse*).
+5. One density app-wide, set at the token layer — never mixed within a page hierarchy (guide → *Screen archetypes*).
+
 ## Page layout & design tokens
 
 Consistency is a system, not a per-page effort. Two things make every screen feel like one product: a **single shared layout** and a **single token source**. A page author composes the layout and reaches for tokens — and never re-decides spacing, colour, or navigation.

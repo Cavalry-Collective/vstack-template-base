@@ -330,7 +330,7 @@
       <div class="nav-group">Composition</div>
       <a href="#archetypes">Screen archetypes</a>
       <div class="nav-group">Beyond</div>
-      <a href="#components">Components</a>
+      <a href="#components">Components &amp; reuse</a>
     </nav>
   </aside>
 
@@ -949,16 +949,47 @@
 
     <section id="components" hidden>
       <p class="kicker">Beyond</p>
-      <h1>Where are the components?</h1>
-      <p>Deliberately absent — apps differ too much to pin an inventory. What's fixed is what
-        components are <em>made of</em>: semantic tokens, the state ladder, the focus ring, the
-        motion bands, the accessibility floor. Two apps with different components should still
-        read as one practice.</p>
+      <h1>Components &amp; reuse</h1>
+      <p class="lede">No component inventory — and nothing new is built before the ladder
+        below is exhausted.</p>
+      <p>Where are the components? Deliberately absent — apps differ too much to pin an
+        inventory. What's fixed is what components are <em>made of</em>: semantic tokens, the
+        state ladder, the focus ring, the motion bands, the accessibility floor. Two apps with
+        different components should still read as one practice.</p>
+
+      <h2>Before you build</h2>
+      <p>Every new screen, section, or control starts by working down this ladder and stopping
+        at the first rung that fits. "It already exists but I'd write it differently" is not a
+        reason to descend.</p>
+      <figure class="figure">
+        <div class="tiers">
+          <div class="tier"><span class="t-name">1 · archetype</span><span>Does a <a href="#archetypes">screen archetype</a> already shape this page?</span></div>
+          <div class="tier-arrow">no fit ↓</div>
+          <div class="tier"><span class="t-name">2 · pattern</span><span>Does a documented pattern cover it — forms, view states, feedback?</span></div>
+          <div class="tier-arrow">no fit ↓</div>
+          <div class="tier"><span class="t-name">3 · existing</span><span>Does the app already have it? Search the screens and the shared primitives first.</span></div>
+          <div class="tier-arrow">no fit ↓</div>
+          <div class="tier"><span class="t-name">4 · extend</span><span>Can an existing primitive grow a variant instead of a sibling?</span></div>
+          <div class="tier-arrow">no fit ↓</div>
+          <div class="tier"><span class="t-name">5 · new</span><span>Build it — and record in the PR why nothing above fit.</span></div>
+        </div>
+        <figcaption>The reuse ladder: stop at the first rung that fits.</figcaption>
+      </figure>
+      <p><strong>The bar for new:</strong> demonstrably needed, and replicating nothing that
+        already exists. A near-duplicate with different styling fails the bar — restyle or extend
+        the original instead.</p>
       <div class="callout">
         <p><strong>Twice is a coincidence, thrice is a pattern.</strong> Recurs across features →
         promote into the app's <code>atoms/</code>. Recurs across <em>projects</em> → earn a specimen here.
         The guide grows from evidence, not speculation.</p>
       </div>
+      <ul class="rules">
+        <li>Work the ladder before the editor: archetype → documented pattern → existing screens
+          &amp; primitives → extend a primitive → only then new.</li>
+        <li>New passes the bar — demonstrably needed, replicating nothing — and the PR records
+          why nothing above fit.</li>
+        <li>Promotion stays evidence-driven: twice a coincidence, thrice a pattern.</li>
+      </ul>
       <p class="caption">Keystone is the visual keystone gate (<code>apps/frontend/CLAUDE.md → Design
         guide</code>). Source of truth: <code>design/tokens.css</code>. This guide is specimen #1 —
         built exclusively from its own tokens, audited against its own rules.</p>
