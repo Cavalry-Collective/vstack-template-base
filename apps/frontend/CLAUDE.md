@@ -56,13 +56,22 @@ A route is part of the app's public contract; an internal file path is an implem
 
 The route registry file is the auditable routing surface — keep it complete; never ship a page without its route entry. Better still: add a CI check (in the same spirit as the i18n key-parity check) that fails if any page lacks a registry entry, so the surface stays current automatically instead of by diligence.
 
+## Design guide — the visual keystone (confirm before building UI)
+
+**Lock the visual system before building any screen.** The project's visual system lives in a **design guide**: a rendered, browsable page (`design/design-guide.html`) showing every foundation (colour, type, spacing, radius, elevation, motion) and every core component in its states, driven by the single design-token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`) — a live mirror of the tokens, not a stale screenshot.
+
+- **Generate and *confirm* the design guide before building screens.** It is a gate: for a new project (or a rebrand) no screen or component work starts until the guide is **generated (by the Fable 5 model)**, reviewed in a browser, and signed off. Once the system is established small additions don't re-gate — but a new foundational token or component variant lands in the guide first.
+- **Customise by editing tokens, not screens.** A rebrand edits the **primitive** token block; the semantic tier and the whole guide re-derive. This is the "one token source, three tiers" rule below — the guide is its human-reviewable face.
+- **The guide is the source; `atoms/` implement it.** Every atom/molecule matches its specimen in the guide; a component that drifts from it is the defect (the DRY-gate audit under *Component structure* catches this). Foundations map to tokens, atoms to the guide's component specimens — atomic design, ordered for review.
+- **The template ships a placeholder; the Fable 5 model generates the actual guide** (`design/design-guide.html` + `design/tokens.css`) for the project — standalone, token-driven specimens (neutral defaults, or the project's brand). A stack pack may later add a Storybook that renders the *real* framework components against the same tokens (optional upgrade).
+
 ## Page layout & design tokens
 
 Consistency is a system, not a per-page effort. Two things make every screen feel like one product: a **single shared layout** and a **single token source**. A page author composes the layout and reaches for tokens — and never re-decides spacing, colour, or navigation.
 
 **Primary form factor (FILL IN ON SETUP):** `<mobile-first | desktop-first | responsive-equal>` plus the supported viewport range. This choice drives the default navigation pattern and which furniture the shared layout carries.
 
-**One shared layout.** Every page builds on common layout components that supply the standing furniture — header / navigation, page chrome, consistent gutters and background, and the navigation pattern for the declared form factor (sidebar / top-nav for desktop-first; bottom-nav with safe-area clearance for mobile-first). The page provides its content; the layout owns the frame. Don't hand-roll a page shell.
+**One shared layout.** Every page builds on common layout components that supply the standing furniture — header / navigation, page chrome, consistent gutters and background, and the navigation pattern for the declared form factor (sidebar / top-nav for desktop-first; bottom-nav with safe-area clearance for mobile-first). The page provides its content; the layout owns the frame. Don't hand-roll a page shell. **The layout owns every clearance and inset; pages never re-derive them.** Each piece of fixed/sticky chrome reserves its space through the layout via one clearance token, composed with its safe-area inset and counted **once** — `max(clearance, bar-height + safe-area-inset)`, never re-declared per page and never double-counting the inset. The top-spacing variants the layout supports are a **prop, not a per-page CSS choice** — e.g. a full-gutter *tab* screen vs. a hug-the-top *navigated/back* screen; a page picks the variant, it never re-decides the padding.
 
 **Layouts are responsive by default** — content reflows without horizontal scroll or clipping across the declared viewport range; no fixed pixel widths that break it.
 
@@ -73,6 +82,8 @@ Consistency is a system, not a per-page effort. Two things make every screen fee
 3. **Component tokens** — per-component overrides, where a component genuinely needs them.
 
 Pages and components consume **semantic** tokens; they never reach past them to a raw primitive value.
+
+**A token's committed value must match its documented scale — guard it.** Check the token file against its declared scale, in the spirit of the i18n key-parity check.
 
 ## Responsive layout
 
@@ -89,6 +100,15 @@ Pages and components consume **semantic** tokens; they never reach past them to 
 - **Treat configurable copy as variable-length.** Any admin/CMS-editable string (headline, tagline, label) has no fixed length; the layout must survive a one-word *and* a three-line value without clipping or colliding with neighbouring chrome. Balance headings (avoid an orphaned last word) as the default, not a later fix.
 - **Multi-field rows collapse to full-width below the breakpoint.** A row of inputs/controls that sits side-by-side on wide screens stacks full-width on narrow ones, and each field keeps a sensible min-width so its content (e.g. a date *and* a time) stays legible instead of being squeezed.
 - **Adapt by disclosure, never by hiding meaning.** Swapping a short label for a full one across a breakpoint is fine; *removing* an actionable control on small screens is not — if navigation doesn't fit, collapse it into a menu, don't drop destinations.
+
+## Navigation chrome, overlays & scroll
+
+Persistent chrome (a bottom nav, a sticky header), overlays, and client-side route changes recur as rework in an SPA — fix each at the root, not per screen. (Companion to *Responsive layout* above, which owns overflow and viewport sizing; and to *One shared layout*, which owns clearance.)
+
+- **Render overlays and fixed chrome in a top-level portal** — never nested inside a page or shell that establishes a stacking or `transform` context. A `transform` (e.g. a page-slide transition) becomes the containing block for `position: fixed` descendants and drags the fixed nav along with the page; a low `z-index` on an ancestor traps every descendant beneath sibling chrome. *Prevents:* fixed bars sliding during transitions, and sheets rendering under the nav.
+- **Reset or restore scroll in an effect keyed on the actual route/view change (before paint)** — not synchronously at the navigation call, which fires before the view swaps and is therefore nondeterministic. A keep-alive tab surface has **one explicit scroll owner**; if panes share a scroll container, reset it on pane change. *Prevents:* a newly-shown view inheriting the previous one's scroll offset.
+- **Global-nav visibility is a denylist of chrome-less routes, not an allowlist of the main ones.** A new deep screen keeps the nav by default; only auth/legal/full-screen-editor routes opt out — and a full-screen editor with its own sticky action bar hides the global nav so its primary action isn't clipped beneath it. *Prevents:* every new screen silently losing its nav, or a Save button clipped under a fixed bar.
+- **Under the soft keyboard, a flex column scrolls — it does not squeeze.** The scroll region is `overflow-y: auto` and non-shrinkable panels are `flex-shrink: 0`; a bottom-pinned footer in a `min-height` container grows the content with `flex: 1 0 auto` rather than an `auto` margin (which some engines won't resolve without a definite container height). *Prevents:* panels collapsing to a clipped sliver when the keyboard opens, and a footer that pins in one browser but floats in another.
 
 ## Visual quality bar
 
@@ -201,7 +221,6 @@ These bind the frontend to the backend's cross-cutting machinery. All three live
 - **Correlation id is never discarded.** The backend returns a correlation id on every response (`x-correlation-id` header; errors also carry `error.correlationId` — the envelope is pinned in *Error responses*, `apps/backend/CLAUDE.md`). The shared error-handling path reads it from a failed response, shows it unobtrusively in the user-visible error UI ("Error reference: `<id>`") so it can be quoted in a support report, and attaches it to any client-side error / telemetry report.
 - **Session & auth UX.** A single shared services-layer interceptor handles auth responses — no page implements its own 401 redirect. On **401**, send the user to login, preserve the originally requested URL, and return them there after sign-in. On **403**, render the shared "forbidden" error state — don't bounce to login. Guard against redirect loops (never redirect the login route itself; cap repeated redirects). On explicit sign-out, clear client / store state so no stale authenticated data lingers. Treat token / session refresh as one shared concern, not duplicated per request. (Tie 401 / 403 back to the backend status-code contract.)
 - **Analytics & events (if the project ships product analytics).** Emit client analytics through a single shared service / hook, never via inline tracking calls scattered in components. Event names follow a documented by-meaning taxonomy (`order.checkout_started`, not `page3.click`), mirroring the i18n name-by-meaning rule so events survive a redesign. A UI story that emits analytics names its key events in the spec, the same way it names its loading / error / empty / success states. Stay vendor-agnostic; don't pin an analytics SDK.
-
 ## Testing
 
 - **Store slices & `lib/` helpers** — test as plain units.

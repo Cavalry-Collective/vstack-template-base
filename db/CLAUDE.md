@@ -15,7 +15,7 @@ Migrations are one of the highest-risk surfaces in any project — irreversible 
 - **Expand → migrate → contract for destructive changes.** For non-additive or destructive changes (DROP COLUMN/TABLE, NOT NULL on a populated table, type narrowing), split the work across separate migrations/releases so a rollback never loses data: add the new shape, migrate onto it, then remove the old shape once nothing reads it.
 - **Prove the down path, not just the up.** Before merging, run the migration up, then down, then up again on a throwaway scratch DB and confirm a clean round-trip — don't rely on the down script being present but untested. State the evidence you observed.
 - **Transactional where supported.** Run each migration in a transaction where the engine supports it, so a failed migration rolls back instead of leaving the schema half-changed.
-- **Seed/reset are non-production only.** Seed and reset scripts are idempotent and run only against local/throwaway databases — never against a shared or production database.
+- **Seed/reset are non-production only.** Seed and reset scripts are idempotent and run only against local/throwaway databases — never against a shared or production database. Prefer **realistic, named** seed accounts and content (not `user1` / `user2`) so manual and e2e testing exercises lifelike data. (If the project adopts the **test-mode** add-on, those seeded accounts also back its test-user picker — see `add-ons/test-mode/`.)
 
 ## Shared DB across worktrees
 

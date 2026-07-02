@@ -166,6 +166,7 @@ Concerns that touch every request — auth, context, logging, transactions, erro
 - **Request context / identity:** established at the edge, passed inward as an argument — never read from a global by an inner ring.
 - **Transactions:** the boundary wraps the use case (see Service).
 - **Logging & audit:** one shared path carrying the request's correlation id, so a request traces end to end. Keep it out of the domain. Emit **structured records** (key/value fields, not concatenated strings) at meaningful **levels** — `error` for handled failures, `warn` for recoverable anomalies, `info` for state changes, `debug` behind a flag for diagnostics. **Never log secrets, tokens, credentials, auth headers, or PII; redact at the logging boundary** and log identifiers (e.g. a user id) rather than payloads. Log a failure **once**, where it is handled — not at every ring on the way out (re-logging the same error is the noise the root Principles forbid).
+- **Audit trail:** when the app must answer *who changed what* (permission or role changes, contact-detail edits, moderation, money movement), that is a concern **distinct** from operational logging — logs rotate and aren't queryable as history. Record every meaningful state change through **one shared `record()` call** in the service ring — actor, action, target, and the before/after where it matters — to durable, queryable storage, carrying the request's correlation id. One call site per state change, invoked by the use case that owns the change; not scattered inserts, and not the log stream.
 - **Errors:** the domain raises failures in domain terms; the controller ring is the single place that maps them onto transport responses, using the *Error responses* envelope — one shape app-wide.
 
 ## Standards reference
@@ -184,6 +185,7 @@ Treat every external API, callback, webhook, queue, and event as untrusted and u
 - **Ordering:** where order matters, process by event time, sequence/version number, or business rule — not arrival order.
 - **Failure handling:** classify failures as transient, permanent, invalid, unsupported, duplicate, or unknown. Retry only transient ones, with bounded retries and backoff, and a defined final-failure path.
 - **Unclear outcomes:** never treat a timeout, transport error, malformed or unexpected response, or ambiguous result as success. Preserve existing valid data and route the outcome to reconciliation or manual recovery.
+- **Gate a risky integration behind a default-off flag with a no-op sink.** An integration that spends money or reaches real users (SMS/email/payment/push) ships behind a **default-off** validated-config boolean (root *Configuration*), read in **one** place, that routes to a **stdout / no-op sink** when off. Exercise it against the sink until you flip the flag on per-environment; flipping it back off is the instant rollback. (This flag underpins the optional **test-mode** and **otp-auth** add-ons — see `add-ons/`.)
 
 ### Security baseline
 

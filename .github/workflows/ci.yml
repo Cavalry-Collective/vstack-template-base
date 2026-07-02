@@ -22,6 +22,12 @@ jobs:
       - name: Stack rule drift
         run: bash scripts/activate-stack.sh --check
 
+      # Same gate for optional add-ons (add-ons/README.md "Activation"): every
+      # activated .claude/rules/addon-*.md must match its source add-on README.
+      # No-op until an add-on is activated. Regenerate with: scripts/activate-addons.sh
+      - name: Add-on rule drift
+        run: bash scripts/activate-addons.sh --check
+
       # - name: Install dependencies
       #   run: # TODO: install command (e.g. pnpm install --frozen-lockfile)
 

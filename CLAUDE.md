@@ -14,6 +14,7 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 - `infra/` — Terraform for the project's cloud resources. See `infra/CLAUDE.md`.
 - `design/` — design mockups / UI reference, **reference only** (not part of the buildable workspace). See *UI mockup / design reference* below.
 - `stacks/` — optional stack packs: appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. See `stacks/README.md`.
+- `add-ons/` — optional capability add-ons: agnostic patterns for features the base leaves out (test mode, OTP login); zero or more chosen at instantiation, the rest deleted, the active stack pack supplying their concrete bindings. See `add-ons/README.md`.
 
 ## Common commands
 
@@ -134,3 +135,4 @@ Durable, cross-session notes go here instead of the memory system (see the note 
 - 2026-06-06: CLAUDE.md overhaul shipped (`specs/2026-06-06-claude-md-overhaul.md`); 14 low-severity review findings deliberately deferred — the spec's *Out of scope* section is the backlog.
 - 2026-06-06: Claude Code rule files (`.claude/rules/`) do **not** resolve `@`-imports — only `CLAUDE.md` files do. Stack-pack activation therefore uses prepend-copies (frontmatter + appendix body); regenerate the rule file after editing an appendix.
 - 2026-06-12: instructions-hardening pass shipped (`specs/2026-06-12-instructions-hardening.md`) — backend error/list envelopes pinned; stack activation centralized in `scripts/activate-stack.sh` (CI runs `--check` as the drift gate); `.claude/settings.json` ask-rules + migration-immutability hook added; the feature-flag and `.claude/`-artifacts items from the deferred-lows backlog are closed.
+- 2026-07-02: Post-project learnings folded (`specs/2026-07-02-post-project-learnings.md`). **Base** gained an audit-trail rule and a default-off-flag + no-op-sink integration rule (`apps/backend`), and **Navigation chrome** + **Responsive layout** + **Design guide** sections (`apps/frontend`). New optional **`add-ons/` mechanism** (`scripts/activate-addons.sh`, always-on rules, CI drift gate) with **test-mode** and **otp-auth**. New stack pack **`stacks/taro-fastify-mysql-tencent/`** (Taro H5 + Fastify + Knex/MySQL on Tencent Cloud; deploy via a real `deploy.yml` pipeline). **Design-guide keystone** (`design/`) as the visual-consistency gate — placeholders the **Fable 5 model** generates per project. Multi-tenancy deliberately not extracted.
