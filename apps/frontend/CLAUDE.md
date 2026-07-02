@@ -74,7 +74,7 @@ Consistency is a system, not a per-page effort. Two things make every screen fee
 
 **One token source, three tiers.** All spacing, colour, typography, radius, and elevation come from a single design-token source, never hardcoded per page. Structure tokens in three layers so they stay coherent and themeable:
 
-1. **Primitive tokens** — raw, context-free values (`--color-blue-600`, `--space-4`).
+1. **Primitive tokens** — raw, context-free values (`--red-400`, `--space-3`).
 2. **Semantic tokens** — decisions that map primitives to meaning (`--color-bg`, `--gutter-screen`, `--header-clearance`). Components reference *these* (plus form-factor-specific tokens such as `--bottom-nav-clearance` only when mobile is the primary form factor).
 3. **Component tokens** — per-component overrides, where a component genuinely needs them.
 
