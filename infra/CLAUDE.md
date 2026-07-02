@@ -1,36 +1,24 @@
 # Infra
 
-The infrastructure contract — read before touching anything under `infra/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs the Terraform under `infra/`. Agent instructions for this folder are here; there is no separate AGENTS.md. **If a stack pack is adopted (a single directory kept under `stacks/`) and it ships an `infra.md` appendix, also read that before working here** — it adds the concrete bindings, and its conflict register resolves any disagreement with this file, for that stack only.
+The infrastructure contract — read before touching anything under `infra/`; repo-wide rules live in the root `CLAUDE.md`. Stack pack adopted (and it ships an `infra.md`)? Read that first — precedence rules in `stacks/README.md`.
 
-> **This template's blessed cloud is GCP.** Sections marked **(GCP)** apply when using it; on AWS/Azure follow the equivalent context, auth, and discovery tooling for that provider.
-
-## Purpose
-Agents working in this folder will typically do one of two things:
-1. inspect and explain the current infrastructure, or
-2. propose and implement scoped infrastructure changes.
+> **GCP is the template's default cloud binding; an adopted stack pack's `infra.md` replaces it (items marked (GCP) go with it).** On AWS/Azure, follow the equivalent context, auth, and discovery tooling.
 
 ## Core principles
-- Prefer the smallest change that solves the request.
-- Keep changes scoped to the requested environment and outcome.
-- Optimize for readability and straightforward rollback.
-- Prefer stable, maintainable patterns over clever abstractions.
-- Preserve existing repository conventions unless there is a strong reason to change them.
-- Treat all infrastructure changes as potentially high impact until proven otherwise.
+
+Root `CLAUDE.md` Principles apply with extra force here — infrastructure changes are high impact until proven otherwise.
+
+- Optimize for readability and straightforward rollback; prefer stable patterns over clever abstractions; keep existing conventions absent a strong reason to change them.
 - Run Terraform commands from inside the target workload directory (`infra/<workload>/`), never from `infra/` itself or the git root.
-- Do not assume a change applies to all environments.
-- Always make the target environment explicit in summaries and approvals.
-- **Set up observability from day 1** — metrics, logs, and (for user-facing apps) product analytics, retained and queryable — as part of bringing a workload online, not deferred. Where your platform's IaC owns observability, give it its own concern file; the platform-specific wiring (log drains, retention, dashboards) lives in the active stack pack — which may own none of it in Terraform (e.g. an integration-managed drain).
+- **Set up observability from day 1** — metrics, logs, and (for user-facing apps) product analytics, retained and queryable — when bringing a workload online, not deferred. Where the platform's IaC owns observability, give it its own concern file; the platform wiring (log drains, retention, dashboards) lives in the active stack pack, which may own none of it in Terraform.
 
 ## Default execution mode
-- At the start of each new chat, verify the active cloud auth/credential and project context before making any changes.
-- Run the provider's context command outside the sandbox and show the available contexts to the user **(GCP:** `gcloud config configurations list`**)**.
-- Ask the user which account/project/configuration to use before running commands that depend on cloud credentials or project context.
-- Do not assume the previously used context is correct.
+
+At the start of each new chat, verify the active cloud auth and project context before making changes: run the provider's context command outside the sandbox, show the contexts **(GCP:** `gcloud config configurations list`**)**, and ask which account/project/configuration to use before anything credential- or context-dependent. Never assume the previous context is correct.
 
 ### Read-only workflows
-For read-only and non-destructive tasks, continue automatically until a meaningful stopping point or a clear approval boundary is reached.
 
-Read-only actions include:
+Continue read-only, non-destructive work automatically to a meaningful stopping point or approval boundary — never pause for confirmation between read-only steps:
 - repository inspection
 - code search
 - dependency and reference tracing
@@ -39,35 +27,31 @@ Read-only actions include:
 - `terraform plan`
 - diff generation
 
-Do not stop to ask for confirmation between consecutive read-only steps.
-
 ### Mutation workflows
+
 For any change that could modify infrastructure or configuration behavior, follow this sequence unless the user explicitly asks otherwise:
 1. understand the target environment and requested outcome
 2. inspect the relevant module and environment configuration
 3. make the smallest reasonable change
 4. run formatting and validation
 5. run `terraform plan`
-6. before asking for approval, present the target environment, planned resource actions, and risk summary using the format defined in the *Risk review checklist* section below
-7. ask for approval before `terraform apply` (see *Guardrails → Safety* — the approval rule lives there)
+6. present the target environment, planned resource actions, and risk summary in the *Risk review checklist* format below
+7. ask for approval before `terraform apply` (the approval rule lives in *Guardrails → Safety*)
 
 ## Terraform authoring style
-- Prefer explicit Terraform resource declarations over DRY abstractions when managing multiple infrastructure objects.
-- Define each infrastructure object as its own individually named `resource` block by default.
-- Do not use `for_each`, `count`, `dynamic` blocks, or `locals` collections to generate multiple resources unless the user explicitly requests that pattern or there is a clear repository convention requiring it.
-- Favor repetition over abstraction when it improves readability, reviewability, importability, and rollback clarity.
-- Do not use `lifecycle.ignore_changes` unless the diff is confirmed by the user to be noisy and intentionally acceptable.
+
+- Define each infrastructure object as its own individually named `resource` block — explicit declarations over DRY abstractions. No `for_each`, `count`, `dynamic` blocks, or `locals` collections to generate resources unless the user requests that pattern or a clear repository convention requires it; repetition that improves readability, reviewability, importability, and rollback clarity beats abstraction.
+- No `lifecycle.ignore_changes` unless the user confirms the diff is noisy and intentionally acceptable.
 
 ## Importing existing resources
 
-A controlled migration workflow for bringing already-running infrastructure under Terraform management.
-
-- **Prefer import over replacement.** Replacing existing infrastructure risks availability, data durability, naming continuity, external integrations, and rollback complexity — replace only when the user explicitly requests it or it is clearly safer than import. After import, Terraform is the source of truth for that resource.
-- **Smallest scope that solves the task.** Never bulk-import an entire project, folder, or organization unless explicitly requested. Small migrations import into explicit destination `resource` blocks; larger ones may bootstrap drafts with a provider discovery/export tool **(GCP:** `gcloud beta resource-config bulk-export`**; other providers have analogous tooling)**.
-- **Generated output is scaffolding, never repository-ready Terraform.** Reshape it to this folder's conventions before merging: one individually named `resource` block per real object; no generated `for_each`/`count`/`dynamic`/`locals` collections; no `lifecycle.ignore_changes` to hide drift; provider-default churn removed. Final committed Terraform reads like intentionally authored infrastructure, not tool output.
-- **Before approval:** identify the exact environment and resources, confirm import IDs and destination addresses, run `terraform plan`, review all drift, and explicitly call out additions, changes, replacements, deletions, IAM changes, networking changes, and any stateful-resource risk.
+- **Prefer import over replacement** — replacement risks availability, data durability, naming continuity, external integrations, and rollback complexity. Replace only when the user explicitly requests it or it is clearly safer; after import, Terraform is the source of truth for that resource.
+- **Import the smallest scope that solves the task.** Never bulk-import a project, folder, or organization unless explicitly requested. Import into explicit destination `resource` blocks; larger migrations may bootstrap drafts with the provider's discovery/export tool **(GCP:** `gcloud beta resource-config bulk-export`**)**.
+- **Generated output is scaffolding, never repository-ready.** Reshape it to the authoring style above before merging — one named `resource` block per real object, no generated loops, no `lifecycle.ignore_changes` to hide drift, provider-default churn removed. Committed Terraform reads as intentionally authored, not tool output.
+- **Before approval:** identify the exact environment and resources, confirm import IDs and destination addresses, run `terraform plan`, review all drift, and call out additions, changes, replacements, deletions, IAM and networking changes, and stateful-resource risk.
 
 ## Risk review checklist
+
 Before asking for approval to apply, present the change in this format:
 
 ### Plan summary
@@ -95,7 +79,8 @@ For each dimension, state `no material impact` or describe the impact:
 - **Cost** — likely spend increase or decrease; sizing, replication, retention, or traffic-related changes.
 
 ## Standard layout
-The `infra/` folder is organized **per workload**. Each subdirectory of `infra/` is a self-contained Terraform root module that maps to a single project.
+
+The `infra/` folder is organized **per workload**: each subdirectory is a self-contained Terraform root module mapping to a single project, with its own `backend.tf` and `terraform.tfvars`.
 
 ```
 infra/
@@ -110,81 +95,51 @@ infra/
 ```
 
 ### Workload directories
-- Each workload directory is a Terraform root module with its own `backend.tf` and `terraform.tfvars`.
-- Do not introduce cross-workload references or shared local modules without explicit approval — workloads are intentionally independent.
-- New workloads should follow the same self-contained pattern as existing ones under `infra/`.
+- No cross-workload references or shared local modules without explicit approval — workloads are intentionally independent.
+- New workloads follow the same self-contained pattern as existing ones.
 
 ### When a shared `modules/` directory becomes appropriate
-- The flat per-workload layout is preferred while workloads are one-of-a-kind and share little or no infrastructure shape.
-- If two or more workloads genuinely need the same shape (for example identical networking, identical bucket conventions, the same compute pattern across environments), a small `infra/modules/` directory may be introduced and called by the affected workload root modules.
-- Do not preemptively introduce shared modules in anticipation of future reuse. Wait until concrete duplication exists across at least two workloads.
-- When introducing a shared module, keep it focused on the genuinely shared concern only. Do not collapse unrelated workload-specific resources into it.
-- Shared modules must still follow the explicit, repetition-friendly authoring style in this document — submodules are not a license to use `for_each`/`count`/`dynamic` to generate resources.
+- Prefer the flat per-workload layout while workloads are one-of-a-kind and share little infrastructure shape.
+- Introduce a small `infra/modules/` directory only after concrete duplication exists across at least two workloads (identical networking, bucket conventions, or compute pattern) — never preemptively in anticipation of reuse.
+- Keep a shared module to the genuinely shared concern; do not collapse unrelated workload-specific resources into it.
+- Shared modules follow the explicit authoring style above — a submodule is not a license to generate resources.
 
 ### Naming guidance
-- Prefer grouping by concern, not by resource count.
-- Avoid excessive file fragmentation.
-- Use predictable names that make navigation easy.
-- Keep module structure consistent across similar modules.
-- If a category becomes too large, split it further with still-specific names, for example:
-  - security_kms.tf
-  - security_secrets.tf
+- Group `.tf` files by concern, not resource count — no file-per-resource.
+- Use predictable names; keep module structure consistent across similar modules.
+- If a concern file grows too large to navigate, split with still-specific names — `security_kms.tf`, `security_secrets.tf`.
 
 ### Local artifacts and git hygiene
-- **Commit `.terraform.lock.hcl`.** The dependency lock file pins provider versions for every machine and CI run; use `terraform providers lock -platform=<os_arch>` to add the platforms teammates and CI use. Only `.terraform/` directories and plan artifacts stay out of version control.
-- Always keep Terraform plan artifacts such as `tfplan` and `*.tfplan` gitignored and out of version control.
-- Treat plan files as local ephemeral artifacts for review or apply only.
-- Do not commit generated local execution artifacts created during planning, validation, or debugging.
+- **Commit `.terraform.lock.hcl`.** The lock file pins provider versions for every machine and CI run; add the platforms teammates and CI use via `terraform providers lock -platform=<os_arch>`.
+- Plan artifacts (`tfplan`, `*.tfplan`), `.terraform/` directories, and generated local execution artifacts stay gitignored — plan files are local, ephemeral, for review or apply only, never committed.
 
-## Infrastructure conventions
-Opinions on how to set up specific infrastructure concerns. These guide authoring choices when adding or changing resources of these types.
+## Networking
 
-### Networking (GCP)
-- Do not use the default VPC or default subnets for managed infrastructure.
-- Prefer a custom-mode VPC with explicitly defined subnets, secondary ranges, firewall rules, and NAT.
-- Default VPCs typically come with auto-created subnets and permissive default firewall rules (broadly open SSH, RDP, ICMP from `0.0.0.0/0`) that are not an acceptable security posture.
-- If existing resources are found on the default VPC, call it out and propose a migration path rather than extending usage.
-- On AWS/Azure the same intent holds: define the network, subnets, and security-group/firewall rules explicitly; never rely on a provider's default network or default-open ingress.
+- Never use a provider's default network or subnets for managed infrastructure — define the network explicitly: custom network, subnets, secondary ranges, firewall rules, NAT. Provider defaults ship permissive firewall rules (open SSH, RDP, ICMP from `0.0.0.0/0`) — not an acceptable posture.
+- **(GCP)** Use a custom-mode VPC with explicitly defined subnets; never the default VPC.
+- Existing resources on a default network? Call it out and propose a migration path rather than extending usage.
 
 ## Guardrails
 
 ### Safety
-- Never run destructive actions without explicit confirmation.
-- Never run `terraform apply` without explicit user approval.
-- Treat deletion, replacement, and security boundary changes as high risk.
-- Treat production as requiring extra caution, even for apparently small changes.
-- Always state the target environment before asking for approval.
+- Never run destructive actions without explicit confirmation; never `terraform apply` without explicit user approval of a reviewed plan.
+- State the target environment in every summary and approval request; never assume a change applies to all environments.
+- If a plan cannot be run, never guess the impact — say why.
+- Treat deletion, replacement, and security-boundary changes as high risk; give production extra caution even for small changes.
 - Never hide or collapse destructive or replacement actions in the plan summary.
-- Never edit or manipulate Terraform state directly unless the user explicitly requests a state operation and the risks are clearly explained.
+- Never edit Terraform state directly unless the user explicitly requests a state operation and the risks are clearly explained.
 
 ### Scope control
-- Do only what the request asks for.
-- Avoid unrelated refactors, renames, and file moves.
-- Call out assumptions when context is ambiguous.
-- Keep environment boundaries strict.
-- Avoid accidental cross-environment edits caused by shared module changes.
-- If a shared module change affects multiple environments, state that explicitly.
-
-### Plans and applies
-- Never apply without a reviewed plan.
-- Never guess about infrastructure impact when a plan cannot be run.
-- If a plan cannot be run, explain why clearly.
-- Always state the environment being planned or applied.
+- Keep changes scoped to the requested environment and outcome; keep environment boundaries strict.
+- A shared-module change that affects multiple environments must say so explicitly; watch for accidental cross-environment edits it can cause.
 
 ### Secrets and sensitive data
-- Never commit secrets, credentials, keys, tokens, certificates, or private data.
-- Do not hardcode secrets in `.tf` files or checked-in `.tfvars` files.
-- Prefer injecting sensitive values through:
-  - CI/CD environment variables
-  - remote secret managers
-  - secure variable injection at runtime
-  - ignored local override files only when necessary
-
-### Sensitive variables
-- Mark Terraform input variables as `sensitive = true` where appropriate.
-- Avoid exposing sensitive outputs unless absolutely necessary.
+- Never commit secrets, credentials, keys, tokens, certificates, or private data; never hardcode them in `.tf` or checked-in `.tfvars` files.
+- Inject sensitive values via CI/CD environment variables, a remote secret manager, or secure runtime injection; use a gitignored local override file only when a local run needs the value and no injected path serves it.
+- Mark every secret-bearing input `sensitive = true`; expose a sensitive output only when a consumer needs it, and say which.
 
 ## Out of scope by default
+
 Do not perform these unless explicitly requested:
 - broad architecture migrations
 - provider or platform switches
