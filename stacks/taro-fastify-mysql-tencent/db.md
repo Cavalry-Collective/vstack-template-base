@@ -2,43 +2,44 @@
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **CynosDB** (serverless) in production, a fixed-name Docker container locally — with **Knex** for both migrations and the query layer, over the **`mysql2`** driver. Read the base files first.
+Binds `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **CynosDB** serverless in production, a fixed-name Docker container locally — via **Knex** over **`mysql2`**. Owns migrations, seed, schema conventions, and repo-ring query/transaction mechanics — SCF entry/bundle: `./backend.md`; provisioning/invocation: `./infra.md`.
 
-**Scope.** This file owns migrations, seed, schema conventions, and the repo-ring query/transaction mechanics. The SCF entry and bundle live in `./backend.md`; provisioning and the migrate-function invocation live in `./infra.md`.
+## Binding at a glance
 
-## Tool picks
+- **Knex migrations** — real paired `up`/`down`; base reversibility and round-trip rules apply **verbatim**. Create with `knex migrate:make <verb_noun>`; **keep Knex's default timestamp prefix**, never hand-numbered sequences (the base's parallel-branch collision).
+- **Knex query builder, no ORM.** Repos are thin builders over explicit queries; Knex binds values (the base never-interpolate rule, by construction). `db.raw()` only for `INSERT ... ON DUPLICATE KEY UPDATE` / `INSERT IGNORE`.
 
-- **Knex migrations** — real paired `up`/`down`, so the base reversibility and up→down→up round-trip rules apply **verbatim**. Create with `knex migrate:make <verb_noun>`; **keep Knex's default timestamp prefix** — do **not** override it with hand-numbered `0001_`/`0002_` sequences, which is exactly the parallel-branch collision the base warns about.
-- **Knex query builder, no ORM.** Repos are thin builders over explicit queries; values are bound by Knex (the base "never interpolate request data" rule holds by construction). Drop to `db.raw()` only for `INSERT ... ON DUPLICATE KEY UPDATE` / `INSERT IGNORE`.
+## Structure & migrations
 
-## Migrations
-
-- Live under `db/migrations/`, run via the root `migrate` verb (`knex migrate:latest`; rollback `migrate:rollback`). Each file exports `up(knex)` and `down(knex)`.
-- **Reversibility, bound:** every `up` ships its real `down`; a genuinely irreversible change carries the base's justification comment. Each migration runs in a transaction where MySQL DDL permits (note: most MySQL DDL auto-commits — keep one logical change per migration so a failure is diagnosable).
-- **Separate schema from data;** backfills are batched, idempotent, resumable (base rule) — add a column nullable, backfill it in an idempotent data migration, then enforce/consume it in a later one.
+- Migrations live under `db/migrations/` and run via the root `migrate` verb (`knex migrate:latest`; rollback `migrate:rollback`); each exports `up(knex)` and `down(knex)`.
+- Most MySQL DDL **auto-commits** — the base transactional rule binds weakly, so keep one logical change per migration for diagnosable failures.
+- **Separate schema from data**, bound: add the column nullable, backfill in an idempotent batched data migration, enforce/consume in a later one.
 
 ## Schema & MySQL-8 gotchas
 
-- snake_case tables/columns; every table carries `created_at`/`updated_at`. Index every FK and frequent filter/sort column explicitly.
-- **A `CHECK` constraint validates against *existing* rows on MySQL 8** — so you cannot add one to a table whose legacy rows already violate it. Enforce such invariants **in the service**, not with a late `CHECK`, when legacy or imported data may violate them.
-- **Fixed value sets: a native MySQL `ENUM` is acceptable** — widening it (`ALTER TABLE ... MODIFY ... ENUM(...)`) is a plain reversible migration (contrast Postgres, where the `vercel` pack avoids native enums). A new challenge `purpose` is added this way.
+- snake_case tables/columns; the base timestamps-on-every-table rule lands as `created_at`/`updated_at` [merged → `db/CLAUDE.md`]. Index every FK and frequent filter/sort column explicitly, in the migration that adds it.
+- **A `CHECK` constraint validates *existing* rows on MySQL 8** — you cannot add one to a table whose legacy rows violate it — enforce such invariants **in the service** when legacy or imported data may.
+- **Fixed value sets: native MySQL `ENUM` is acceptable** — widening one (`ALTER TABLE ... MODIFY ... ENUM(...)`) is a plain reversible migration, so the usual reasons to avoid native enums don't bite here.
 
 ## Repo ring binding (Knex)
 
-- **One Knex instance per process**, created at boot by `plugins/db.js`; repos receive it (or a transaction) as their **first arg** (`db`), then a named-args object — never construct their own connection.
-- **Mappers at the boundary:** repos translate rows (snake_case) ↔ DTOs (camelCase); a raw row never crosses inward. Prefer explicit column lists over `SELECT *`.
-- **Transactions:** a multi-write use case opens `knex.transaction(async (trx) => …)` in the **service** and passes `trx` as each repo's `db`; a single write relies on the statement's own atomicity.
+- **One Knex instance per process**, created at boot by `plugins/db.js`; repos receive it (or a transaction) as **first arg** (`db`), then a named-args object — never their own connection.
+- **Mappers at the boundary:** rows (snake_case) ↔ DTOs (camelCase); a raw row never crosses inward. Explicit column lists over `SELECT *`.
+- **Transactions:** a multi-write use case opens `knex.transaction(async (trx) => …)` in the **service**, passing `trx` as each repo's `db`; a single write relies on statement atomicity.
 
-## Local dev, seed & the destructive test-DB ritual
+## Local dev & seed
 
-- **Local MySQL is one fixed-name Docker container**, shared across worktrees per the base — reuse it, run `migrate`, never start a second copy (the base shared-DB rule stands; this stack does **not** use per-worktree databases, unlike the `vercel` pack).
-- **Seed** realistic, named accounts + content (base `db/CLAUDE.md`) so manual/e2e testing and the **test-mode** add-on's test-user picker have lifelike data; idempotent, upsert by business key.
-- **The test suite is destructive** — it truncates tables. The runner **refuses to run unless `DB_NAME` ends in `_test`**, and `pnpm test` auto-suffixes it, so the dev schema is never touched. One-time setup creates and migrates the `*_test` schema (`pnpm --filter backend test:db:setup`, idempotent). This `*_test`-schema guard *is* this stack's binding of the base "destructive checks go to a throwaway DB" rule.
+- **Local MySQL: one fixed-name Docker container shared across worktrees** (base shared-DB rule) — reuse it and run `migrate`; never a second copy, never per-worktree databases.
+- **Seed** realistic, named accounts + content (base rule) — lifelike data for manual/e2e testing and the **test-mode** picker; idempotent, upsert by business key.
 
 ## Production migrations — a separate SCF function
 
-**The deploy does not run `migrate` inline.** Migrations run in a dedicated SCF **event** function (`<project>-migrate`), invoked by the pipeline **after** `terraform apply` (`scripts/invoke-migrate.js` → SCF Invoke, options passed via `ClientContext`: `resetSchema`, `forceReseedTestUsers`). Because the function code and schema ship in the same pipeline run, keep every migration **backward-compatible** (expand → migrate → contract, base rule) so the brief window where old code meets new schema never breaks. Full pipeline order → `./infra.md`.
+**The deploy never runs `migrate` inline** — a dedicated SCF **event** function (`<project>-migrate`) runs migrations, pipeline-invoked **after** `terraform apply` (`scripts/invoke-migrate.js` → SCF Invoke; `ClientContext` options: `resetSchema`, `forceReseedTestUsers`). Code and schema ship in one pipeline run, so keep every migration **backward-compatible** (expand → migrate → contract, base rule): the window where old code meets new schema must never break. Pipeline order: `./infra.md`.
+
+## Testing — the `*_test` ritual
+
+The suite **truncates tables**; the runner **refuses unless `DB_NAME` ends in `_test`**, and `pnpm test` auto-suffixes it — the dev schema is never touched. One-time setup creates and migrates the `*_test` schema (`pnpm --filter backend test:db:setup`, idempotent). This guard *is* the stack's binding of the base throwaway-DB rule for destructive checks.
 
 ## Conflict register
 
-- **Base says:** seed/reset scripts are **non-production only** — idempotent and run only against local/throwaway databases, never a shared or production database. **In this stack:** controlled **data** seeds *do* run against production — admin bootstrap and one-off imports execute inside the migrate function, and the destructive **reset** path exists there too. **Because:** the migrate function is the one authenticated write path to the production DB (CynosDB is VPC-locked), so idempotent data bootstrapping rides it rather than a second mechanism. **Concretely:** DO keep any prod-run seed idempotent + upsert-by-business-key + non-fatal (a failed seed logs, it doesn't fail the deploy); DON'T let `resetSchema` reach production — it is an explicit opt-in `ClientContext`/`workflow_dispatch` flag, never the default, and never wired to run unattended against prod.
+- **Base says:** seed/reset scripts are **non-production only** — run only against local/throwaway databases. **In this stack:** controlled **data** seeds *do* run against production — admin bootstrap and one-off imports ride the migrate function; the destructive **reset** path exists there too. **Because:** the migrate function is the one authenticated write path to the VPC-locked production DB, so idempotent data bootstrapping rides it rather than a second mechanism. **Concretely:** DO keep any prod-run seed idempotent + upsert-by-business-key + non-fatal (a failed seed logs rather than failing the deploy); DON'T let `resetSchema` reach production — it is an explicit opt-in `ClientContext`/`workflow_dispatch` flag, never the default, never unattended.

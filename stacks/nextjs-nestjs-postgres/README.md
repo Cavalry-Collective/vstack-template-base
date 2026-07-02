@@ -1,24 +1,19 @@
 # Stack pack: nextjs-nestjs-postgres
 
-Frontend **Next.js** (App Router, server-first) · Backend **NestJS** · DB **Postgres via Prisma**. Language-neutral: TypeScript or plain JavaScript, with JS-path notes in each appendix. This is the **manifest** — it wires the pack onto a project; the bindings and conflict registers live in the three appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
+Frontend **Next.js** (App Router, server-first) · Backend **NestJS** · DB **Postgres via Prisma**. TypeScript or plain JavaScript, with JS-path notes per appendix. This manifest wires the pack onto a project; bindings and conflict registers live in the appendices — conflicts never live here. Pack invariants: `../README.md`.
 
 ## Appendix → base mapping
 
 | Appendix | Binds onto | Scope |
 |---|---|---|
-| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router, server-first rendering, four-states mapping, form-factor rule |
-| `backend.md` | `apps/backend/CLAUDE.md` | NestJS module/provider → onion mapping, Zod validation, JS Babel decorator setup |
-| `db.md` | `db/CLAUDE.md` + repo ring | Prisma schema, migrations (`migrations.path → ../db/migrations`), client wiring |
+| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router, server-first rendering, four-states mapping |
+| `backend.md` | `apps/backend/CLAUDE.md` | NestJS module/provider → onion mapping, security + add-on bindings, JS Babel setup |
+| `db.md` | `db/CLAUDE.md` + repo ring | Prisma schema, migrations (`migrations.path → db/migrations`), client boundaries |
+| `infra.md` | `infra/CLAUDE.md` | n/a stub — deployment-platform-agnostic; base applies unchanged |
 
-Each appendix opens with the verbatim precedence line and ends with its conflict register (see `../README.md`). Conflicts live in the appendices, not here.
+## Toolchain (pnpm workspaces)
 
-## Day-1 wiring
-
-Run as part of the root `README.md` `## Day-1 checklist`: delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here (mechanism: `../README.md` *Activation*). Nothing to generate or rerun; the appendices are read in place.
-
-Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and the **CI** block into `.github/workflows/ci.yml` — never the same block in both, and never `prisma migrate dev` in CI.
-
-## Suggested toolchain (pnpm workspaces)
+Three library picks bind the pack, each argued once in its owning appendix: NestJS on the **Fastify adapter** (not the default Express adapter), **Zod** as the one schema language at the NestJS edge and for Next form/response schemas — shared shapes defined once, no class-validator — and **AsyncLocalStorage** (`nestjs-cls`) for request context. Details: `backend.md`, `frontend.md`.
 
 **Dev block → root `CLAUDE.md` "Common commands":**
 
@@ -34,8 +29,14 @@ pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
 
 **CI block → `.github/workflows/ci.yml` (non-interactive):** spin up a Postgres service container; `pnpm install --frozen-lockfile`; `prisma generate`; `prisma migrate deploy` (**never `prisma migrate dev` in CI — it can reset the DB or prompt**); `pnpm typecheck`; `next build` + `nest build`; non-watch `pnpm test`. Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
 
-**Validation:** **Zod** is the schema library at the NestJS controller edge and for Next form/response schemas; a shape shared across the two is defined once and reused (no class-validator). Details in `backend.md` / `frontend.md`.
+## Day-1 wiring
+
+Run as part of the root `README.md` Day-1 checklist:
+
+1. Delete every other `stacks/*` directory — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). The appendices are read in place; nothing to generate.
+2. Copy the **dev** block over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and the **CI** block into `.github/workflows/ci.yml` — never the same block in both.
+3. Record in root `CLAUDE.md` **Learnings**: `Stack: nextjs-nestjs-postgres; appendices under stacks/nextjs-nestjs-postgres/`.
 
 ## Deploy seam
 
-`prisma migrate deploy` and the Next build output deploy and run through the cloud pipeline — see `infra/CLAUDE.md` (GCP/Terraform) for where migrate-on-deploy runs. This pack ships no `infra.md` (infra is cloud-shaped, not app-stack-shaped).
+`prisma migrate deploy` and the Next build ship through the cloud pipeline — see `infra/CLAUDE.md` for where migrate-on-deploy runs. This pack's `infra.md` is the platform-agnostic stub.
