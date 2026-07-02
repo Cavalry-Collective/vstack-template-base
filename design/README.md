@@ -6,6 +6,10 @@ inventory, copy, and flows. **Do not copy the mockup code** into the apps (its
 framework is usually not the app stack). See the *UI mockup / design reference*
 section in the root `CLAUDE.md`.
 
+This folder also holds the **design guide** — `design-guide.html` + `tokens.css`,
+the visual keystone confirmed before any UI work (`apps/frontend/CLAUDE.md` →
+*Design guide*). Everything below concerns the mockups.
+
 ## Layout
 
 Keep mockups findable so "point the relevant mockup at the spec" is mechanical, not a hunt.
