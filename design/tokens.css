@@ -192,6 +192,11 @@
   --bottom-nav-height: 3.5rem; /* mobile-first form factors */
   --bottom-nav-clearance: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 
+  /* Page rhythm — fixed by the screen archetype (design-guide.html →
+     Screen archetypes); pages never re-decide these gaps */
+  --page-title-gap: var(--space-4);   /* page-header block → first content */
+  --page-section-gap: var(--space-5); /* between content sections in a page */
+
   /* ════════════════ 3 · COMPONENT ════════════════ */
 
   --control-height: 2.5rem;

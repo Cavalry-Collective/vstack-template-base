@@ -214,6 +214,29 @@
   .g8  { grid-template-columns: repeat(8, 1fr); }
   .g4  { grid-template-columns: repeat(4, 1fr); }
 
+  /* —— Page miniatures (archetype skeletons) —— */
+  .pg { border: var(--border-1) solid var(--color-border-strong); border-radius: var(--radius-2);
+    background: var(--color-bg); padding: var(--space-2); display: grid; gap: var(--space-2);
+    align-content: start; max-width: 24rem; }
+  .pg i { display: block; height: var(--space-3); background: var(--color-bg-subtle);
+    border: var(--border-1) solid var(--color-border); border-radius: var(--radius-1); }
+  .pg .ph { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+  .pg .ttl { width: 40%; height: var(--space-3); background: var(--color-content-subtle);
+    border-radius: var(--radius-1); }
+  .pg .act { width: var(--space-5); height: var(--space-3); flex: none;
+    background: var(--color-accent); border-radius: var(--radius-1); }
+  .pg .row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--space-2); }
+  .pg .card { background: var(--color-surface); border: var(--border-1) solid var(--color-border);
+    border-radius: var(--radius-1); box-shadow: var(--shadow-1); padding: var(--space-1);
+    display: grid; gap: var(--space-1); }
+  .pg .card i { height: var(--space-2); }
+  .pg .steps { display: flex; gap: var(--space-1); }
+  .pg .steps i { width: var(--space-3); height: var(--space-1); border-radius: var(--radius-round); }
+  .pg .steps .on { background: var(--color-accent); border-color: var(--color-accent); }
+  .pg .ctr { display: grid; gap: var(--space-2); justify-items: center;
+    padding: var(--space-3) var(--space-4); }
+  .pg .ctr i { width: 60%; }
+
   /* —— Shape / elevation —— */
   .tiles { display: flex; flex-wrap: wrap; gap: var(--space-4); margin: var(--space-3) 0; align-items: end; }
   .tile { display: grid; gap: var(--space-1); justify-items: center; }
@@ -304,6 +327,8 @@
       <a href="#accessibility">Accessibility</a>
       <a href="#content">Content</a>
       <a href="#data">Data formatting</a>
+      <div class="nav-group">Composition</div>
+      <a href="#archetypes">Screen archetypes</a>
       <div class="nav-group">Beyond</div>
       <a href="#components">Components</a>
     </nav>
@@ -326,7 +351,7 @@
       <ul class="rules">
         <li><strong>New project?</strong> Rebrand the primitive tier of <code>tokens.css</code>;
           every page here re-derives. Confirm in a browser before building screens — that's the gate.</li>
-        <li><strong>Building?</strong> Consume semantic tokens only.</li>
+        <li><strong>Building?</strong> Pick the screen archetype first; consume semantic tokens only.</li>
         <li><strong>Reviewing?</strong> Each chapter ends in checkable rules; a violation is the defect.</li>
       </ul>
       <div class="callout">
@@ -492,6 +517,8 @@
       </figure>
       <ul class="rules">
         <li><code>1–2</code> inside controls · <code>3</code> component gaps · <code>4</code> between components · <code>5</code> between sections · <code>6</code> page-level.</li>
+        <li>Page-level gaps have names — <code>--page-title-gap</code>, <code>--page-section-gap</code> —
+          fixed by the <a href="#archetypes">screen archetype</a>, never re-derived.</li>
         <li>If the scale can't express a layout, fix the scale — not the instance.</li>
       </ul>
     </section>
@@ -548,6 +575,8 @@
         <li>Author from 320px up; no sideways scroll, ever.</li>
         <li>Prefer intrinsic sizing (wrap, min/max, container-fit) to breakpoints; add one only for a real layout change.</li>
         <li>Pages pick a layout variant; they never re-derive gutters or clearances.</li>
+        <li>The layout owns the frame; what fills the body region is the
+          <a href="#archetypes">screen archetype</a>'s decision.</li>
       </ul>
     </section>
 
@@ -709,6 +738,171 @@
       </table></div>
       <ul class="rules">
         <li>Store UTC, render local; timezone and locale pinned in one shared helper.</li>
+      </ul>
+    </section>
+
+    <section id="archetypes" hidden>
+      <p class="kicker">Composition</p>
+      <h1>Screen archetypes</h1>
+      <p class="lede">Seven page shapes cover the product. Name the archetype before you build —
+        the page frame is a decision already made, so page five looks like page one.</p>
+      <div class="callout">
+        <p><strong>One page, one archetype.</strong> A zone may host another archetype's content
+        pattern (a dashboard widget shows a mini collection), but exactly one archetype owns the
+        frame. No fit? Extend this set in the guide — never improvise a page shape on a screen.</p>
+      </div>
+
+      <h2>The page skeleton</h2>
+      <p>Every archetype starts from the same skeleton: a <strong>page header</strong> —
+        one title (the page's only H1), with optional description, back link or breadcrumb,
+        and page-level actions on the trailing edge — then that archetype's zones. The app
+        frame around it (top bar, nav, gutters) belongs to <a href="#layout">Layout</a>;
+        archetypes shape what fills the body region.</p>
+      <figure class="figure">
+        <div class="pg" aria-hidden="true">
+          <div class="ph"><span class="ttl"></span><span class="act"></span></div>
+          <i></i><i></i>
+        </div>
+        <figcaption>Title left, page actions trailing, content below —
+          <code>--page-title-gap</code> between header and content.</figcaption>
+      </figure>
+      <div class="table-wrap"><table>
+        <tr><th>Token</th><th>Value</th><th>Owns</th></tr>
+        <tr><td><code>--page-title-gap</code></td><td><span class="resolved" data-token="--page-title-gap"></span></td><td>Page header → first content</td></tr>
+        <tr><td><code>--page-section-gap</code></td><td><span class="resolved" data-token="--page-section-gap"></span></td><td>Between sections within a page</td></tr>
+      </table></div>
+      <p class="caption">Edges and widths are the layout's: <code>--gutter-screen</code>,
+        <code>--container-content</code>, <code>--container-narrow</code> (<a href="#layout">Layout</a>).</p>
+
+      <h2>Which archetype?</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Archetype</th><th>The job</th><th>Not for → use instead</th><th>Width</th></tr>
+        <tr><td>Collection</td><td>Browse and act on many records of one type</td><td>Reading one record → Record detail</td><td><code>content</code></td></tr>
+        <tr><td>Record detail</td><td>Everything about one record, at a glance</td><td>Heavy editing → Form</td><td><code>content</code></td></tr>
+        <tr><td>Form</td><td>Create or edit one record in a single sitting</td><td>Long or unfamiliar tasks → Multi-step flow</td><td><code>narrow</code></td></tr>
+        <tr><td>Dashboard</td><td>Monitor state across the product; jump to the work</td><td>Acting on records → Collection</td><td><code>content</code></td></tr>
+        <tr><td>Settings</td><td>View and adjust configuration in place</td><td>One-shot data entry → Form</td><td><code>content</code></td></tr>
+        <tr><td>Multi-step flow</td><td>A long or unfamiliar task, one step at a time (3–8 steps)</td><td>Tasks that fit one screen → Form</td><td><code>narrow</code></td></tr>
+        <tr><td>Full-page utility</td><td>Sign-in, not-found, full-page error or empty product — outside the app frame</td><td>Anything with navigation → the other six</td><td><code>narrow</code></td></tr>
+      </table></div>
+
+      <h2>Collection</h2>
+      <p>Many records, one type — scan, narrow, act.</p>
+      <figure class="figure">
+        <div class="pg" aria-hidden="true">
+          <div class="ph"><span class="ttl"></span><span class="act"></span></div>
+          <div class="row"><i style="width:70%"></i><i style="width:70%"></i><i></i></div>
+          <div class="card"><i></i><i></i><i></i><i></i></div>
+          <i style="width:30%; justify-self:end"></i>
+        </div>
+        <figcaption>Zones: page header → toolbar (search · filters · view controls) → records →
+          pagination. <code>--page-title-gap</code> under the header, <code>--space-3</code> between
+          the rest. Records sit in <code>box-sm</code> rows. Reflow: rows become cards below
+          <code>sm</code>; the toolbar wraps; row actions fold into a menu.</figcaption>
+      </figure>
+
+      <h2>Record detail</h2>
+      <p>One record's whole story: identity, key facts, then the detail.</p>
+      <figure class="figure">
+        <div class="pg" aria-hidden="true">
+          <div class="ph"><span class="ttl"></span><span class="act"></span></div>
+          <div class="row"><div class="card"><i></i></div><div class="card"><i></i></div><div class="card"><i></i></div></div>
+          <div class="card"><i></i><i></i><i></i></div>
+          <div class="card"><i></i><i></i></div>
+        </div>
+        <figcaption>Zones: page header (record name · status · actions) → key-facts strip →
+          content sections, <code>--page-section-gap</code> apart → related records last.
+          Reflow: the facts strip wraps; side-by-side sections stack below <code>sm</code>.</figcaption>
+      </figure>
+
+      <h2>Form</h2>
+      <p>Create or edit in one sitting — one column, nothing competing for attention.</p>
+      <figure class="figure">
+        <div class="pg" aria-hidden="true">
+          <div class="ph"><span class="ttl"></span></div>
+          <i style="width:30%; height:var(--space-2)"></i><i></i>
+          <i style="width:30%; height:var(--space-2)"></i><i></i>
+          <div class="ph" style="justify-content:flex-end"><i style="width:20%"></i><span class="act"></span></div>
+        </div>
+        <figcaption>Zones: page header → field groups (one column; <code>--space-3</code> between
+          fields, <code>--page-section-gap</code> between groups) → action bar. Field anatomy,
+          widths, and validation: the Forms pattern. Reflow: one column at every width; only
+          short, related fields pair up from <code>sm</code>.</figcaption>
+      </figure>
+
+      <h2>Dashboard</h2>
+      <p>The product's pulse — read in seconds, then jump to the work.</p>
+      <figure class="figure">
+        <div class="pg" aria-hidden="true">
+          <div class="ph"><span class="ttl"></span><i style="width:20%"></i></div>
+          <div class="row"><div class="card"><i style="width:50%"></i><i></i></div><div class="card"><i style="width:50%"></i><i></i></div><div class="card"><i style="width:50%"></i><i></i></div></div>
+          <div class="row"><div class="card"><i></i><i></i><i></i></div><div class="card"><i></i><i></i><i></i></div></div>
+        </div>
+        <figcaption>Zones: page header (+ scope/time filter) → KPI strip (Metric type role) →
+          widget grid on the <a href="#layout">grid</a>. Each widget hosts another archetype's
+          content pattern in miniature and links to it — the widget summarises, the archetype
+          page does the work. Reflow: 12 → 8 → 4 columns; the KPI strip wraps 4 → 2 → 1.</figcaption>
+      </figure>
+
+      <h2>Settings</h2>
+      <p>Read and adjust in place — grouped, labelled, predictable.</p>
+      <figure class="figure">
+        <div class="pg" aria-hidden="true">
+          <div class="ph"><span class="ttl"></span></div>
+          <div class="card"><i style="width:40%"></i><i></i><i></i></div>
+          <div class="card"><i style="width:40%"></i><i></i><i></i></div>
+        </div>
+        <figcaption>Zones: page header → settings groups, <code>--page-section-gap</code> apart —
+          one group, one surface; label-left, control-right rows inside. Many groups earn a
+          sub-nav, not a longer page. Save behaviour: the Forms pattern. Reflow: label/control
+          rows stack below <code>sm</code>.</figcaption>
+      </figure>
+
+      <h2>Multi-step flow</h2>
+      <p>One topic per step, 3–8 steps, a review before commit.</p>
+      <figure class="figure">
+        <div class="pg" aria-hidden="true">
+          <div class="ph"><span class="ttl"></span><span class="steps"><i class="on"></i><i></i><i></i><i></i></span></div>
+          <div class="card"><i style="width:40%"></i><i></i><i></i></div>
+          <div class="ph" style="justify-content:space-between"><i style="width:20%"></i><span class="act"></span></div>
+        </div>
+        <figcaption>Zones: page header + step indicator → the step's content (one question or
+          topic) → step actions (back · continue) → a review step last. Reflow: the indicator
+          compresses to "Step 2 of 4" below <code>sm</code>.</figcaption>
+      </figure>
+
+      <h2>Full-page utility</h2>
+      <p>Sign-in, not-found, full-page failure, first-run — the app frame steps aside.</p>
+      <figure class="figure">
+        <div class="pg" aria-hidden="true">
+          <div class="ctr">
+            <i style="width:var(--space-4); height:var(--space-4)"></i>
+            <span class="ttl" style="width:50%"></span>
+            <i style="height:var(--space-2)"></i>
+            <span class="act"></span>
+          </div>
+        </div>
+        <figcaption>Zones: one centered column — mark → headline → one sentence → one action.
+          No nav, no chrome. Copy rules: <a href="#content">Content</a>. Reflow: intrinsically
+          single-column.</figcaption>
+      </figure>
+
+      <h2>Density</h2>
+      <p>The box scale (<a href="#spacing">Spacing</a>) <em>is</em> the app's density: a denser
+        product remaps <code>--box-padding-*</code> once, at the token layer. A zone's box size is
+        part of its archetype — collection rows sit in <code>box-sm</code> by definition; that is
+        the archetype speaking, not a per-page density choice.</p>
+
+      <ul class="rules">
+        <li>Name the archetype before building any screen — its zones, gaps, and width are
+          decisions already made.</li>
+        <li>Page rhythm is token-only: <code>--page-title-gap</code> under the header,
+          <code>--page-section-gap</code> between sections, edges and widths from
+          <a href="#layout">Layout</a>. Never re-derived per page.</li>
+        <li>Exactly one archetype owns a page; zones may host other archetypes' content patterns.</li>
+        <li>No fit → extend this set in the guide first. A page shape invented on a screen is a
+          one-off by definition.</li>
+        <li>One density app-wide, set at the token layer — never mixed within a page hierarchy.</li>
       </ul>
     </section>
 
