@@ -22,9 +22,10 @@ Spec: specs/<file>
 
 - [ ] all four data states verified (loading / error / empty / success) — see `apps/frontend/CLAUDE.md`
 - [ ] keyboard-only pass done (reachable, visible focus, modals trap/restore)
-- [ ] mockup linked and compared, or noted "no mockup" — see `design/README.md`
+- [ ] new screen compared to its `design/` mockup (mockups are the **initial-build** reference only); existing-screen change built to convention — see `design/README.md`
 - [ ] all user-facing strings via i18n (keys added to every locale) or the project's single strings/copy module — see `apps/frontend/CLAUDE.md`
-- [ ] before/after screenshots attached at the primary form factor (add the off-axis breakpoint if layout changed)
+- [ ] verified at the minimum supported width — no overflow / clipping / horizontal scroll, fixed chrome clears content — see `apps/frontend/CLAUDE.md` *Responsive layout*
+- [ ] before/after screenshots attached at the primary form factor and the narrow width
 
 ## Notes
 

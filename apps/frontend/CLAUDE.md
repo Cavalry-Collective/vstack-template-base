@@ -69,10 +69,26 @@ Consistency is a system, not a per-page effort. Two things make every screen fee
 **One token source, three tiers.** All spacing, colour, typography, radius, and elevation come from a single design-token source, never hardcoded per page. Structure tokens in three layers so they stay coherent and themeable:
 
 1. **Primitive tokens** — raw, context-free values (`--color-blue-600`, `--space-4`).
-2. **Semantic tokens** — decisions that map primitives to meaning (`--color-bg`, `--gutter-screen`). Components reference *these* (plus form-factor-specific tokens such as `--bottom-nav-clearance` only when mobile is the primary form factor).
+2. **Semantic tokens** — decisions that map primitives to meaning (`--color-bg`, `--gutter-screen`, `--header-clearance`). Components reference *these* (plus form-factor-specific tokens such as `--bottom-nav-clearance` only when mobile is the primary form factor).
 3. **Component tokens** — per-component overrides, where a component genuinely needs them.
 
 Pages and components consume **semantic** tokens; they never reach past them to a raw primitive value.
+
+## Responsive layout
+
+"Responsive by default" (above) is a promise; these rules keep it. They are **form-factor-independent** — they prevent failures common to *any* fluid layout, whatever primary form factor you declared. Each names the failure it prevents. The through-line: **fix each with a primitive or token applied once, never a per-page tweak.**
+
+- **Author from the smallest supported width up.** Base styles target the narrowest viewport in the declared range; scale *up* with min-width breakpoints. The floor is the WCAG **Reflow** target — no sideways scroll or lost content at **320 CSS px** (≈ 400% zoom), and the layout survives **200% text zoom**.
+- **Prefer intrinsic sizing; reach for breakpoints last.** Let content size itself — fluid type and space (`clamp()`), grids and rows that wrap on their own (`auto-fit`/`minmax`, `flex-wrap`) — so layout adapts *between* breakpoints, not only at them. A reusable component adapts to **its container's** width (a container query), not the viewport's, so one primitive works in a wide main *and* a narrow sidebar. Add a viewport breakpoint only for a genuine page-level layout change.
+- **No horizontal overflow at the minimum width.** The page never scrolls sideways and nothing clips. Three usual culprits, each with its fix:
+  - **Atomic values never wrap mid-token.** Phone numbers, emails, IDs, codes, currency amounts are single units — keep them on one line and let the *container* size to them. Bake the no-wrap into the shared inline-value / link primitive so every occurrence inherits it. (The exception is a string too long for any width — a raw URL: let it break with `overflow-wrap`, don't force the page to scroll.)
+  - **Long free text wraps or truncates — it never pushes width.** Prose wraps; a single-line cell that can't wrap (a table column) truncates and exposes the full value accessibly. A flex/grid child only shrinks if it (or its parent) allows it — give it `min-width: 0`, or the "unbreakable child" silently forces the row wider.
+  - **Wide content scrolls inside its own box.** Data tables and code blocks live in a horizontally scrollable wrapper so *they* scroll, not the page.
+- **Reserve space for fixed / sticky chrome with a token, in the layout.** Express each bar's height as one semantic token (`--header-clearance`) applied by the shared layout — not re-measured or re-padded per page. Top-anchor a full-bleed first section (hero) by that clearance so its content position stays deterministic however tall its (variable-length) copy renders.
+- **Size full-bleed sections to content, not the viewport.** Give a hero a content-driven **min-height plus responsive vertical padding** — not `100vh` (ignores mobile browser UI) or an aspect-ratio on a flex child (sizes inconsistently across engines). Where an element genuinely must fill the viewport (a mobile sheet or overlay), use `svh` (the *small* viewport unit, stable) — never `vh`, and `dvh` only when you deliberately want it to track the URL bar.
+- **Treat configurable copy as variable-length.** Any admin/CMS-editable string (headline, tagline, label) has no fixed length; the layout must survive a one-word *and* a three-line value without clipping or colliding with neighbouring chrome. Balance headings (avoid an orphaned last word) as the default, not a later fix.
+- **Multi-field rows collapse to full-width below the breakpoint.** A row of inputs/controls that sits side-by-side on wide screens stacks full-width on narrow ones, and each field keeps a sensible min-width so its content (e.g. a date *and* a time) stays legible instead of being squeezed.
+- **Adapt by disclosure, never by hiding meaning.** Swapping a short label for a full one across a breakpoint is fine; *removing* an actionable control on small screens is not — if navigation doesn't fit, collapse it into a menu, don't drop destinations.
 
 ## Visual quality bar
 
@@ -144,6 +160,7 @@ Non-negotiable. The headless library covers a11y only for widgets routed through
 - **Motion.** Honour `prefers-reduced-motion`; never convey essential feedback by motion alone.
 - **State announcement.** Don't convey state by colour alone; announce dynamic updates via a live region or managed focus.
 - **Touch targets** ~44×44px minimum on touch-primary form factors (tie this to the declared primary form factor; don't mandate it for desktop-primary tools).
+- **Reflow & zoom.** Content reflows without horizontal scrolling or loss at **320 CSS px** width (WCAG 1.4.10) and stays usable at **200% text zoom** (1.4.4) — the responsive floor; see *Responsive layout*. Content that genuinely needs two-dimensional layout (data tables, maps) scrolls inside its own box, not the page.
 
 An automated a11y check (axe / lighthouse-style) belongs in CI alongside Lint / Test / Build, but automation is the floor — it catches only a fraction of these rules.
 
@@ -191,6 +208,7 @@ These bind the frontend to the backend's cross-cutting machinery. All three live
 - **Services** — test with the network mocked at the edge: assert request shape + response / error mapping, never by stubbing internal methods.
 - **Organisms (feature components)** — test for behaviour and the four required states (loading / error / empty / success), not markup. The four-state contract in *Layering* is itself a test checklist for every data-backed screen.
 - **No broad DOM snapshots.** Snapshot the data a component receives, not its rendered output — markup snapshots lock in structure and produce noise on every refactor.
+- **At least one automated check runs at a narrow viewport.** A suite that only ever runs at one desktop width leaves responsive layout untested — the canonical way mobile-layout regressions ship. Run the end-to-end suite (or a representative subset) at the minimum supported width as well as the primary; the concrete mechanism (a second device project, a viewport override) is the active stack pack's.
 
 ## Verifying a change
 
@@ -199,5 +217,5 @@ Run it; don't infer from reading the code.
 - Start the dev server and load the touched screen.
 - Confirm all four states (loading / error / empty / success) actually render — force the error and empty paths, don't just read the code.
 - Do one keyboard-only pass: tab order sane, focus visible, Esc / Enter work on any modal or dialog.
-- Check the screen against its `design/` mockup for the declared primary form factor, plus a sanity check at the other width (the responsive baseline).
+- Exercise the touched screen at the declared primary form factor, **and at the minimum supported width and 200% zoom** — resize down to the narrow end (~320 px) and confirm nothing overflows, clips, or forces horizontal scroll, and that fixed chrome doesn't overlap content (force it; don't infer safety from the classes). This is the responsive baseline, not an optional glance.
 - **State what you observed** (which states you exercised, what you saw), not just that you ran it.

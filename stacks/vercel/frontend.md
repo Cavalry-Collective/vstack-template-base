@@ -45,6 +45,22 @@ Binding only — the base owns the why. **Loading** → `loading.tsx` / `<Suspen
 - **Foundation: Radix UI primitives**, wrapped as **atoms** in `components/atoms/` (base *Component structure* unchanged). Atom/molecule variants via `class-variance-authority`; class composition via `clsx` + `tailwind-merge` (one `cn()` helper in `lib/`). Icons: `lucide-react`. Fonts via `next/font`.
 - Don't import a prebuilt styled component kit on top — compose Radix + tokens in `components/atoms/`/`molecules/`. Swapping the headless library is allowed only by recording the choice in `apps/frontend/CLAUDE.md`; don't mix two.
 
+## Responsive layout (Tailwind v4)
+
+Binds the base *Responsive layout* rules to Tailwind v4 — the base owns the *why*, here is the idiom for each.
+
+- **Mobile-first, stepped utilities.** Base classes target the narrowest width; scale up with `sm:`/`md:`/`lg:`. The default breakpoints are usually enough — don't add custom `@theme` breakpoints without a real reason.
+- **Prefer intrinsic sizing over breakpoints.** Reach for fluid type/space (`clamp()`, or a fluid step in the `@theme` scale) and self-wrapping layout (`grid-cols-[repeat(auto-fit,minmax(…,1fr))]`, `flex-wrap`) before adding a breakpoint — they adapt continuously, so fewer breakpoints and less per-screen tuning.
+- **Component responsiveness uses container queries.** A primitive that must adapt to the space it occupies uses Tailwind v4's built-in `@container` + `@sm:`/`@md:` variants (not viewport `sm:`/`md:`), so the same component works in a wide main *and* a narrow sidebar. Keep viewport breakpoints for page-level layout.
+- **CSS-first, no `tailwind.config`.** Breakpoints and tokens are the `@theme` declaration in the global stylesheet — the single token source the base names. Header clearance and screen gutter are semantic tokens (`--header-clearance`, `--gutter-screen`), not magic numbers per page.
+- **One layout primitive owns the gutter.** Wrap the recurring `container mx-auto px-4 lg:px-8` idiom once as a `<Container>` / `<Section>` atom (driven by `--gutter-screen`), with inner `max-w-*` reading columns. Hand-composing that string per page is the greppable smell — it drifts.
+- **Full-bleed hero: content-driven height.** `min-h-[Xrem]` + responsive `py-*`. **Never** `h-screen` / `100vh` (ignores mobile browser UI) and **never** `aspect-[…]` on a flex child (sizes inconsistently across engines). Where an element must truly fill the viewport (a mobile sheet), use `min-h-[100svh]` (the *small* unit, stable) — not `vh`, and `dvh` only to deliberately track the URL bar. Clearance comes from the shared layout token (`pt-[…]` bound to `--header-clearance`); top-anchor the copy so its position doesn't depend on (admin-editable) headline height.
+- **Atomic values don't wrap.** The shared inline-value / link atom applies `whitespace-nowrap` to `tel:`/`mailto:` values and `font-mono` codes; a long unbreakable string (a raw URL) uses `overflow-wrap`. Free-text table cells use `truncate max-w-*` inside a `min-w-0` parent; wrap wide tables/code in an `overflow-x-auto` box so the page never scrolls sideways.
+- **`text-balance` is the heading default** — set it in the shared heading atom, don't retrofit per screen.
+- **`<DataTable>` primitive.** `overflow-x-auto` wrapper + `whitespace-nowrap` columns (opt-in `truncate max-w-*` for free text) + **windowed pagination (≤ ~7 slots: first, last, current ± 1, ellipsis)** so a large page count can't widen the layout.
+- **Modal sizing is fixed once.** Keep the Radix/shadcn dialog baseline `w-full max-w-[calc(100%-2rem)] sm:max-w-lg` — full-width-minus-gutter on phones, capped above `sm`; don't re-solve dialog sizing per feature.
+- **Images: `next/image` `fill` + explicit `sizes` + an `aspect-[…]` wrapper.** Art-direct across breakpoints with `object-position` / `object-cover` rather than shipping crops — unless a crop genuinely must differ, which is what `<picture>` / `media` is for. Use `unoptimized` only for `data:` URLs and the logo.
+
 ## Versioning / build identity
 
 Inline the version at build time — `next.config` sets `env.NEXT_PUBLIC_APP_VERSION` from `npm_package_version` — and render the unobtrusive `v<version>` tag from it. Vercel + App Router handle deployment skew (deployment ids, asset versioning, RSC re-fetch on navigation) — see the conflict register; no `version.json` poll.
@@ -65,6 +81,7 @@ The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`nex
 ## Testing — typecheck + build + Playwright e2e
 
 - The frontend suite is `tsc --noEmit`, `next build`, and **Playwright** specs under `apps/frontend/e2e/` exercising the real app — every screen's four states and primary flows. `E2E_BASE_URL` selects the target: the local dev stack or a deployed preview.
+- **Run the specs at a narrow viewport as well as desktop** (base *Testing* rule). Define a second Playwright project on a mobile device — `{ name: 'mobile', use: { ...devices['Pixel 7'] } }` beside the desktop project — so the four-state specs also run at phone width; a suite pinned to one desktop viewport ships mobile-layout regressions. Add mobile-only assertions (nav collapses, no horizontal scroll) where a screen's layout genuinely diverges.
 - See the conflict register for what this replaces. The moment a store slice or service accrues branching logic worth isolating, add a unit runner for that code — don't scaffold one speculatively.
 
 ## Conflict register
