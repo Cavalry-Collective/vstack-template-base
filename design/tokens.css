@@ -1,0 +1,17 @@
+/*
+  Design tokens — PLACEHOLDER.
+
+  The Fable 5 model will generate the project's full token set here: a commented
+  PRIMITIVE tier (palette ramps, type scale, spacing, radius, elevation, z-index,
+  motion, breakpoints) and a SEMANTIC tier (intent-named aliases pointing at
+  primitives), plus a dark remap and a prefers-reduced-motion collapse — driven
+  by the project's brand.
+
+  This is the single token source the app's token file is seeded from, and the
+  one design/design-guide.html renders live. See apps/frontend/CLAUDE.md → "Design guide".
+
+  Until generated, this file intentionally defines no tokens.
+*/
+:root {
+  /* Fable 5 fills in the primitive + semantic tokens here. */
+}
