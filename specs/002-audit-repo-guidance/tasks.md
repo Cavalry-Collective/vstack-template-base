@@ -108,11 +108,11 @@
 ### Implementation for User Story 4
 
 - [X] T030 [US4] Document the canonical pack structure in `stacks/README.md` per `contracts/stack-pack-structure.md`: the five files, absence-is-a-statement rule, exception label format, authoring guidance for future packs (FR-015)
-- [ ] T031 [P] [US4] Conform `stacks/nextjs-nestjs-postgres/`: add `infra.md` (content or n/a-declared stub with reason), align section shape with the contract, label sanctioned deviations, streamline prose to the contract voice, move any misplaced generic content up / pull implementation detail down from generic files per approved findings
-- [ ] T032 [P] [US4] Conform `stacks/taro-fastify-mysql-tencent/` (same procedure)
-- [ ] T033 [P] [US4] Conform `stacks/vercel/` (same procedure)
-- [ ] T034 [US4] Resolve remaining tier conflicts in the generic files per approved findings: strip stack-specific detail from `CLAUDE.md`, `apps/*/CLAUDE.md`, `db/CLAUDE.md`, `infra/CLAUDE.md` — generic prevails unless the pack carries a labelled exception (FR-005, FR-006; touches US2's files, so runs after Phase 4)
-- [ ] T035 [US4] Validate: build the StackPack conformance table (data-model.md) — five files present/n-a-declared per pack, zero unlabelled contradictions in side-by-side reads (SC-004, SC-011); update `rule-inventory.md` for moved rules
+- [X] T031 [P] [US4] Conform `stacks/nextjs-nestjs-postgres/`: add `infra.md` (content or n/a-declared stub with reason), align section shape with the contract, label sanctioned deviations, streamline prose to the contract voice, move any misplaced generic content up / pull implementation detail down from generic files per approved findings
+- [X] T032 [P] [US4] Conform `stacks/taro-fastify-mysql-tencent/` (same procedure)
+- [X] T033 [P] [US4] Conform `stacks/vercel/` (same procedure)
+- [X] T034 [US4] Resolve remaining tier conflicts in the generic files per approved findings: strip stack-specific detail from `CLAUDE.md`, `apps/*/CLAUDE.md`, `db/CLAUDE.md`, `infra/CLAUDE.md` — generic prevails unless the pack carries a labelled exception (FR-005, FR-006; touches US2's files, so runs after Phase 4)
+- [X] T035 [US4] Validate: build the StackPack conformance table (data-model.md) — five files present/n-a-declared per pack, zero unlabelled contradictions in side-by-side reads (SC-004, SC-011); update `rule-inventory.md` for moved rules
 
 **Checkpoint**: Tiers are clean; packs are parallel; future-pack authoring is documented
 
@@ -126,9 +126,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T036 [US5] Wire missing references per the discovery map's `orphaned` entries: add "read `<file>` before working on `<area>`" pointers in root `CLAUDE.md` and the area `CLAUDE.md` files so every agent-binding file is one hop from a loaded file (FR-007)
-- [ ] T037 [US5] For every `audience: human` file, verify no agent-binding rule exists only there; move any such rule into the owning CLAUDE.md-tier file and update `rule-inventory.md` (US5 scenario 2)
-- [ ] T038 [US5] Validate: update `discovery-map.md` — zero `orphaned` agent-binding files remain (SC-005); re-run the cross-reference check for broken links introduced by wiring (FR-008)
+- [X] T036 [US5] Wire missing references per the discovery map's `orphaned` entries: add "read `<file>` before working on `<area>`" pointers in root `CLAUDE.md` and the area `CLAUDE.md` files so every agent-binding file is one hop from a loaded file (FR-007)
+- [X] T037 [US5] For every `audience: human` file, verify no agent-binding rule exists only there; move any such rule into the owning CLAUDE.md-tier file and update `rule-inventory.md` (US5 scenario 2)
+- [X] T038 [US5] Validate: update `discovery-map.md` — zero `orphaned` agent-binding files remain (SC-005); re-run the cross-reference check for broken links introduced by wiring (FR-008)
 
 **Checkpoint**: Nothing binding can be missed for naming reasons
 
@@ -138,11 +138,11 @@
 
 **Purpose**: Final measurements, end-to-end proof, and the merge-back gate
 
-- [ ] T039 [P] Final SC-003 measurement: corpus `wc -w` ≤ 27,733 and `rule-inventory.md` shows zero unapproved losses; if over target, iterate on the wordiest files (evidence into `audit-report.md`)
-- [ ] T040 [P] Dry-run instantiation (SC-006): fresh clone in a scratch directory, follow the README Day-1 checklist end to end; zero broken references, missing files, or stale placeholders
-- [ ] T041 [P] Run SC-007 (two-doc orientation: root + one area file states the area's binding rules) and re-run SC-008 if `README.md` changed after T029
-- [ ] T042 Full quickstart.md sweep: every row SC-001…SC-012 passes; release-gate section of `audit-report.md` all-pass with evidence
-- [ ] T043 Close the ledger: every finding in `audit-report.md` reaches `applied`/`verified` or `rejected`; no new TODO/FIXME in touched files (Definition of Done); note explicitly that lint/typecheck/test/build are still toolchain TODOs
+- [X] T039 [P] Final SC-003 measurement: corpus `wc -w` ≤ 27,733 and `rule-inventory.md` shows zero unapproved losses; if over target, iterate on the wordiest files (evidence into `audit-report.md`)
+- [X] T040 [P] Dry-run instantiation (SC-006): fresh clone in a scratch directory, follow the README Day-1 checklist end to end; zero broken references, missing files, or stale placeholders
+- [X] T041 [P] Run SC-007 (two-doc orientation: root + one area file states the area's binding rules) and re-run SC-008 if `README.md` changed after T029
+- [X] T042 Full quickstart.md sweep: every row SC-001…SC-012 passes; release-gate section of `audit-report.md` all-pass with evidence
+- [X] T043 Close the ledger: every finding in `audit-report.md` reaches `applied`/`verified` or `rejected`; no new TODO/FIXME in touched files (Definition of Done); note explicitly that lint/typecheck/test/build are still toolchain TODOs
 - [ ] T044 Merge-back gate per root `CLAUDE.md`: self-review the full diff end to end, rebase onto `main`, fast-forward merge, remove the worktree — and **confirm with the maintainer before any push** (deploy workflow triggers on `main`)
 
 ---

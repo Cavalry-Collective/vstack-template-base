@@ -18,7 +18,7 @@ Three library picks bind the pack, each argued once in its owning appendix: Nest
 **Dev block → root `CLAUDE.md` "Common commands":**
 
 ```bash
-pnpm bootstrap   # install; start local Postgres (TODO: name the docker-compose Postgres service — reuse the shared container across worktrees); prisma generate; prisma migrate dev; run both dev servers
+pnpm bootstrap   # install; start the shared fixed-name local Postgres container (reused across worktrees — never a second copy); prisma generate; prisma migrate dev; run both dev servers
 pnpm dev         # Nest watch + Next dev server
 pnpm lint        # workspace lint, both apps
 pnpm typecheck   # tsc --noEmit per app (explicit no-op in a plain-JS app)

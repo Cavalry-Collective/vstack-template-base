@@ -224,3 +224,24 @@ Classification of all 29 files: [discovery-map.md](./discovery-map.md). Summary:
 All other findings are non-destructive edits already authorized by the spec's P2–P5 stories; they proceed after this gate.
 
 > **Gate status (2026-07-03)**: report presented; Decisions 1–3 asked, maintainer response pending. Non-destructive remedies (35 findings) proceeding per spec authorization. Destructive items (F-001 remediation, F-002/spec-dir removal, F-020 disposition) remain `proposed` until answered — re-asked at the merge gate.
+
+## Final validation (T042, 2026-07-03)
+
+**Disposition update**: all 35 non-destructive findings (F-003–F-019, F-021–F-038) are **applied → verified** — evidence below and in the streamlining/conformance commits on `worktree-002-audit-repo-guidance`. F-001, F-002, F-020 remain **proposed** pending Decisions 1–3; T028 (destructive removals) waits on them.
+
+| SC | Result | Evidence |
+|---|---|---|
+| SC-001 | ✅ | 29/29 corpus files + structural artifacts have verdicts (mechanically diffed vs baseline) |
+| SC-002 | ✅ | discovery map complete; README + report answer the loading question with doc citations |
+| SC-003 | ◐ | 36,978 → **30,275** words (−18.1%) with **zero rules lost** vs the 25% target. Per-session context load (root + area + pack appendix) is down ~25% — e.g. frontend session 9,574 → 7,196w — because mandated additions (security/add-on bindings, infra stub, OTP hardening, license/branding, canon skeleton) never co-load. Deeper cuts now trade readability or rules; maintainer may tune per the spec's assumption |
+| SC-004 | ✅ | zero unlabelled contradictions; F-010/F-011 now registered; generic tier grep-clean of stack names |
+| SC-005 | ✅ | zero orphaned agent-binding files; every chain ≤ 1 hop (discovery map updated) |
+| SC-006 | ✅ | scratch-clone dry run: all Day-1 references resolve; markers grep-able exactly as documented |
+| SC-007 | ✅ | root + area file state each area's binding rules; stack detail is the explicitly-pointed appendix |
+| SC-008 | ✅ | fresh-reader test ×2 (before/after final edits): ORIENTED yes; "reads convincingly as the public flagship of an opinionated senior team" |
+| SC-009 | ◐ | secrets ✅, license ✅, front door ✅; internal refs/personal data pending Decisions 1 & 3 |
+| SC-010 | ✅ | 3-file sample + corpus-wide prohibited-phrase grep clean |
+| SC-011 | ✅ | 3 packs × 5 files (present, none missing; nextjs infra.md = declared n/a stub); one skeleton; registers replacements-only |
+| SC-012 | ✅ | lockup/mark render from `design/brand/` only; zero external or internal asset references |
+
+**Optional follow-ups surfaced by the fresh-reader (out of scope, maintainer's call)**: a CONTRIBUTING/support note for the template repo itself; a Keystone screenshot in the README; a documented path for instantiated projects to absorb upstream template improvements; a POSIX-shell note on the checklist commands.

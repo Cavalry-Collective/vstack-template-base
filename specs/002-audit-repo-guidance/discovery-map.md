@@ -20,19 +20,21 @@ How the coding agent encounters each file, per the documented loading model (res
 | stacks/*/frontend.md (×3) | agent | stack-pack | one-hop | apps/frontend/CLAUDE.md categorical |
 | stacks/*/db.md (×3) | agent | stack-pack | one-hop | db/CLAUDE.md categorical |
 | stacks/*/infra.md (×2) | agent | stack-pack | one-hop | infra/CLAUDE.md categorical (conditional "if it ships one") |
-| stacks/nextjs-nestjs-postgres/README.md | both | stack-pack | **two-hop** ⚠️ | root → stacks/README.md → pack README |
-| stacks/taro-fastify-mysql-tencent/README.md | both | stack-pack | **two-hop** ⚠️ | same chain |
-| stacks/vercel/README.md | both | stack-pack | **two-hop** ⚠️ | same chain |
-| db/migrations/README.md | unclear | generic-area | **orphaned** ⚠️ | nothing references it |
-| .github/PULL_REQUEST_TEMPLATE.md | both | meta | **orphaned** ⚠️ | GitHub UI renders it for humans; no guidance pointer for agents (root mentions "the PR template" without a path) |
+| stacks/nextjs-nestjs-postgres/README.md | both | stack-pack | one-hop ✅ (was two-hop) | root Repo shape: "a new adoption starts at the pack's own `README.md`" — adoption-time surface; work-time surface is the one-hop appendices |
+| stacks/taro-fastify-mysql-tencent/README.md | both | stack-pack | one-hop ✅ (was two-hop) | same categorical pointer |
+| stacks/vercel/README.md | both | stack-pack | one-hop ✅ (was two-hop) | same categorical pointer |
+| db/migrations/README.md | both | generic-area | one-hop ✅ (was orphaned) | db/CLAUDE.md intro: "its `README.md` marks the folder" |
+| .github/PULL_REQUEST_TEMPLATE.md | both | meta | one-hop ✅ (was orphaned) | root CLAUDE.md *Goal-driven execution* names `.github/PULL_REQUEST_TEMPLATE.md` |
 | .github/ISSUE_TEMPLATE/bug.md | human | meta | n/a (GitHub UI) | human-facing only — acceptable if no unique agent-binding rules |
 | .github/ISSUE_TEMPLATE/feature.md | human | meta | n/a (GitHub UI) | same |
 | .claude/skills/** | agent | vendored | on skill invocation (harness) | untracked in git |
 | .specify/** | agent | vendored | read by Spec Kit skills | untracked in git |
 
-## At-risk summary (feeds FR-007 wiring in US5)
+## At-risk summary — RESOLVED (US5 wiring, 2026-07-03)
 
-1. `db/migrations/README.md` — orphaned; 9 words; disposition needed (delete, or fold its content into `db/CLAUDE.md`).
-2. `stacks/<pack>/README.md` (×3) — two hops from auto-loaded guidance. Mitigation: they are instantiation-time documents (a human-led moment via the Day-1 checklist), and post-instantiation work flows through the one-hop area appendices — wire an explicit pointer or accept with rationale.
-3. `.github/PULL_REQUEST_TEMPLATE.md` — carries the Test-plan-evidence expectation agents must satisfy; root CLAUDE.md names the obligation but not the file. One explicit pointer fixes it.
-4. Issue templates — human-only, no unique binding rules (verify in T037).
+1. `db/migrations/README.md` — ✅ de-orphaned: `db/CLAUDE.md` intro references it; the README frames the empty folder as deliberate and points back at the rules.
+2. `stacks/<pack>/README.md` (×3) — ✅ root `CLAUDE.md` Repo shape now points categorically at "the pack's own `README.md`" for adoption; work-time guidance flows through the one-hop area appendices.
+3. `.github/PULL_REQUEST_TEMPLATE.md` — ✅ root `CLAUDE.md` *Goal-driven execution* names the file where it states the Test-plan-evidence obligation.
+4. Issue templates — ✅ verified human-only (T037): reporter requirements rendered by GitHub's UI; no agent-binding rule exists only there.
+
+**SC-005 status: zero orphaned agent-binding files; every chain ≤ 1 hop from auto/lazy-loaded guidance.**
