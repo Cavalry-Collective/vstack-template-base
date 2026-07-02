@@ -121,9 +121,9 @@ Feature touches exactly three source files: `design/design-guide.html`, `design/
 
 **Purpose**: Whole-guide integrity audits and the merge-back gate
 
-- [ ] T030 Run the full quickstart audits (§1 structure smoke incl. no-JS fallback and stable `#elevation`/`#components` anchors; §2 token greps + live-mirror; §5 rule-form/one-home spot-checks, the SC-005 three-failure-modes probe, and the full 10-brief SC-006 selection probe) against the completed guide in the worktree; fix findings and re-run until clean
-- [ ] T031 Self-review the full diff end to end per root `CLAUDE.md` (correct layer, no unrelated reformatting, names carry business meaning, no stray TODOs) across `design/design-guide.html`, `design/tokens.css`, `apps/frontend/CLAUDE.md`
-- [ ] T032 Merge-back gate per root `CLAUDE.md`: rebase onto trunk; state explicitly that lint/typecheck/test/build remain toolchain-TODO (Definition of Done disclosure); fast-forward merge; remove worktree + branch; confirm with the user before any push (deploy trigger caveat)
+- [X] T030 Run the full quickstart audits (§1 structure smoke incl. no-JS fallback and stable `#elevation`/`#components` anchors; §2 token greps + live-mirror; §5 rule-form/one-home spot-checks, the SC-005 three-failure-modes probe, and the full 10-brief SC-006 selection probe) against the completed guide in the worktree; fix findings and re-run until clean
+- [X] T031 Self-review the full diff end to end per root `CLAUDE.md` (correct layer, no unrelated reformatting, names carry business meaning, no stray TODOs) across `design/design-guide.html`, `design/tokens.css`, `apps/frontend/CLAUDE.md`
+- [X] T032 Merge-back gate per root `CLAUDE.md`: rebase onto trunk; state explicitly that lint/typecheck/test/build remain toolchain-TODO (Definition of Done disclosure); fast-forward merge; remove worktree + branch; confirm with the user before any push (deploy trigger caveat)
 
 ---
 
