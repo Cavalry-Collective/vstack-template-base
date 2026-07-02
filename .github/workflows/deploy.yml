@@ -13,9 +13,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only on a successful CI run, and only for main.
+    # Only on a successful CI run of a push to main. The `event == 'push'` guard is
+    # load-bearing: without it, a fork PR opened from a branch named "main" satisfies
+    # `head_branch == 'main'` and would deploy the fork's commit with this repo's secrets.
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
     steps:
       # When filling in: check out the exact commit CI tested — a `workflow_run`
