@@ -67,14 +67,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Streamline root `CLAUDE.md` per `contracts/guidance-style.md`, applying approved findings; update each touched rule's disposition in `rule-inventory.md` — this file sets the voice exemplar for all others
-- [ ] T017 [P] [US2] Streamline `apps/backend/CLAUDE.md` (same procedure, match the T016 voice)
-- [ ] T018 [P] [US2] Streamline `apps/frontend/CLAUDE.md`
-- [ ] T019 [P] [US2] Streamline `db/CLAUDE.md` and apply the approved disposition for `db/migrations/README.md`
-- [ ] T020 [P] [US2] Streamline `infra/CLAUDE.md`
-- [ ] T021 [P] [US2] Streamline `design/README.md`, `specs/README.md`, `add-ons/README.md`, `add-ons/test-mode/README.md`, `add-ons/otp-auth/README.md`
-- [ ] T022 [US2] Sweep `rule-inventory.md`: every rule has a disposition; every `removed` links to an approved finding — zero unapproved losses (FR-004)
-- [ ] T023 [US2] Measure progress: corpus `wc -w` (interim, final target ≤ 27,733 lands after US4); sample 3 streamlined files against `contracts/guidance-style.md` (SC-010); record evidence in `audit-report.md` dispositions
+- [X] T016 [US2] Streamline root `CLAUDE.md` per `contracts/guidance-style.md`, applying approved findings; update each touched rule's disposition in `rule-inventory.md` — this file sets the voice exemplar for all others
+- [X] T017 [P] [US2] Streamline `apps/backend/CLAUDE.md` (same procedure, match the T016 voice)
+- [X] T018 [P] [US2] Streamline `apps/frontend/CLAUDE.md`
+- [X] T019 [P] [US2] Streamline `db/CLAUDE.md` and apply the approved disposition for `db/migrations/README.md`
+- [X] T020 [P] [US2] Streamline `infra/CLAUDE.md`
+- [X] T021 [P] [US2] Streamline `design/README.md`, `specs/README.md`, `add-ons/README.md`, `add-ons/test-mode/README.md`, `add-ons/otp-auth/README.md`
+- [X] T022 [US2] Sweep `rule-inventory.md`: every rule has a disposition; every `removed` links to an approved finding — zero unapproved losses (FR-004)
+- [X] T023 [US2] Measure progress: corpus `wc -w` (interim, final target ≤ 27,733 lands after US4); sample 3 streamlined files against `contracts/guidance-style.md` (SC-010); record evidence in `audit-report.md` dispositions
 
 **Checkpoint**: Non-stack guidance is lean and on-voice; ledger proves zero loss
 
@@ -88,12 +88,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T024 [P] [US3] Copy the Cavalry brand SVGs — lockup light + dark, one mark — from `/Users/adam/GitHub/cavalry-website/design/brand/` into `design/brand/` in this repo (only the variants used; FR-016, research.md R9)
-- [ ] T025 [P] [US3] Add `LICENSE` at repo root: MIT text with Cavalry's copyright line (FR-013, research.md R5)
-- [ ] T026 [US3] Rewrite `README.md` as the public front door: Cavalry lockup via light/dark `<picture>` element referencing `design/brand/`, what-this-is positioning, the opinionated philosophy, how to start (Day-1 checklist kept accurate), attribution naming Cavalry (FR-012, FR-016; depends on T024)
-- [ ] T027 [P] [US3] Add the Cavalry mark + attribution line to `design/design-guide.html`, referencing `design/brand/` assets (FR-016)
+- [X] T024 [P] [US3] Copy the Cavalry brand SVGs — lockup light + dark, one mark — from `/Users/adam/GitHub/cavalry-website/design/brand/` into `design/brand/` in this repo (only the variants used; FR-016, research.md R9)
+- [X] T025 [P] [US3] Add `LICENSE` at repo root: MIT text with Cavalry's copyright line (FR-013, research.md R5)
+- [X] T026 [US3] Rewrite `README.md` as the public front door: Cavalry lockup via light/dark `<picture>` element referencing `design/brand/`, what-this-is positioning, the opinionated philosophy, how to start (Day-1 checklist kept accurate), attribution naming Cavalry (FR-012, FR-016; depends on T024)
+- [X] T027 [P] [US3] Add the Cavalry mark + attribution line to `design/design-guide.html`, referencing `design/brand/` assets (FR-016)
 - [ ] T028 [US3] Apply the maintainer-approved destructive dispositions from `audit-report.md`: remove approved internal-only artifacts (e.g. `specs/001-enhance-design-guide/` if approved); if history remediation was approved for release-blocking content, execute it against the repo's git history — only what T015 approved (FR-010, FR-011)
-- [ ] T029 [US3] Validate: run the fresh-reader 10-minute test on `README.md` (SC-008); verify every brand-asset reference resolves to files under `design/brand/` with no external/internal URLs (SC-012); confirm `LICENSE` present; update release-gate section in `audit-report.md`
+- [X] T029 [US3] Validate: run the fresh-reader 10-minute test on `README.md` (SC-008); verify every brand-asset reference resolves to files under `design/brand/` with no external/internal URLs (SC-012); confirm `LICENSE` present; update release-gate section in `audit-report.md`
 
 **Checkpoint**: The repo presents as Cavalry's public flagship
 
@@ -107,7 +107,7 @@
 
 ### Implementation for User Story 4
 
-- [ ] T030 [US4] Document the canonical pack structure in `stacks/README.md` per `contracts/stack-pack-structure.md`: the five files, absence-is-a-statement rule, exception label format, authoring guidance for future packs (FR-015)
+- [X] T030 [US4] Document the canonical pack structure in `stacks/README.md` per `contracts/stack-pack-structure.md`: the five files, absence-is-a-statement rule, exception label format, authoring guidance for future packs (FR-015)
 - [ ] T031 [P] [US4] Conform `stacks/nextjs-nestjs-postgres/`: add `infra.md` (content or n/a-declared stub with reason), align section shape with the contract, label sanctioned deviations, streamline prose to the contract voice, move any misplaced generic content up / pull implementation detail down from generic files per approved findings
 - [ ] T032 [P] [US4] Conform `stacks/taro-fastify-mysql-tencent/` (same procedure)
 - [ ] T033 [P] [US4] Conform `stacks/vercel/` (same procedure)

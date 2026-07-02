@@ -14,9 +14,9 @@ The repository's engineering substance is strong — the architecture contracts 
 | Item | Status | Evidence |
 |---|---|---|
 | Secrets (tree + full history) | ✅ PASS | gitleaks 8.30.1, 54 commits, no leaks |
-| Internal references / personal data | ❌ FAIL | F-001 (history emails), F-002 (spec artifacts) |
-| License | ❌ FAIL | F-003 — no LICENSE; remedy decided (MIT) |
-| Front door | ❌ FAIL | README is a checklist, not a positioning front door; no branding (US3 scope, FR-012/FR-016) |
+| Internal references / personal data | ⏳ PENDING | F-001 (history emails), F-002 (spec artifacts) — awaiting Decisions 1 & 3; working tree clean outside `specs/002-*` |
+| License | ✅ PASS | `LICENSE` (MIT © Cavalry) at root; README license section (2026-07-03) |
+| Front door | ✅ PASS | README rewritten with Cavalry lockup + attribution; fresh-reader test ORIENTED=yes (SC-008); assets local-only (SC-012) |
 
 ## Findings
 
@@ -222,3 +222,5 @@ Classification of all 29 files: [discovery-map.md](./discovery-map.md). Summary:
 3. **Template-development specs (F-002, F-018)** — do `specs/001-*` and `specs/002-*` ship in the public template? Recommended: no (keep `specs/README.md`; the work stays in the private history).
 
 All other findings are non-destructive edits already authorized by the spec's P2–P5 stories; they proceed after this gate.
+
+> **Gate status (2026-07-03)**: report presented; Decisions 1–3 asked, maintainer response pending. Non-destructive remedies (35 findings) proceeding per spec authorization. Destructive items (F-001 remediation, F-002/spec-dir removal, F-020 disposition) remain `proposed` until answered — re-asked at the merge gate.

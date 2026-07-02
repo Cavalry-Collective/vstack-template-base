@@ -1,5 +1,18 @@
 # Rule Inventory — the zero-loss ledger (T004, FR-004)
 
+> **Disposition log (T022, 2026-07-03).** Streamlining pass complete for the root + generic tiers and meta docs; every rule below verified kept unless annotated here. Exceptions, by file:
+> - **CLAUDE.md**: #12 → one-line rule + `design/README.md` owns the lifecycle (F-014); #15 → merged into #23; #29 detail → `specs/README.md` owns slice rules (F-015); #35 detail → `db/CLAUDE.md` owns (F-024). No removals.
+> - **README.md**: all 16 kept; #14 generalized (pack staging detail → pack `infra.md`); new steps added (specs cleanup, brand-swap note). No removals.
+> - **apps/backend/CLAUDE.md**: #40–#54 relocated (sections promoted); #2/#3/#5/#22 reworded (stack names trimmed). All 56 kept.
+> - **apps/frontend/CLAUDE.md**: single-owner merges per F-021 (#5, #13–16, #19, #21, #37, #76, #81, #85, #87 halves); pointers per F-014/F-022/F-038 (#90, #95, #97, #101, #102); 2 rules ADDED (pagination window, dialog sizing — hoisted per F-030). All 102 kept.
+> - **db/CLAUDE.md** + migrations README: all 11 kept; 3 rules ADDED (money, timestamps, unique→409 — hoisted per F-030); shared-DB rule single-owner here (F-024).
+> - **infra/CLAUDE.md**: all 34 kept; root-principle restatements → pointer (#3/#5/#30 partial); approval/environment rules single-owner in Guardrails (#7, #26, #28, #31); GCP reframed as replaceable default (#2, #25 — F-025).
+> - **specs/README.md, design/README.md, add-ons/**, **PR template**: all 55 kept; #2 (specs) gains the directory escape hatch (F-007); 4 rules ADDED to otp-auth (CSPRNG, single-use, bounded TTL, max attempts — F-005).
+> - **stacks/README.md**: #6/#15 reworded by F-008 (five-file canon, absence-is-a-statement); rules ADDED: replacements-only registers (F-028), standalone packs (F-031), per-area skeleton + manifest shape (F-029). All 15 accounted.
+> - **Stack packs**: dispositions recorded per pack in the US4 pass (below in each pack's section spirit); hoisted duplicates marked `merged → db/CLAUDE.md` / `apps/frontend/CLAUDE.md`.
+>
+> Zero rules removed anywhere; zero removals lacking an approved finding.
+
 **Captured**: 2026-07-03 at commit bdd463d, before any streamlining edit.
 
 Every actionable rule in the non-vendored guidance corpus, one line per rule, grouped by source file. **Rule ID = `<file> #<n>`** (file heading + ordinal within it) — a practical adaptation of the data model's `R-###`. **Disposition convention**: a rule with no annotation is `kept` (still present in the streamlined file, possibly reworded). Only exceptions are annotated inline during US2/US4/US5: `[merged → <file>#<n>]`, `[moved → <file>]`, or `[REMOVED — F-### approval]`. The T022/T035 sweeps verify no rule is missing an owner and no removal lacks an approved finding.
