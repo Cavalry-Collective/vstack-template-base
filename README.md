@@ -11,7 +11,7 @@ Every new Cavalry project starts here. Clone it, run the Day-1 checklist once, a
 
 Most project templates give you scaffolding: a folder of generated code that's stale the week after it's cut. This template ships something more durable — **contracts**. A set of `CLAUDE.md` files encode how software is built here: a backend onion with a pure domain at the centre, a layered frontend with a design-token keystone, reversible migrations, spec-first slices, and a Definition of Done where *verified means observed, not inferred*.
 
-The contracts are written for humans **and** for AI agents. An agent working in this repo auto-loads the contract for whatever area it touches, so the hundredth feature is built to the same standard as the first — whether a person or an agent wrote it. That is the entire bet: **the biggest lever on project quality is an opinionated approach, stated where the work happens.**
+The contracts are written for humans **and** for AI agents. An agent working in this repo auto-loads the contract for whatever area it touches (`CLAUDE.md` files load automatically — the root at session start, each area's the moment the agent works in that directory; every other document is read where a loaded file points at it), so the hundredth feature is built to the same standard as the first — whether a person or an agent wrote it. That is the entire bet: **the biggest lever on project quality is an opinionated approach, stated where the work happens.**
 
 ## The ideology
 
@@ -57,9 +57,9 @@ The template is intentionally framework-agnostic. You choose:
 - Cloud provider and Terraform provider
 - Database client
 
-Pick what fits the project. The CLAUDE.md files tell you where things go and how to structure them — not which library to use.
+Pick what fits the project. The CLAUDE.md files tell you where things go and how to structure them — not which library to use. (The template is most at home in a JavaScript/TypeScript ecosystem — the toolchain verbs, parity checks, and shipped packs are JS-shaped — but the architectural contracts themselves carry to any stack.)
 
-Or choose a stack pack under `stacks/` (e.g. `nextjs-nestjs-postgres`) for a vetted set of these choices plus copy-paste commands; the base CLAUDE.md files stay framework-agnostic. The pack is opt-in, not a mandate — see [`stacks/README.md`](stacks/README.md).
+Or choose a stack pack under `stacks/` for a vetted set of these choices plus copy-paste commands. Three ship today: **`nextjs-nestjs-postgres`** (server-first Next.js · NestJS · Postgres/Prisma), **`taro-fastify-mysql-tencent`** (Taro H5 · Fastify · MySQL on Tencent Cloud), and **`vercel`** (Next.js · Fastify · Neon Postgres on Vercel). Two add-ons ship today: **`test-mode`** and **`otp-auth`**. The base CLAUDE.md files stay framework-agnostic either way — a pack is opt-in, not a mandate ([`stacks/README.md`](stacks/README.md)).
 
 ## Day-1 checklist
 
@@ -94,15 +94,15 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
 10. **Rebrand & confirm the design guide — before building any screen.** The template ships **Keystone** (`design/design-guide.html` + `design/tokens.css`): design principles plus the full foundations — colour, type, spacing, layout, elevation, motion, states, content, data formatting — as a token-driven SaaS system shipping the Cavalry palette by default (components deliberately left flexible per app). Rebrand it — edit the **primitive** tier in `tokens.css`, or have your AI assistant regenerate it from your brand — then open the guide in a browser and confirm it reads as one coherent system. This is the visual keystone gate (`apps/frontend/CLAUDE.md` → *Design guide*); the app's token source and `atoms/` then implement what it shows — don't build screens against an unconfirmed system. Replace the Cavalry brand assets under `design/brand/` with your own (and swap the lockup at the top of this README).
 11. **Copy runtime config.** Copy any gitignored runtime config (`.env`, secrets) into your local checkout — it is not carried over from the template.
 12. **Protect `main`.** Add a branch protection rule / ruleset requiring the CI workflow to pass before merge. Trunk must stay releasable — and on packs whose pipeline ships whatever lands on `main` (e.g. `vercel`), green-CI-before-merge *is* the deploy gate.
-13. **Stand up staging (if your pack defines one).** Bring up the persistent preview/staging environment your stack pack specifies before feature work — for the `vercel` pack that is the `develop` branch plus its dedicated Neon branch (`stacks/vercel/infra.md` → *Staging environment*), migrated with the same manual runbook as prod (`stacks/vercel/db.md` → *Production & staging migrations*).
+13. **Stand up staging (if your pack defines one).** Bring up the persistent preview/staging environment your stack pack specifies before feature work — the pack's `infra.md` names the environment and its runbook.
 14. **Confirm green.** Push and watch the first CI run pass. Then confirm no placeholder survives — all three must return nothing: `grep -rn 'FILL IN ON SETUP' . --exclude-dir=stacks --exclude-dir=specs --exclude-dir=.git --exclude=README.md`, `grep -n 'TODO:' .github/workflows/*.yml`, and `grep -n '^<pm> ' CLAUDE.md`. (This README's own checklist names the markers, so it is excluded; delete it once instantiation is done if you prefer a clean tree.)
 
 > If you chose the server-first `nextjs-nestjs-postgres` pack, soften the SPA framing the base ships agnostic: root `CLAUDE.md` "the single-page app" → "the web frontend", and the **What's included** "Frontend SPA" row above → "Frontend (server-first Next.js)".
 
 ## License
 
-MIT © [Cavalry](LICENSE). Projects created from this template may keep or replace the license — the template itself stays free to use, copy, and adapt.
+[MIT](LICENSE) © Cavalry. Projects created from this template may keep or replace the license — the template itself stays free to use, copy, and adapt.
 
 ---
 
-Built and maintained by **Cavalry** — an opinionated software engineering team. This template is how we start everything we ship.
+Built and maintained by **[Cavalry](https://cavalry.sg)** — senior engineers pairing with AI to ship software we answer for. This template is how we start everything we build.
