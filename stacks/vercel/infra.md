@@ -9,7 +9,7 @@ Binds `infra/CLAUDE.md` to the **Vercel Terraform provider** (`vercel/vercel`): 
 - One self-contained workload directory per product under `infra/<workload>/` (base layout stands): `versions.tf` (provider `vercel/vercel`), `providers.tf` (`api_token` from `TF_VAR_vercel_api_token` — never committed), `variables.tf`, plus concern files — `web.tf` (frontend project + its env vars), `api.tf` (backend project + its env vars), `storage.tf` (Blob store + project connection).
 - **Two `vercel_project` resources:** web (`framework = "nextjs"`, `root_directory = "apps/frontend"`) and api (`root_directory = "apps/backend"`). Pin `node_version` (keep in sync with the workspace `engines`) and the function region per project via `resource_config`.
 - **One explicit resource block per environment variable** (`vercel_project_environment_variable`), `sensitive = true` for secrets — the base explicit-over-DRY authoring style, bound. Store connections inject their own variables — the Neon marketplace integration injects `DATABASE_URL`, the Blob store connection injects `BLOB_READ_WRITE_TOKEN` — don't duplicate those as Terraform-managed variables.
-- **The state file holds the secret env-var values.** A gitignored local backend is acceptable while the project is single-operator; move to a remote backend the moment a second operator appears.
+- **The state file holds the secret env-var values — treat it like a credential.** Use a remote, access-controlled backend from day 1 (Terraform Cloud, an object-store backend, etc.); a laptop-only local state file is unencrypted, unbacked-up, and one `git add` away from a leak. Never commit state.
 
 ## Auth / context
 

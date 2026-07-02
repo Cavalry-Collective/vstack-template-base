@@ -23,7 +23,7 @@ Binds `infra/CLAUDE.md` to the **`tencentcloud` Terraform provider**: the produc
 
 - **CynosDB MySQL in `SERVERLESS` mode** (min/max CCU, postpaid), which **auto-pauses after idle** (~2 h). The deploy pipeline **resumes a paused cluster before `terraform apply`** (`tccli ... ResumeServerless`, then poll `serverless_status` until `running`) — and a cold request path may still hit a resuming DB, so tolerate first-hit latency.
 - **Backup caveat (serverless):** physical snapshots / PITR are **hard-capped at 7 days** by the serverless tier — any longer retention is rejected. For a longer compliance window, run an **automatic logical backup** (mysqldump → COS) at the retention you need, alongside the 7-day physical.
-- DB credentials come from env (`DB_PASSWORD`, or `DB_SECRET_NAME` + SSM — SSM/KMS is costlier, usually skipped). Migration execution → `./db.md`.
+- DB credentials come from env (`DB_PASSWORD`, injected via Terraform / pipeline secrets, never committed). Pack decision — rejected alternative: `DB_SECRET_NAME` + SSM/KMS, rejected on cost for this stack. Migration execution → `./db.md`.
 
 ## Storage — COS + VOD
 
