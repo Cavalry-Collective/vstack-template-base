@@ -43,10 +43,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [P] [US1] Run `gitleaks git . --verbose` over working tree + full history from the repo root; record tool version, command, and results in `specs/002-audit-repo-guidance/scan-evidence.md` (FR-011)
-- [ ] T006 [P] [US1] Run the internal-reference/personal-data grep pass (patterns per quickstart.md: internal URLs/hosts, personal emails, internal project names) over the working tree; append results to `specs/002-audit-repo-guidance/scan-evidence.md` (FR-011)
-- [ ] T007 [P] [US1] Build the instruction-discovery map: classify every corpus file's `audience`, `tier`, and `loading` (auto / lazy-subtree / one-hop / orphaned) per research.md R1 and the GuidanceFile entity; draft as `specs/002-audit-repo-guidance/discovery-map.md` (FR-003, FR-007 input)
-- [ ] T008 [P] [US1] Run the cross-reference check (quickstart.md command): extract relative links and backticked path references from the corpus, list broken targets and orphaned files; append to `specs/002-audit-repo-guidance/scan-evidence.md` (FR-008)
+- [X] T005 [P] [US1] Run `gitleaks git . --verbose` over working tree + full history from the repo root; record tool version, command, and results in `specs/002-audit-repo-guidance/scan-evidence.md` (FR-011)
+- [X] T006 [P] [US1] Run the internal-reference/personal-data grep pass (patterns per quickstart.md: internal URLs/hosts, personal emails, internal project names) over the working tree; append results to `specs/002-audit-repo-guidance/scan-evidence.md` (FR-011)
+- [X] T007 [P] [US1] Build the instruction-discovery map: classify every corpus file's `audience`, `tier`, and `loading` (auto / lazy-subtree / one-hop / orphaned) per research.md R1 and the GuidanceFile entity; draft as `specs/002-audit-repo-guidance/discovery-map.md` (FR-003, FR-007 input)
+- [X] T008 [P] [US1] Run the cross-reference check (quickstart.md command): extract relative links and backticked path references from the corpus, list broken targets and orphaned files; append to `specs/002-audit-repo-guidance/scan-evidence.md` (FR-008)
 - [ ] T009 [P] [US1] Review root tier against conventions, Principles, and `contracts/guidance-style.md`: `CLAUDE.md`, `README.md`, `specs/README.md`, `design/README.md` — draft findings (bloat, contradictions, sketchy guidance, missing front-door elements) with severity + remedy
 - [ ] T010 [P] [US1] Review generic area tier: `apps/backend/CLAUDE.md`, `apps/frontend/CLAUDE.md`, `db/CLAUDE.md`, `db/migrations/README.md`, `infra/CLAUDE.md` — draft findings incl. stack-specific detail that belongs in packs (FR-005)
 - [ ] T011 [P] [US1] Review all three stack packs under `stacks/` against `contracts/stack-pack-structure.md` and their generic counterparts — draft findings: contradictions, unlabelled deviations, structure non-conformance (known: `stacks/nextjs-nestjs-postgres/` lacks `infra.md`), pack-vs-pack drift (FR-006, FR-015)
