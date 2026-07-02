@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Guide — placeholder</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center;
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background:#f7f8fa; color:#111827; padding:2rem; }
+  main { max-width:40rem; }
+  h1 { font-size:1.75rem; margin:0 0 .5rem; }
+  .tag { display:inline-block; font-size:.75rem; font-weight:600; letter-spacing:.04em;
+    text-transform:uppercase; color:#2563eb; border:1px solid #b2ccff; background:#eff6ff;
+    border-radius:9999px; padding:.25rem .75rem; margin-bottom:1rem; }
+  p { color:#4b5563; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background:#edeff2; padding:.1em .35em; border-radius:4px; }
+  ul { color:#4b5563; }
+  @media (prefers-color-scheme: dark) {
+    body { background:#111827; color:#f7f8fa; } p, ul { color:#9aa3af; } code { background:#1f2733; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">Placeholder</span>
+  <h1>Design Guide</h1>
+  <p>This is the project's <strong>visual keystone</strong> — a living, browsable style guide (foundations + component specimens) that must be generated and confirmed <em>before</em> building UI.</p>
+  <p><strong>The Fable 5 model will generate it</strong> for this project: the full foundations (colour, type, spacing, radius, elevation, motion) and component inventory, rendered live from <code>./tokens.css</code>. This file is only a placeholder until then.</p>
+  <ul>
+    <li>What it must contain + the confirm-before-build gate: <code>apps/frontend/CLAUDE.md</code> → <em>Design guide</em>.</li>
+    <li>When to generate it: the <em>Day-1 checklist</em> in <code>README.md</code>.</li>
+    <li>Token source it renders from: <code>design/tokens.css</code> (also a placeholder until generated).</li>
+  </ul>
+</main>
+</body>
+</html>
