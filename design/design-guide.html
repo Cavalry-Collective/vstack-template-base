@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Keystone — Design Foundations</title>
+<title>Keystone — Design Guide</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -52,10 +52,13 @@
   @media (max-width: 63.999rem) {
     .shell { grid-template-columns: 1fr; }
     .sidebar { position: static; height: auto; border-right: none;
-      border-bottom: var(--border-1) solid var(--color-border); }
-    .sidebar nav { display: flex; flex-wrap: wrap; gap: 0 var(--space-2); }
-    .sidebar .nav-group { flex-basis: 100%; }
-    .sidebar a { border-left: none; }
+      border-bottom: var(--border-1) solid var(--color-border);
+      padding: var(--space-3) var(--gutter-screen); }
+    .sidebar nav { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+    .sidebar .nav-group { flex-basis: 100%; margin: var(--space-2) 0 0; }
+    .sidebar a { margin-left: 0; border: var(--border-1) solid var(--color-border);
+      border-radius: var(--radius-round); background: var(--color-surface); }
+    .sidebar a.active { border-color: var(--color-accent); }
   }
 
   /* —— Main / pages —— */
@@ -339,16 +342,15 @@
   <main>
 
     <section id="intro">
-      <p class="kicker">Keystone · design foundations</p>
+      <p class="kicker">Keystone · design guide</p>
       <h1>Many apps. One design philosophy.</h1>
       <p class="lede">The foundation for every product built from this template — the principles,
         tokens, and rules that make ten different apps feel like one practice built them.
-        Foundations only: components stay flexible per app, but everything they're made of starts here.</p>
+        Components stay flexible per app; everything they're made of starts here.</p>
       <div class="chips">
         <span class="chip">Cavalry palette</span>
         <span class="chip">Token-driven</span>
         <span class="chip">WCAG AA</span>
-        <span class="chip">Foundations, not components</span>
       </div>
       <ul class="rules">
         <li><strong>New project?</strong> Rebrand the primitive tier of <code>tokens.css</code>;
@@ -386,6 +388,12 @@
       <p class="kicker">Start</p>
       <h1>Tokens</h1>
       <p class="lede">One source, three tiers — small enough to hold in your head.</p>
+      <p>A <strong>design token</strong> is a design decision with a name. Instead of writing
+        <code>#e02b20</code> on a button, the button asks for <code>--color-accent</code> and
+        the token answers. Name a decision once and every screen that asks gets the same
+        answer; change the answer and every screen follows. That is the whole trick —
+        screens hold no colour, size, space, or timing opinions of their own.</p>
+      <p>The tokens live in one file, <code>tokens.css</code>, arranged in three tiers:</p>
       <figure class="figure">
         <div class="tiers">
           <div class="tier"><span class="t-name">1 · primitive</span><span>Raw scales — ramps, sizes, durations. <strong>Rebrand edits only this.</strong> <span class="mono">--red-400 · --space-3</span></span></div>
@@ -396,8 +404,26 @@
         </div>
         <figcaption>A rebrand touches tier 1; screens touch tier 2; tier 3 grows only as components stabilise.</figcaption>
       </figure>
+      <p>Naming carries the system: a <strong>primitive</strong> says what a value <em>is</em>
+        (<code>--red-400</code>, <code>--space-3</code>); a <strong>semantic</strong> token says
+        what it's <em>for</em> (<code>--color-accent</code>, <code>--page-title-gap</code>).
+        Screens speak only the role language — which is why a palette swap, or a future dark
+        remap, never touches a screen. One lookup, end to end:</p>
+      <figure class="figure">
+        <div class="tiers">
+          <div class="tier"><span class="t-name">screen asks</span><span>"What colour is the primary action?" → <code>--color-accent</code></span></div>
+          <div class="tier-arrow">resolves to ↓</div>
+          <div class="tier"><span class="t-name">semantic</span><span><code>--color-accent: var(--red-400)</code> — the role picks a step</span></div>
+          <div class="tier-arrow">resolves to ↓</div>
+          <div class="tier"><span class="t-name">primitive</span><span><code>--red-400</code> = <span class="resolved" data-token="--red-400"></span> — the raw value, set once</span></div>
+        </div>
+        <figcaption>Rebranding rewrites the last line; the screen never changes. Every annotation
+          in this guide is read from the tokens the same way, at load.</figcaption>
+      </figure>
       <ul class="rules">
         <li>A hex code or px literal in a screen is the greppable violation.</li>
+        <li>Semantic names describe the job, never the look — a token named after its colour
+          can't survive a rebrand.</li>
         <li>One light theme. Dark, if ever needed, is a remap of the semantic tier only.</li>
       </ul>
     </section>
@@ -406,15 +432,13 @@
       <p class="kicker">Foundation</p>
       <h1>Colour</h1>
       <p class="lede">The Cavalry palette: purple-cast neutrals, Cavalry red for action,
-        violet / green / amber for meaning. Hover a step for its value.</p>
-      <div id="ramps"></div>
-      <div class="callout">
-        <p><strong>The intent formula:</strong> subtle background = <code>50</code> · border = <code>200</code> ·
-        interactive = <code>400</code> (must hold ≥ 4.5:1 on white) · hover = <code>500</code> ·
-        active / text-on-tint = <code>600</code>. Brand-vivid values that can't hold 4.5:1
-        (<code>--red-300</code> — the pure brand red — and <code>--amber-400</code>) are for graphics and
-        large accents only, never body-size text on white.</p>
-      </div>
+        violet / green / amber for meaning.</p>
+
+      <h2>Roles — what screens use</h2>
+      <p>Screens never name a hue. They ask for a <strong>role</strong> — accent, danger,
+        border — and the role picks the step. The ramps further down are raw material for
+        these roles; a screen that reaches past a role into a ramp is off-system
+        (<a href="#tokens">Tokens</a>).</p>
       <div class="table-wrap"><table id="color-roles">
         <tr><th></th><th>Token</th><th>Value</th><th>Use for</th></tr>
       </table></div>
@@ -428,7 +452,23 @@
           <figcaption><strong>Don't</strong> — a bare red dot: colour as the only signal.</figcaption>
         </figure>
       </div>
+
+      <h2>Ramps — the raw material</h2>
+      <p>Each hue is a small ramp of numbered steps; the roles above resolve into them.
+        Hover a step for its value.</p>
+      <div id="ramps"></div>
+      <div class="callout">
+        <p><strong>The intent formula:</strong> subtle background = <code>50</code> · border = <code>200</code> ·
+        interactive / content = <code>400</code> (holds ≥ 4.5:1 on white) · text-on-tint = <code>600</code>.
+        The interactive red adds hover = <code>500</code> and pressed = <code>600</code>; the support
+        hues carry no hover duty, so four steps is their whole ramp. Neutrals run six for
+        surface, border, and text work. Brand-vivid values that can't hold 4.5:1
+        (<code>--red-300</code> — the pure brand red — and <code>--amber-400</code>) are for graphics and
+        large accents only, never body-size text on white.</p>
+      </div>
       <ul class="rules">
+        <li>Screens consume roles, never ramp steps — the ramp is the primitive tier behind
+          the role (<a href="#tokens">Tokens</a>).</li>
         <li>Content tokens meet AA against their surfaces — 4.5:1 body, 3:1 large/UI (every pairing verified).</li>
         <li>Meaning never rides on colour alone; ration the accent to links, focus, and the one primary action.</li>
         <li>Accent and danger share the brand-red family here — destructive actions are disambiguated by
@@ -478,11 +518,33 @@
           <figcaption><strong>Don't</strong> — tabular digits inside a sentence stick out; prose uses proportional figures.</figcaption>
         </figure>
       </div>
+
+      <h2>Wrapping &amp; truncation</h2>
+      <p>Text wraps by default, and layouts assume it — no fixed-height text boxes. Truncation
+        is a last resort for genuinely fixed slots (a table cell, a list-row title): one line,
+        an ellipsis, and the full value reachable — a tooltip, or the row's detail view. Long
+        unbroken strings (URLs, emails) break mid-string rather than stretch their container.
+        Data values are the exception and never truncate or split
+        (<a href="#data">Data formatting</a>).</p>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><div class="form-row" style="max-width:13rem"><span class="lh-tight" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Meeting notes — Acme Corp renewal call, 12 Jan</span></div></div>
+          <figcaption><strong>Do</strong> — a fixed slot ellipsizes one line; the full value stays
+            reachable.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><span class="btn-demo">Save cha…</span></div>
+          <figcaption><strong>Don't</strong> — labels, headings, and actions never truncate;
+            reword them instead.</figcaption>
+        </figure>
+      </div>
       <ul class="rules">
         <li><strong>UI text</strong> — buttons, badges, table headers, card values — is a full string set in
           <code>medium</code>; bolding a word <em>inside</em> a sentence is <code>strong</code>, a different thing.</li>
         <li>~4 sizes and 2 weights per screen; a new size is a new scale step, never a one-off.</li>
         <li>Body measures ≤ <code>--measure</code>; one H1 per page, no skipped heading levels.</li>
+        <li>Wrap by default; ellipsis only in fixed slots with the full value reachable — never
+          on headings, labels, or buttons.</li>
       </ul>
     </section>
 
@@ -553,6 +615,13 @@
           <strong>2</strong> side nav (<code>--side-nav-width</code>, fixed width) ·
           <strong>3</strong> body content. The shared layout owns all three; pages fill region 3.</figcaption>
       </figure>
+      <p>The shared layout component supplies regions <strong>1</strong> and <strong>2</strong> —
+        the top bar and the nav rail — plus the screen gutters, and it alone reads the clearance
+        tokens, so fixed chrome reserves its space exactly once, safe-areas included. Region
+        <strong>3</strong> is the only region a page owns, and even there the page doesn't
+        improvise: its shape comes from its <a href="#archetypes">screen archetype</a>. Below
+        <code>sm</code> the rail gives way to a menu — or a bottom bar when the project is
+        mobile-first — and the same page fills the same body region unchanged.</p>
 
       <h2>Grid</h2>
       <figure class="figure">
@@ -562,6 +631,13 @@
         <figcaption>12 columns ≥ <code>lg</code> · 8 from <code>sm</code> · 4 below. Columns are percentages;
           gutters fixed at <code>--space-3</code>; margins are <code>--gutter-screen</code>.</figcaption>
       </figure>
+      <p>Columns are percentages, so they breathe with the viewport; gutters hold at
+        <code>--space-3</code>, so density stays even at any width. A block spans
+        <em>columns</em>, never pixel widths — six of twelve is half the page everywhere.
+        Two container widths cap the body: <code>--container-content</code> for working
+        screens, <code>--container-narrow</code> for reading and focused flows; the
+        archetype picks between them. Everything the frame owns has a token, and pages
+        consume these through the layout without restating them:</p>
 
       <div class="table-wrap"><table>
         <tr><th>Token</th><th>Value</th><th>Owns</th></tr>
@@ -684,9 +760,11 @@
     <section id="iconography">
       <p class="kicker">Foundation</p>
       <h1>Icons</h1>
-      <p class="lede">One library, two sizes, coloured by their label.</p>
+      <p class="lede">One library, four sizes, coloured by their label.</p>
       <div class="tiles">
+        <div class="tile"><span class="icon-box" style="width:var(--space-4);height:var(--space-4)"><svg width="12" height="12" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></svg></span><span class="caption"><code>--icon-size-xs</code> dense meta, table chips</span></div>
         <div class="tile"><span class="icon-box" style="width:var(--space-5);height:var(--space-5)"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></svg></span><span class="caption"><code>--icon-size-sm</code> inline with text</span></div>
+        <div class="tile"><span class="icon-box" style="width:var(--space-5);height:var(--space-5)"><svg width="20" height="20" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></svg></span><span class="caption"><code>--icon-size-md</code> buttons, controls</span></div>
         <div class="tile"><span class="icon-box" style="width:var(--space-6);height:var(--space-6)"><svg width="24" height="24" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></svg></span><span class="caption"><code>--icon-size-lg</code> navigation, features</span></div>
       </div>
       <ul class="rules">
@@ -791,7 +869,7 @@
         <tr><td>Dates</td><td>Month name written; ISO 8601 when numeric</td><td>Jan 12, 2026 · 2026-01-12</td></tr>
         <tr><td>Relative time</td><td>Just now → 13 min ago → Yesterday → Jan 12; absolute past a year</td><td>"Yesterday at 10:30 am"</td></tr>
         <tr><td>Numbers</td><td>Numerals, thousands separators, tabular in columns</td><td class="num">12,480</td></tr>
-        <tr><td>Currency</td><td>ISO code on totals and anything multi-currency</td><td>$12.50 SGD · −$4.20</td></tr>
+        <tr><td>Currency</td><td>Symbol day-to-day; ISO code where currencies mix — one or the other, never both</td><td>$12.50 · SGD 12.50 · −$4.20</td></tr>
         <tr><td>Empty value</td><td>Em dash — never blank, "null", or fake 0</td><td>—</td></tr>
         <tr><td>Truncation</td><td>Free text truncates (full value accessible); atomic values never wrap or split</td><td>INV-2041 stays whole</td></tr>
       </table></div>
@@ -1090,7 +1168,7 @@
     <section id="components">
       <p class="kicker">Beyond</p>
       <h1>Components &amp; reuse</h1>
-      <p class="lede">No component inventory — and nothing new is built before the ladder
+      <p class="lede">Reuse before invention — nothing new is built before the ladder
         below is exhausted.</p>
       <p>Where are the components? Deliberately absent — apps differ too much to pin an
         inventory. What's fixed is what components are <em>made of</em>: semantic tokens, the
@@ -1153,9 +1231,9 @@
   const RAMPS = {
     gray:   [50, 200, 300, 400, 600, 900],
     red:    [50, 200, 300, 400, 500, 600],
-    violet: [50, 200, 400, 500, 600],
-    green:  [50, 200, 400, 500, 600],
-    amber:  [50, 200, 400, 500, 600],
+    violet: [50, 200, 400, 600],
+    green:  [50, 200, 400, 600],
+    amber:  [50, 200, 400, 600],
   };
   document.getElementById('ramps').innerHTML = Object.entries(RAMPS).map(([name, steps]) =>
     `<div class="ramp-row"><span class="ramp-name">${name}</span><div class="ramp">` +
@@ -1202,9 +1280,11 @@
       }).join(''));
   });
 
-  // Spacing ruler
+  // Spacing ruler — each step carries its job so the scale is self-explanatory
+  const SPACE_JOBS = ['inside controls', 'icon ↔ label, tight groups', 'component padding, gaps',
+    'between components', 'between sections', 'page-level rhythm'];
   document.getElementById('space-ruler').innerHTML = [1,2,3,4,5,6].map(n =>
-    `<div class="row"><code>--space-${n}</code><span class="resolved" data-token="--space-${n}"></span><div><div class="bar" style="width:var(--space-${n})"></div></div></div>`).join('');
+    `<div class="row"><code>--space-${n}</code><span><span class="resolved" data-token="--space-${n}"></span> <span class="caption">· ${SPACE_JOBS[n-1]}</span></span><div><div class="bar" style="width:var(--space-${n})"></div></div></div>`).join('');
   document.querySelectorAll('#space-ruler .resolved').forEach(el => {
     el.textContent = cs.getPropertyValue(el.dataset.token).trim();
   });

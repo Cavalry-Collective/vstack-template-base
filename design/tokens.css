@@ -11,15 +11,16 @@
   purple-cast neutrals, violet/green/amber support; Space Grotesk display
   over Inter body. Swap the primitive tier for another brand's ramps.
 
-  Deliberately small: 5 steps per colour family, 5 type sizes, 6 space steps.
+  Deliberately small: 4–6 steps per colour family, 5 type sizes, 6 space steps.
   If a screen needs a value that isn't here, extend the scale — never the screen.
 
   One light theme. Dark is a later remap of the SEMANTIC tier only, if a
   project needs it. Intent formula: subtle bg = 50 · border = 200 ·
   interactive/content = 400 (holds ≥ 4.5:1 on white — verified) ·
-  hover = 500 · active / text-on-tint = 600. Brand-vivid values that can't
-  hold 4.5:1 (pure Cavalry red, amber) sit at 300/400 for graphics and large
-  accents only, never body-size text on white.
+  text-on-tint = 600. The interactive red adds hover = 500 · pressed = 600;
+  support hues carry no hover duty, so four steps is their whole ramp.
+  Brand-vivid values that can't hold 4.5:1 (pure Cavalry red, amber) sit at
+  300/400 for graphics and large accents only, never body-size text on white.
 
   Note: accent and danger share the brand-red family in this palette —
   destructive actions are disambiguated by wording and confirmation, not hue.
@@ -53,19 +54,16 @@
   --violet-50:  #f4effe;
   --violet-200: #c9b0f8;
   --violet-400: #7c3aed;  /* brand-exact */
-  --violet-500: #6527cc;
   --violet-600: #4f1fa3;
 
   --green-50:  #e9f9f2;
   --green-200: #7fe0bd;
   --green-400: #0b8157;
-  --green-500: #0a7351;
   --green-600: #085c41;
 
   --amber-50:  #fef5e6;
   --amber-200: #fbd38d;
   --amber-400: #f59e0b;  /* brand-exact — graphics only (2.2:1 on white) */
-  --amber-500: #b57407;
   --amber-600: #8a5c06;
 
   /* Type — Space Grotesk for titles/headings, Inter for everything else;
@@ -121,9 +119,9 @@
   --z-tooltip: 600;  /* above everything           */
 
   /* Motion — reduced motion collapses all to 0 */
-  --duration-fast: 100ms;  /* state feedback: press, toggle */
-  --duration-base: 200ms;  /* reveals: menu, tooltip, fade  */
-  --duration-slow: 400ms;  /* large surfaces: sheet, modal  */
+  --duration-fast: 150ms;  /* state feedback: press, toggle */
+  --duration-base: 250ms;  /* reveals: menu, tooltip, fade  */
+  --duration-slow: 500ms;  /* large surfaces: sheet, modal  */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);    /* default (exits too) */
   --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);  /* entrances           */
 
@@ -132,9 +130,11 @@
   --focus-ring-offset: 2px;
 
   /* Sizing */
-  --icon-size-sm: 1rem;        /* 16 — inline with text      */
-  --icon-size-lg: 1.5rem;      /* 24 — navigation, features  */
-  --touch-target-min: 2.75rem; /* 44 — touch form factors    */
+  --icon-size-xs: 0.75rem;     /* 12 — dense meta, table chips */
+  --icon-size-sm: 1rem;        /* 16 — inline with text        */
+  --icon-size-md: 1.25rem;     /* 20 — buttons, controls       */
+  --icon-size-lg: 1.5rem;      /* 24 — navigation, features    */
+  --touch-target-min: 2.75rem; /* 44 — touch form factors      */
 
   /* Layout */
   --breakpoint-sm: 40rem;      /*  640 — informational copy  */
