@@ -13,8 +13,8 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 - `db/` — top-level **database scripts**: reversible migrations under `db/migrations/` (plus seed/reset scripts). See `db/CLAUDE.md`.
 - `infra/` — Terraform for the project's cloud resources. See `infra/CLAUDE.md`.
 - `design/` — design mockups / UI reference, **reference only** (not part of the buildable workspace). See *UI mockup / design reference* below.
-- `stacks/` — optional stack packs: appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. See `stacks/README.md`.
-- `add-ons/` — optional capability add-ons: agnostic patterns for features the base leaves out (test mode, OTP login); zero or more chosen at instantiation, the rest deleted, the active stack pack supplying their concrete bindings. See `add-ons/README.md`.
+- `stacks/` — optional stack packs: appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. Each area's `CLAUDE.md` tells you to read the adopted pack's matching appendix before working there. See `stacks/README.md`.
+- `add-ons/` — optional capability add-ons: agnostic patterns for features the base leaves out (test mode, OTP login); zero or more chosen at instantiation, the rest deleted, the active stack pack supplying their concrete bindings. **Every directory kept under `add-ons/` is adopted — read its `README.md` and follow it whenever you touch the capability it covers.** See `add-ons/README.md`.
 
 ## Common commands
 
@@ -72,7 +72,7 @@ Assess whether names make intent clear without requiring the reviewer to reconst
 
 ## Principles (must follow)
 
-Load-bearing engineering rules; honor them on every change. They are stack- and tooling-agnostic. The first four are adapted from Karpathy's coding guidelines (<https://github.com/multica-ai/andrej-karpathy-skills>).
+Load-bearing engineering rules; honor them on every change. They are stack- and tooling-agnostic. The first four are adapted from Andrej Karpathy's coding guidelines, folded into this file so no external reference is needed.
 
 - **Think before coding.** Don't assume, don't hide confusion, surface tradeoffs. State your assumptions and ask when uncertain; present multiple interpretations rather than silently picking one; suggest simpler alternatives and respectfully push back when warranted; stop and name what's confusing rather than proceeding on unclear requirements.
 - **Simplicity first / YAGNI.** The minimum code that solves the problem, nothing speculative — no unrequested features, no abstractions for single-use code, no configurability or error handling for cases that can't occur. Any added complexity (extra project, framework, abstraction layer, build target, third-party SDK, distributed component) must be justified with the simpler alternative explicitly rejected; "we might want X later" is not a justification. If 200 lines could be 50, rewrite it shorter — would an experienced engineer find this unnecessarily complex?
@@ -130,9 +130,4 @@ Worktrees are the **default** here — most work runs in parallel with Claude ac
 
 ## Learnings
 
-Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it.
-
-- 2026-06-06: CLAUDE.md overhaul shipped (`specs/2026-06-06-claude-md-overhaul.md`); 14 low-severity review findings deliberately deferred — the spec's *Out of scope* section is the backlog.
-- 2026-06-06: Claude Code rule files (`.claude/rules/`) do **not** resolve `@`-imports — only `CLAUDE.md` files do. Stack-pack activation therefore uses prepend-copies (frontmatter + appendix body); regenerate the rule file after editing an appendix.
-- 2026-06-12: instructions-hardening pass shipped (`specs/2026-06-12-instructions-hardening.md`) — backend error/list envelopes pinned; stack activation centralized in `scripts/activate-stack.sh` (CI runs `--check` as the drift gate); `.claude/settings.json` ask-rules + migration-immutability hook added; the feature-flag and `.claude/`-artifacts items from the deferred-lows backlog are closed.
-- 2026-07-02: Post-project learnings folded (`specs/2026-07-02-post-project-learnings.md`). **Base** gained an audit-trail rule and a default-off-flag + no-op-sink integration rule (`apps/backend`), and **Navigation chrome** + **Responsive layout** + **Design guide** sections (`apps/frontend`). New optional **`add-ons/` mechanism** (`scripts/activate-addons.sh`, always-on rules, CI drift gate) with **test-mode** and **otp-auth**. New stack pack **`stacks/taro-fastify-mysql-tencent/`** (Taro H5 + Fastify + Knex/MySQL on Tencent Cloud; deploy via a real `deploy.yml` pipeline). **Design-guide keystone** (`design/`) as the visual-consistency gate — placeholders the **Fable 5 model** generates per project. Multi-tenancy deliberately not extracted.
+Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it. The template ships this section empty; the first entry is usually the stack-pack choice recorded at instantiation (see the Day-1 checklist in `README.md`).

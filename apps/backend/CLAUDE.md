@@ -1,6 +1,6 @@
 # Backend
 
-The backend contract — read before touching anything under `apps/backend/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`. Stack: not yet chosen (see the root `CLAUDE.md`). The examples below use JS-style filenames (`container.js`) and an Express/Fastify-style HTTP layer **illustratively**; treat file extensions and framework specifics as examples, not mandates — the same way `apps/frontend/CLAUDE.md` does.
+The backend contract — read before touching anything under `apps/backend/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`. Stack: not yet chosen (see the root `CLAUDE.md`). **If a stack pack is adopted (a single directory kept under `stacks/`), also read its `backend.md` appendix before working here** — it adds the concrete bindings, and its conflict register resolves any disagreement with this file, for that stack only. The examples below use JS-style filenames (`container.js`) and an Express/Fastify-style HTTP layer **illustratively**; treat file extensions and framework specifics as examples, not mandates — the same way `apps/frontend/CLAUDE.md` does.
 
 The backend is an **onion**: a pure domain at the centre, wrapped by rings that depend inward toward it. Everything below follows from that.
 

@@ -13,17 +13,11 @@ This file is the system doc; each add-on carries its own `README.md`.
 
 A directory `add-ons/<name>/` with a `README.md` of agnostic guidance. `<name>` is lowercase, hyphenated, capability-named (`test-mode`, `otp-auth`). Docs only — no dependencies, lockfiles, or scaffolding, consistent with `stacks/`.
 
-## Opt in
+## Opt in — adoption is keeping the directory
 
-Keep the add-ons you want under `add-ons/`, delete the directories you don't, then activate. Opting out *is* deleting the directory. The Day-1 checklist (root `README.md`) is where a fresh project chooses.
+Keep the add-ons you want under `add-ons/`, delete the directories you don't. Opting out *is* deleting the directory; every directory still present is adopted. The Day-1 checklist (root `README.md`) is where a fresh project chooses.
 
-## Activate (always-on rules)
-
-`scripts/activate-addons.sh` writes one rule per kept add-on to `.claude/rules/addon-<name>.md` — the README body copied verbatim with **no `paths:` frontmatter**, so it loads unconditionally. Add-ons are cross-cutting (backend + frontend + db at once), so unlike a path-scoped stack appendix they stay in context for every task.
-
-The README is the source of truth: edit it, then rerun the script. `scripts/activate-addons.sh --check` verifies the copies are current and flags an orphaned rule; CI runs it as the **Add-on rule drift** gate (a no-op until an add-on is activated).
-
-> A copied rule, not an `@`-import or a "read this" pointer: rule files don't resolve `@`-imports, and an agent can skip a prose pointer but not a loaded rule (same rationale as `stacks/README.md`). The only difference is the absent `paths:` frontmatter, which makes it load unconditionally.
+Activation is by instruction: the root `CLAUDE.md` tells agents to read every kept add-on's `README.md` and follow it when touching the capability it covers. Add-ons are cross-cutting (backend + frontend + db at once), so the pointer lives in the always-loaded root file rather than a per-area one. The README under `add-ons/` is the single source of truth — edit it in place; there is no generated copy.
 
 ## Add-on invariants (valid iff all hold)
 
@@ -44,4 +38,4 @@ The README is the source of truth: edit it, then rerun the script. `scripts/acti
 
 1. Create `add-ons/<name>/README.md` — the agnostic approach + its "binds to a stack" and "interactions" sections, per the invariants.
 2. If it needs concrete bindings, add a short section to each active stack pack's appendices.
-3. Wire it into the root `README.md` Day-1 "choose your add-ons" step, and run `scripts/activate-addons.sh`.
+3. Wire it into the root `README.md` Day-1 "choose your add-ons" step — a kept directory is picked up by the root `CLAUDE.md` pointer automatically.

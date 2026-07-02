@@ -1,6 +1,6 @@
 # Add-on: otp-auth
 
-> Optional add-on. Opt in at Day-1, activate with `scripts/activate-addons.sh` (see `add-ons/README.md`). Agnostic approach; the active stack pack supplies the concrete store/provider, SDK, and canonicalisation.
+> Optional add-on. Opt in at Day-1 by keeping this directory (see `add-ons/README.md`). Agnostic approach; the active stack pack supplies the concrete store/provider, SDK, and canonicalisation.
 
 One-time-code auth: a user proves control of a phone or email by entering a code sent to it. Use for passwordless login, signup verification, and adding/changing a contact method.
 

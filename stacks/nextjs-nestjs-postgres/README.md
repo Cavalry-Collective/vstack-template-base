@@ -14,7 +14,7 @@ Each appendix opens with the verbatim precedence line and ends with its conflict
 
 ## Day-1 wiring
 
-Run as part of the root `README.md` `## Day-1 checklist`: `scripts/activate-stack.sh nextjs-nestjs-postgres` builds the three **path-scoped rule files** under `.claude/rules/` — one per appendix, each loading only when its files are touched (mechanism, `paths:` scopes, and why prepend-copies rather than symlinks or `@`-imports: `../README.md` *Activation*). If you later edit an appendix, rerun the script; CI's **Stack rule drift** step catches a stale copy. Confirm what loaded with the `InstructionsLoaded` hook.
+Run as part of the root `README.md` `## Day-1 checklist`: delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here (mechanism: `../README.md` *Activation*). Nothing to generate or rerun; the appendices are read in place.
 
 Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and the **CI** block into `.github/workflows/ci.yml` — never the same block in both, and never `prisma migrate dev` in CI.
 

@@ -17,7 +17,7 @@ This pack ships the optional `infra.md` (permitted by `../README.md`): the deplo
 
 ## Day-1 wiring
 
-Part of the root `README.md` Day-1 checklist. `scripts/activate-stack.sh taro-fastify-mysql-tencent` builds four path-scoped rule files under `.claude/rules/` — one per appendix, `infra.md` included. Rerun after editing an appendix; CI's **Stack rule drift** step catches a stale copy. Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Record in root `CLAUDE.md` **Learnings**: `Stack: taro-fastify-mysql-tencent; appendices under stacks/taro-fastify-mysql-tencent/, activated via scripts/activate-stack.sh`.
+Part of the root `README.md` Day-1 checklist. Delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Record in root `CLAUDE.md` **Learnings**: `Stack: taro-fastify-mysql-tencent; appendices under stacks/taro-fastify-mysql-tencent/`.
 
 ## Suggested toolchain
 

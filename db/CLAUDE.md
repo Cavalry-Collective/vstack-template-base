@@ -2,7 +2,7 @@
 
 The database contract — read before touching anything under `db/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`. This file governs migrations and the seed/reset scripts that share this folder.
 
-Migrations are one of the highest-risk surfaces in any project — irreversible data loss, table locks, ordering collisions, and prod/dev divergence all originate here. The rules below are checkable and client-agnostic (no specific migration tool is assumed); the stack pack, if one is active, binds them to a concrete tool.
+Migrations are one of the highest-risk surfaces in any project — irreversible data loss, table locks, ordering collisions, and prod/dev divergence all originate here. The rules below are checkable and client-agnostic (no specific migration tool is assumed). **If a stack pack is adopted (a single directory kept under `stacks/`), also read its `db.md` appendix before working here** — it binds these rules to the concrete tool, and its conflict register resolves any disagreement with this file, for that stack only.
 
 `db/` is the shared home for **migrations** (under `db/migrations/`) and related **seed/reset** scripts. The backend's repo-ring adapters read from the database at runtime (see `apps/backend/CLAUDE.md`); the migrations here are applied via the root `migrate` command (see root `CLAUDE.md`).
 

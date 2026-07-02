@@ -20,6 +20,7 @@ Every pack carries at least these four files (one may be thin, but all four exis
 ## Pack invariants (a pack is valid iff it satisfies all of these)
 
 - **Additions-only.** No restating base content — only (a) stack bindings and (b) explicit conflict resolutions. If a line is true without naming the stack, it does not belong.
+- **Register or obey.** A pack may override any base rule — even a structural one, like swapping the onion's feature-first axis for layer-first — but only through a conflict-register entry; a silent contradiction makes the pack invalid. What no pack may drop is the discipline itself: layers stay separated and dependencies point one way, whatever the axis.
 - **Precedence line atop every appendix** (verbatim): `> Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.`
 - **Conflict register ending every appendix.** The four registers are the single audit surface — where the appendix replaces a base statement, it is listed here, not left as a live contradiction. Each entry, ending in a checkable imperative:
   > **Base says:** … **In this stack:** … **Because:** … **Concretely:** … *(one DO/DON'T an agent can check or grep for)*
@@ -28,17 +29,15 @@ Every pack carries at least these four files (one may be thin, but all four exis
 - **No project-specific values.** No DB URLs, secrets, env, per-project form-factor declarations, or per-project route tables — those go into project-local files at instantiation.
 - **Size discipline.** Each appendix is well under 200 lines, terse and checkable.
 
-## Activation (path-scoped rules)
+## Activation (by instruction)
 
-Packs activate through **`.claude/rules/` with `paths:` frontmatter** — the documented "load only for matching files" mechanism. **`scripts/activate-stack.sh <pack-name>` is the single activation mechanism**: it writes one rule per appendix — the appendix **body copied** with `paths:` frontmatter prepended (rule files do not resolve `@`-imports — only `CLAUDE.md` files do — so each rule must be self-contained), `infra.md` included when the pack ships it. An appendix loads at full size **only** when an agent touches files matching its rule — a backend-only task never loads the frontend appendix. The appendix under `stacks/` stays the source of truth: edit it, then rerun the script; `scripts/activate-stack.sh --check` verifies the copies are current, and CI runs it as the **Stack rule drift** gate.
-
-> **Decision record (2026-06-06):** chose `.claude/rules/` prepend-copies over (a) `@import` in a nested app CLAUDE.md — the composed lazy-load behavior is undocumented and subdir loading is reported unreliable; (b) a prose "read this first" pointer — an agent can skip a request, a loaded rule cannot; (c) copying appendices into app dirs — that duplicates into the buildable tree and breaks "unused packs get deleted"; (d) `@`-importing the appendix from the rule file — rule files don't resolve `@`-imports per the docs, so the import would silently never load. A symlink under `.claude/rules/` also works but loses path-scoping (the appendix carries no frontmatter), so it would load unconditionally.
+Packs activate by **instruction, not machinery**. Each area's `CLAUDE.md` (`apps/backend`, `apps/frontend`, `db`, `infra`) tells the agent to read the adopted pack's matching appendix before working in that area — so a backend task pulls in `backend.md`, and only that. Adoption is structural: keep exactly **one** pack directory under `stacks/` and delete the rest, so "the adopted pack" is unambiguous. The appendix is read directly from `stacks/` — it is the single source of truth, with no generated copy to regenerate and nothing to drift.
 
 ## How to add a pack
 
 1. Create `stacks/<pack-name>/` with the four required files.
 2. Put the precedence line atop each appendix and a conflict register at the end; keep every line additions-only.
 3. Write the manifest `README.md` — identity, appendix→base mapping, suggested dev + CI `<pm>` blocks, deploy-seam pointer.
-4. Activate with `scripts/activate-stack.sh <pack-name>` as part of the root README `## Day-1 checklist` (the script already maps each appendix to its `paths:` scope, `infra.md` included).
+4. Nothing else to wire — the per-area `CLAUDE.md` pointers pick the pack up as soon as it is the only directory under `stacks/` (see *Activation*).
 
 A pack MAY add an optional `infra.md` later under the same invariants (infra is cloud-shaped, not app-stack-shaped — not required in v1).

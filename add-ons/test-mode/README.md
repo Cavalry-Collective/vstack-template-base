@@ -1,6 +1,6 @@
 # Add-on: test-mode
 
-> Optional add-on. Opt in at Day-1, activate with `scripts/activate-addons.sh` (see `add-ons/README.md`). Agnostic approach; the active stack pack supplies the concrete signal, sinks, and picker.
+> Optional add-on. Opt in at Day-1 by keeping this directory (see `add-ons/README.md`). Agnostic approach; the active stack pack supplies the concrete signal, sinks, and picker.
 
 A first-class runtime mode that stubs external side effects so the whole app runs end to end — locally, in CI/e2e, on staging — without hitting real providers. Adopt it when the app has side effects you can't fire freely: one-time codes, SMS/email, payments, push, third-party calls. Distinct from a feature flag (which gates *whether* an integration runs) and from seed data (which supplies *content*).
 
