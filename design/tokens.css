@@ -186,6 +186,7 @@
 
   /* The shared layout applies these; pages never re-derive them */
   --gutter-screen: var(--space-3);
+  --side-nav-width: 9rem;      /* fixed nav rail from sm up; collapses below */
   --header-height: 3.5rem;
   --header-clearance: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   --bottom-nav-height: 3.5rem; /* mobile-first form factors */
@@ -196,6 +197,12 @@
   --control-height: 2.5rem;
   --control-radius: var(--radius-2);
   --control-padding-x: var(--space-3);
+
+  /* Box model — a container's inner padding; one size per column.
+     The spacing scale governs space BETWEEN siblings, boxes the space WITHIN. */
+  --box-padding-sm: var(--space-2);  /* dense tables, chips           */
+  --box-padding: var(--space-3);     /* cards, dialogs, widgets (default) */
+  --box-padding-lg: var(--space-4);  /* spacious panels, sheets       */
 }
 
 /* Reduced motion — essential feedback never rides on motion alone */

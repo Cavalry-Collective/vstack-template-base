@@ -10,13 +10,13 @@
 <link rel="stylesheet" href="./tokens.css">
 <style>
   /* KEYSTONE — foundations only; components stay per-app, built from these
-     tokens (apps/frontend/CLAUDE.md → "Design guide"). Every value here
-     resolves to tokens.css; annotations are computed at load, so the page
-     cannot drift from the tokens. This page is specimen #1 of its own rules. */
+     tokens (apps/frontend/CLAUDE.md → "Design guide"). Every value resolves
+     to tokens.css; annotations are computed at load. Each chapter is its own
+     page (hash-routed); without JS the guide degrades to one long page.
+     This document is specimen #1 of its own rules. */
 
   * { box-sizing: border-box; }
   html { scroll-padding-top: var(--space-5); }
-  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 
   body { margin: 0; font-family: var(--font-family-base); font-size: var(--text-body);
     line-height: var(--line-height-base); background: var(--color-bg); color: var(--color-content); }
@@ -58,9 +58,9 @@
     .sidebar a { border-left: none; }
   }
 
-  /* —— Main —— */
-  main { max-width: var(--container-narrow); padding: 0 var(--gutter-screen) var(--space-6); }
-  section { margin-top: var(--space-6); scroll-margin-top: var(--space-4); }
+  /* —— Main / pages —— */
+  main { max-width: var(--container-narrow); padding: var(--space-5) var(--gutter-screen) var(--space-6); }
+  section[hidden] { display: none; }
 
   .kicker { font-size: var(--text-caption); font-weight: var(--font-weight-medium);
     text-transform: uppercase; letter-spacing: var(--tracking-caps);
@@ -69,9 +69,7 @@
     line-height: var(--line-height-tight); letter-spacing: var(--tracking-tight);
     margin: 0 0 var(--space-3); }
   h2 { font-family: var(--font-family-display); font-size: var(--font-size-400);
-    line-height: var(--line-height-tight); margin: 0 0 var(--space-2); }
-  h3 { font-size: var(--font-size-300); line-height: var(--line-height-tight);
-    margin: var(--space-5) 0 var(--space-2); }
+    line-height: var(--line-height-tight); margin: var(--space-5) 0 var(--space-2); }
   p { max-width: var(--measure); margin: var(--space-2) 0; }
   .lede { color: var(--color-content-subtle); margin: 0 0 var(--space-3); }
   ul.rules { max-width: var(--measure); padding-left: 1.2em; margin: var(--space-2) 0; }
@@ -84,7 +82,6 @@
   .mono, .resolved { font-family: var(--font-family-mono); font-size: var(--font-size-100);
     color: var(--color-content-subtle); white-space: nowrap; }
 
-  .hero { padding-top: var(--space-6); }
   .chips { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: var(--space-3) 0; }
   .chip { font-size: var(--text-caption); padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-round); border: var(--border-1) solid var(--color-border);
@@ -95,15 +92,35 @@
     padding: var(--space-3) var(--space-4); margin: var(--space-4) 0; max-width: var(--measure); }
   .callout p { margin: 0; }
 
+  /* —— Figures (the illustrations) —— */
+  .figure { border: var(--border-1) solid var(--color-border); border-radius: var(--radius-2);
+    padding: var(--box-padding); margin: var(--space-3) 0; background: var(--color-surface); }
+  .figure > figcaption { font-size: var(--text-caption); color: var(--color-content-subtle);
+    margin-top: var(--space-2); }
+  figure { margin: 0; }
+
+  /* —— Principles —— */
   .principles { display: grid; gap: var(--space-3);
     grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
   .principle { border: var(--border-1) solid var(--color-border);
-    border-radius: var(--radius-2); padding: var(--space-3); background: var(--color-surface); }
-  .principle h3 { margin: 0 0 var(--space-1); font-size: var(--font-size-300); }
+    border-radius: var(--radius-2); padding: var(--box-padding); background: var(--color-surface); }
+  .principle h2 { margin: 0 0 var(--space-1); font-size: var(--font-size-300); }
   .principle .num { font-family: var(--font-family-mono); font-size: var(--text-caption);
     color: var(--color-accent); }
   .principle p { margin: 0; font-size: var(--font-size-200); color: var(--color-content-subtle); }
 
+  /* —— Tier diagram —— */
+  .tiers { display: grid; gap: var(--space-2); max-width: var(--measure); }
+  .tier { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3);
+    align-items: center; border: var(--border-1) solid var(--color-border);
+    border-radius: var(--radius-2); padding: var(--space-2) var(--space-3);
+    background: var(--color-surface); font-size: var(--font-size-200); }
+  .tier .t-name { font-family: var(--font-family-mono); font-size: var(--font-size-100);
+    padding: var(--space-1) var(--space-2); border-radius: var(--radius-1);
+    background: var(--color-accent-subtle); color: var(--color-accent-active); }
+  .tier-arrow { text-align: center; color: var(--color-content-subtle); font-size: var(--text-caption); }
+
+  /* —— Tables —— */
   .table-wrap { overflow-x: auto; border: var(--border-1) solid var(--color-border);
     border-radius: var(--radius-2); margin: var(--space-3) 0; }
   table { border-collapse: collapse; width: 100%; font-size: var(--font-size-200); }
@@ -112,12 +129,13 @@
   th { font-weight: var(--font-weight-medium); color: var(--color-content-subtle);
     background: var(--color-bg-subtle); white-space: nowrap; }
   tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; }
+  td.num-prop { text-align: right; }
 
-  /* Colour artifacts */
+  /* —— Colour —— */
   .ramp-row { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3);
     align-items: center; margin: var(--space-2) 0; }
-  .ramp-name { font-size: var(--font-size-200); font-weight: var(--font-weight-medium);
-    min-width: 6ch; }
+  .ramp-name { font-size: var(--font-size-200); font-weight: var(--font-weight-medium); min-width: 6ch; }
   .ramp { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--space-1); }
   .step { height: var(--space-5); border-radius: var(--radius-1);
     border: var(--border-1) solid var(--color-border); }
@@ -125,37 +143,95 @@
     border-radius: var(--radius-1); border: var(--border-1) solid var(--color-border);
     vertical-align: middle; }
 
+  /* —— Do / Don't —— */
   .dodont { display: grid; gap: var(--space-3);
     grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin: var(--space-3) 0; }
-  .dodont figure { margin: 0; border: var(--border-1) solid var(--color-border);
+  .dodont figure { border: var(--border-1) solid var(--color-border);
     border-radius: var(--radius-2); overflow: hidden; background: var(--color-surface); }
-  .dodont .demo { padding: var(--space-4); background: var(--color-bg-subtle); }
+  .dodont .demo { padding: var(--box-padding); background: var(--color-bg-subtle); }
   .dodont figcaption { padding: var(--space-2) var(--space-3); font-size: var(--text-caption); }
   .dodont .do figcaption strong { color: var(--color-success); }
   .dodont .dont figcaption strong { color: var(--color-danger); }
   .dodont figure.do { border-top: var(--border-2) solid var(--color-success); }
   .dodont figure.dont { border-top: var(--border-2) solid var(--color-danger); }
 
+  /* —— Form-row demo (type line-height pair) —— */
+  .form-row { display: flex; gap: var(--space-3); align-items: flex-start;
+    background: var(--color-surface); border: var(--border-1) solid var(--color-border);
+    border-radius: var(--radius-1); padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-200); }
+  .form-row .lbl { font-weight: var(--font-weight-medium); line-height: var(--line-height-tight); }
+  .lh-tight { line-height: var(--line-height-tight); }
+  .lh-base { line-height: var(--line-height-base); }
+
+  /* —— Spacing —— */
   .ruler { display: grid; grid-template-columns: max-content max-content 1fr;
     gap: var(--space-2) var(--space-3); align-items: center; margin: var(--space-3) 0; }
   .ruler .row { display: contents; }
   .ruler .bar { background: var(--color-accent-subtle);
     border: var(--border-1) solid var(--color-accent); height: var(--space-3);
     border-radius: var(--radius-1); }
+  .box-demo { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+  .box-demo .bx { border: var(--border-1) solid var(--color-border-strong);
+    border-radius: var(--radius-2); background: var(--color-bg-subtle); }
+  .box-demo .bx > div { background: var(--color-surface); border: var(--border-1) dashed var(--color-border-strong);
+    border-radius: var(--radius-1); font-size: var(--text-caption); color: var(--color-content-subtle);
+    padding: var(--space-1) var(--space-2); }
+  .rhythm { display: grid; gap: var(--space-2); max-width: var(--measure); }
+  .rhythm .blk { background: var(--color-surface); border: var(--border-1) solid var(--color-border);
+    border-radius: var(--radius-1); padding: var(--space-1) var(--space-2);
+    font-size: var(--font-size-200); }
+  .rhythm .gap { background: var(--color-accent-subtle); border-radius: var(--radius-1);
+    height: var(--space-2); }
 
+  /* —— Layout anatomy + grid —— */
+  .app-frame { border: var(--border-1) solid var(--color-border-strong); border-radius: var(--radius-2);
+    overflow: hidden; display: grid; grid-template-columns: max-content 1fr;
+    grid-template-rows: max-content 1fr; background: var(--color-bg); }
+  .app-frame .af-top { grid-column: 1 / -1; background: var(--color-surface);
+    border-bottom: var(--border-1) solid var(--color-border);
+    padding: var(--space-1) var(--space-2); font-size: var(--text-caption); }
+  .app-frame .af-nav { width: var(--space-6); background: var(--color-bg-subtle);
+    border-right: var(--border-1) solid var(--color-border); padding: var(--space-2);
+    display: grid; gap: var(--space-1); align-content: start; }
+  .app-frame .af-nav i { display: block; height: var(--space-2);
+    background: var(--color-border); border-radius: var(--radius-1); }
+  .app-frame .af-body { padding: var(--space-2); display: grid; gap: var(--space-2);
+    align-content: start; min-height: var(--space-6); }
+  .app-frame .af-body i { display: block; height: var(--space-3);
+    background: var(--color-bg-subtle); border: var(--border-1) solid var(--color-border);
+    border-radius: var(--radius-1); }
+  .badge-n { display: inline-grid; place-items: center; width: var(--space-4); height: var(--space-4);
+    border-radius: var(--radius-round); background: var(--color-accent);
+    color: var(--color-on-accent); font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold); }
+  .frames { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+
+  .grid-demo { display: grid; gap: var(--space-1); }
+  .grid-demo i { height: var(--space-5); background: var(--color-accent-subtle);
+    border: var(--border-1) solid var(--color-accent); border-radius: var(--radius-1); }
+  .g12 { grid-template-columns: repeat(12, 1fr); }
+  .g8  { grid-template-columns: repeat(8, 1fr); }
+  .g4  { grid-template-columns: repeat(4, 1fr); }
+
+  /* —— Shape / elevation —— */
   .tiles { display: flex; flex-wrap: wrap; gap: var(--space-4); margin: var(--space-3) 0; align-items: end; }
   .tile { display: grid; gap: var(--space-1); justify-items: center; }
   .tile .box { width: var(--space-6); height: var(--space-6);
     background: var(--color-bg-subtle); border: var(--border-1) solid var(--color-border-strong); }
-  .tile .shadow-box { padding: var(--space-3) var(--space-4); border-radius: var(--radius-2);
-    background: var(--color-surface); }
   .concentric { display: inline-block; padding: var(--space-2);
     background: var(--color-bg-subtle); border: var(--border-1) solid var(--color-border-strong);
     border-radius: var(--radius-3); }
   .concentric > div { padding: var(--space-2) var(--space-4); background: var(--color-surface);
     border: var(--border-1) solid var(--color-border-strong); border-radius: var(--radius-2);
     font-size: var(--text-caption); color: var(--color-content-subtle); }
+  .stack { position: relative; height: calc(var(--space-6) + var(--space-6)); max-width: var(--measure); }
+  .stack .plane { position: absolute; border-radius: var(--radius-2);
+    background: var(--color-surface); border: var(--border-1) solid var(--color-border);
+    padding: var(--space-1) var(--space-2); font-size: var(--text-caption);
+    color: var(--color-content-subtle); }
 
+  /* —— Motion —— */
   .motion-demo { display: grid; grid-template-columns: max-content 1fr;
     gap: var(--space-2) var(--space-3); align-items: center; margin: var(--space-3) 0; }
   .motion-lane { display: contents; }
@@ -170,11 +246,11 @@
   .dot-base { transition: left var(--duration-base) var(--ease-decelerate); }
   .dot-slow { transition: left var(--duration-slow) var(--ease-standard); }
 
+  /* —— Icons / states —— */
   .icon-box { display: inline-grid; place-items: center; background: var(--color-bg-subtle);
     border: var(--border-1) solid var(--color-border); border-radius: var(--radius-1); }
   .icon-box svg { stroke: var(--color-content); stroke-width: 1.5; fill: none;
     stroke-linecap: round; opacity: 0.84; }
-
   .states { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-3) 0; }
   .state { display: grid; gap: var(--space-1); justify-items: center; }
   .state .sample { height: var(--control-height); display: grid; place-items: center;
@@ -189,8 +265,19 @@
   .state .s-focus { outline: var(--focus-ring-width) solid var(--color-focus-ring);
     outline-offset: var(--focus-ring-offset); }
 
-  footer { margin-top: var(--space-6); padding-top: var(--space-4);
-    border-top: var(--border-1) solid var(--color-border); }
+  /* —— Empty-state demo —— */
+  .empty-demo { text-align: center; display: grid; gap: var(--space-2); justify-items: center;
+    padding: var(--box-padding-lg); }
+  .empty-demo .glyph { font-size: var(--font-size-500); color: var(--color-content-disabled); }
+  .btn-demo { height: var(--control-height); display: inline-grid; place-items: center;
+    padding: 0 var(--control-padding-x); border-radius: var(--control-radius); border: none;
+    font: inherit; font-size: var(--font-size-200); font-weight: var(--font-weight-medium);
+    background: var(--color-accent); color: var(--color-on-accent); }
+
+  /* —— Pager —— */
+  .pager { display: flex; justify-content: space-between; gap: var(--space-3);
+    margin-top: var(--space-6); padding-top: var(--space-3);
+    border-top: var(--border-1) solid var(--color-border); font-size: var(--font-size-200); }
 </style>
 </head>
 <body>
@@ -199,7 +286,7 @@
 
   <aside class="sidebar">
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span> Keystone</div>
-    <nav aria-label="Sections">
+    <nav aria-label="Chapters">
       <div class="nav-group">Start</div>
       <a href="#intro">Introduction</a>
       <a href="#principles">Principles</a>
@@ -223,21 +310,22 @@
   </aside>
 
   <main>
-    <header class="hero" id="intro">
+
+    <section id="intro">
       <p class="kicker">Keystone · design foundations</p>
       <h1>Many apps. One design philosophy.</h1>
       <p class="lede">The foundation for every product built from this template — the principles,
         tokens, and rules that make ten different apps feel like one practice built them.
         Foundations only: components stay flexible per app, but everything they're made of starts here.</p>
       <div class="chips">
+        <span class="chip">Cavalry palette</span>
         <span class="chip">Token-driven</span>
-        <span class="chip">Light · minimal</span>
         <span class="chip">WCAG AA</span>
         <span class="chip">Foundations, not components</span>
       </div>
       <ul class="rules">
         <li><strong>New project?</strong> Rebrand the primitive tier of <code>tokens.css</code>;
-          this page re-derives. Confirm it in a browser before building screens — that's the gate.</li>
+          every page here re-derives. Confirm in a browser before building screens — that's the gate.</li>
         <li><strong>Building?</strong> Consume semantic tokens only.</li>
         <li><strong>Reviewing?</strong> Each chapter ends in checkable rules; a violation is the defect.</li>
       </ul>
@@ -245,49 +333,53 @@
         <p><strong>There are no special cases.</strong> If the scale can't express a need,
         extend the scale — never the screen. A one-off value is how a system dies.</p>
       </div>
-    </header>
+    </section>
 
-    <section id="principles">
+    <section id="principles" hidden>
       <p class="kicker">Start</p>
-      <h2>Principles</h2>
+      <h1>Principles</h1>
       <p class="lede">Six commitments, in priority order. When two collide, the earlier wins.</p>
       <div class="principles">
-        <div class="principle"><span class="num">01</span><h3>Clarity first</h3>
+        <div class="principle"><span class="num">01</span><h2>Clarity first</h2>
           <p>Hierarchy, not decoration, does the explaining. Strip everything non-essential.</p></div>
-        <div class="principle"><span class="num">02</span><h3>No special cases</h3>
+        <div class="principle"><span class="num">02</span><h2>No special cases</h2>
           <p>Every colour, size, space, and duration resolves to a token. Extend the system, never the screen.</p></div>
-        <div class="principle"><span class="num">03</span><h3>One primary action</h3>
+        <div class="principle"><span class="num">03</span><h2>One primary action</h2>
           <p>One filled, accent-coloured action per view. Everything else recedes.</p></div>
-        <div class="principle"><span class="num">04</span><h3>Every state is designed</h3>
+        <div class="principle"><span class="num">04</span><h2>Every state is designed</h2>
           <p>Loading, error, empty, success — first-class. Feedback lands on the control that caused it.</p></div>
-        <div class="principle"><span class="num">05</span><h3>Accessible by default</h3>
+        <div class="principle"><span class="num">05</span><h2>Accessible by default</h2>
           <p>AA contrast, keyboard-first, visible focus, meaning never by colour alone. A floor, not a feature.</p></div>
-        <div class="principle"><span class="num">06</span><h3>Calm, but instant</h3>
+        <div class="principle"><span class="num">06</span><h2>Calm, but instant</h2>
           <p>Motion is short and purposeful; every interaction answers immediately.</p></div>
       </div>
     </section>
 
-    <section id="tokens">
+    <section id="tokens" hidden>
       <p class="kicker">Start</p>
-      <h2>Tokens</h2>
-      <p class="lede">One source, three tiers. Deliberately small — a scale you can hold in your head.</p>
-      <div class="table-wrap"><table>
-        <tr><th>Tier</th><th>Holds</th><th>Example</th></tr>
-        <tr><td><strong>Primitive</strong></td><td>Raw scales — rebrand edits only this</td><td><code>--blue-400</code>, <code>--space-3</code></td></tr>
-        <tr><td><strong>Semantic</strong></td><td>Role names — what components consume</td><td><code>--color-accent</code>, <code>--gutter-screen</code></td></tr>
-        <tr><td><strong>Component</strong></td><td>Per-component values, sparingly</td><td><code>--control-height</code></td></tr>
-      </table></div>
+      <h1>Tokens</h1>
+      <p class="lede">One source, three tiers — small enough to hold in your head.</p>
+      <figure class="figure">
+        <div class="tiers">
+          <div class="tier"><span class="t-name">1 · primitive</span><span>Raw scales — ramps, sizes, durations. <strong>Rebrand edits only this.</strong> <span class="mono">--red-400 · --space-3</span></span></div>
+          <div class="tier-arrow">↓ referenced by</div>
+          <div class="tier"><span class="t-name">2 · semantic</span><span>Role names — <strong>what components consume.</strong> <span class="mono">--color-accent · --gutter-screen</span></span></div>
+          <div class="tier-arrow">↓ overridden by</div>
+          <div class="tier"><span class="t-name">3 · component</span><span>Per-component values, sparingly. <span class="mono">--control-height · --box-padding</span></span></div>
+        </div>
+        <figcaption>A rebrand touches tier 1; screens touch tier 2; tier 3 grows only as components stabilise.</figcaption>
+      </figure>
       <ul class="rules">
         <li>A hex code or px literal in a screen is the greppable violation.</li>
         <li>One light theme. Dark, if ever needed, is a remap of the semantic tier only.</li>
       </ul>
     </section>
 
-    <section id="colour">
+    <section id="colour" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Colour</h2>
-      <p class="lede">The Cavalry palette: purple-cast neutrals, Cavalry red for action, violet / green / amber
-        for meaning. Hover a step for its value.</p>
+      <h1>Colour</h1>
+      <p class="lede">The Cavalry palette: purple-cast neutrals, Cavalry red for action,
+        violet / green / amber for meaning. Hover a step for its value.</p>
       <div id="ramps"></div>
       <div class="callout">
         <p><strong>The intent formula:</strong> subtle background = <code>50</code> · border = <code>200</code> ·
@@ -299,12 +391,6 @@
       <div class="table-wrap"><table id="color-roles">
         <tr><th></th><th>Token</th><th>Value</th><th>Use for</th></tr>
       </table></div>
-      <ul class="rules">
-        <li>Content tokens meet AA against their surfaces — 4.5:1 body, 3:1 large/UI (every pairing verified).</li>
-        <li>Meaning never rides on colour alone; ration the accent to links, focus, and the one primary action.</li>
-        <li>Accent and danger share the brand-red family here — destructive actions are disambiguated by
-          verb-first labels and confirmation, never hue.</li>
-      </ul>
       <div class="dodont">
         <figure class="do">
           <div class="demo"><span style="display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-2);border-radius:var(--radius-round);background:var(--color-danger-subtle);color:var(--color-danger);border:var(--border-1) solid var(--color-danger-border);font-size:var(--text-caption);font-weight:var(--font-weight-medium)">✕ Payment failed</span></div>
@@ -315,13 +401,19 @@
           <figcaption><strong>Don't</strong> — a bare red dot: colour as the only signal.</figcaption>
         </figure>
       </div>
+      <ul class="rules">
+        <li>Content tokens meet AA against their surfaces — 4.5:1 body, 3:1 large/UI (every pairing verified).</li>
+        <li>Meaning never rides on colour alone; ration the accent to links, focus, and the one primary action.</li>
+        <li>Accent and danger share the brand-red family here — destructive actions are disambiguated by
+          verb-first labels and confirmation, never hue.</li>
+      </ul>
     </section>
 
-    <section id="typography">
+    <section id="typography" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Typography</h2>
-      <p class="lede">Space Grotesk for titles and headings, Inter for everything else — five sizes, three weights;
-        system stack when neither is loaded.</p>
+      <h1>Typography</h1>
+      <p class="lede">Space Grotesk for titles and headings, Inter for everything else —
+        five sizes, three weights; system stack when neither is loaded.</p>
       <div class="table-wrap"><table>
         <tr><th>Role</th><th>Specimen</th><th>Token</th><th>Use for</th></tr>
         <tr><td>Title</td><td><span style="font-family:var(--font-family-display);font-size:var(--font-size-500);font-weight:var(--font-weight-bold);line-height:var(--line-height-tight);letter-spacing:var(--tracking-tight)">Page title</span></td><td><code>500</code> <span class="resolved" data-token="--font-size-500"></span> · display · bold</td><td>One per page; heroes</td></tr>
@@ -333,31 +425,120 @@
         <tr><td>Metric</td><td><span style="font-size:var(--font-size-400);font-weight:var(--font-weight-bold);font-variant-numeric:tabular-nums">12,480</span></td><td><code>400</code> · tabular</td><td>KPIs, dashboard stats</td></tr>
         <tr><td>Code</td><td><code style="white-space:normal">sum(rows)</code></td><td>mono</td><td>Code, ids</td></tr>
       </table></div>
+
+      <h2>Two line-heights, one rule</h2>
+      <p>Reading text breathes at <code>base</code>; text inside components sits at <code>tight</code>
+        so rows align to the rhythm.</p>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><div class="form-row"><span class="lbl">Label</span><span class="lh-tight">Input values, one-liners, and checkbox labels use tight line-height and stay aligned in their row.</span></div></div>
+          <figcaption><strong>Do</strong> — <code>tight</code> inside components: the row stays on the rhythm.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><div class="form-row"><span class="lbl">Label</span><span class="lh-base">Body line-height inside a component row pushes the rhythm apart and misaligns columns.</span></div></div>
+          <figcaption><strong>Don't</strong> — <code>base</code> line-height breaks component alignment.</figcaption>
+        </figure>
+      </div>
+
+      <h2>Digits</h2>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><table style="width:auto"><tr><td class="num">88,888.88</td></tr><tr><td class="num">11,111.11</td></tr></table></div>
+          <figcaption><strong>Do</strong> — tabular figures in tables and metrics: digits align, values compare.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><p style="margin:0;font-variant-numeric:tabular-nums">You have <strong>1,298</strong> unread messages.</p></div>
+          <figcaption><strong>Don't</strong> — tabular digits inside a sentence stick out; prose uses proportional figures.</figcaption>
+        </figure>
+      </div>
       <ul class="rules">
+        <li><strong>UI text</strong> — buttons, badges, table headers, card values — is a full string set in
+          <code>medium</code>; bolding a word <em>inside</em> a sentence is <code>strong</code>, a different thing.</li>
         <li>~4 sizes and 2 weights per screen; a new size is a new scale step, never a one-off.</li>
-        <li>Body measures ≤ <code>--measure</code>; digits in tables are tabular; one H1, no skipped heading levels.</li>
+        <li>Body measures ≤ <code>--measure</code>; one H1 per page, no skipped heading levels.</li>
       </ul>
     </section>
 
-    <section id="spacing">
+    <section id="spacing" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Spacing</h2>
+      <h1>Spacing</h1>
       <p class="lede">Six steps. Proximity is hierarchy — related things sit one step closer.</p>
       <div class="ruler" id="space-ruler"></div>
+
+      <h2>The box model</h2>
+      <p>A container's inner padding is a <strong>box</strong>, not a spacing decision:
+        three sizes, default in the middle, one size per column.</p>
+      <figure class="figure">
+        <div class="box-demo">
+          <div class="bx" style="padding:var(--box-padding-sm)"><div>box-sm · dense tables</div></div>
+          <div class="bx" style="padding:var(--box-padding)"><div>box · cards, dialogs (default)</div></div>
+          <div class="bx" style="padding:var(--box-padding-lg)"><div>box-lg · spacious panels</div></div>
+        </div>
+        <figcaption><code>--box-padding-sm / --box-padding / --box-padding-lg</code> —
+          the spacing scale governs space <em>between</em> siblings; boxes the padding <em>within</em> a container.</figcaption>
+      </figure>
+
+      <h2>Vertical rhythm</h2>
+      <figure class="figure">
+        <div class="rhythm">
+          <div class="blk"><strong>Heading</strong></div>
+          <div class="gap" aria-hidden="true"></div>
+          <div class="blk">Text blocks separated by uniform steps read as one column…</div>
+          <div class="gap" aria-hidden="true"></div>
+          <div class="blk">…so adjacent columns align row-for-row across a screen.</div>
+        </div>
+        <figcaption>Line-heights and control heights land on the 4px grid — the rhythm is why
+          component text uses <code>tight</code>.</figcaption>
+      </figure>
       <ul class="rules">
-        <li><code>1–2</code> inside controls · <code>3</code> component padding · <code>4</code> between components · <code>5</code> between sections · <code>6</code> page-level.</li>
+        <li><code>1–2</code> inside controls · <code>3</code> component gaps · <code>4</code> between components · <code>5</code> between sections · <code>6</code> page-level.</li>
         <li>If the scale can't express a layout, fix the scale — not the instance.</li>
       </ul>
     </section>
 
-    <section id="layout">
+    <section id="layout" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Layout</h2>
-      <p class="lede">Fluid by default; two breakpoints; the shared layout owns the frame.</p>
+      <h1>Layout</h1>
+      <p class="lede">Three regions, two breakpoints, and a shared layout that owns the frame.</p>
+
+      <h2>Anatomy</h2>
+      <figure class="figure">
+        <div class="frames">
+          <div>
+            <div class="app-frame" aria-hidden="true">
+              <div class="af-top"><span class="badge-n">1</span></div>
+              <div class="af-nav"><span class="badge-n">2</span><i></i><i></i><i></i><i></i></div>
+              <div class="af-body"><span class="badge-n">3</span><i></i><i></i><i></i></div>
+            </div>
+            <p class="caption">≥ <code>sm</code>: fixed side nav</p>
+          </div>
+          <div>
+            <div class="app-frame" style="grid-template-columns:1fr" aria-hidden="true">
+              <div class="af-top"><span class="badge-n">1</span> <span class="badge-n">2</span></div>
+              <div class="af-body"><span class="badge-n">3</span><i></i><i></i><i></i></div>
+            </div>
+            <p class="caption">&lt; <code>sm</code>: nav collapses (menu, or bottom nav on mobile-first)</p>
+          </div>
+        </div>
+        <figcaption><strong>1</strong> top bar (<code>--header-height</code>) ·
+          <strong>2</strong> side nav (<code>--side-nav-width</code>, fixed width) ·
+          <strong>3</strong> body content. The shared layout owns all three; pages fill region 3.</figcaption>
+      </figure>
+
+      <h2>Grid</h2>
+      <figure class="figure">
+        <div class="grid-demo g12" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="grid-demo g8" style="margin-top:var(--space-2)" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="grid-demo g4" style="margin-top:var(--space-2)" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <figcaption>12 columns ≥ <code>lg</code> · 8 from <code>sm</code> · 4 below. Columns are percentages;
+          gutters fixed at <code>--space-3</code>; margins are <code>--gutter-screen</code>.</figcaption>
+      </figure>
+
       <div class="table-wrap"><table>
         <tr><th>Token</th><th>Value</th><th>Owns</th></tr>
-        <tr><td><code>--breakpoint-sm</code></td><td><span class="resolved" data-token="--breakpoint-sm"></span></td><td>Fields go side-by-side; nav may dock</td></tr>
-        <tr><td><code>--breakpoint-lg</code></td><td><span class="resolved" data-token="--breakpoint-lg"></span></td><td>Full multi-column layouts, side panels</td></tr>
+        <tr><td><code>--breakpoint-sm</code></td><td><span class="resolved" data-token="--breakpoint-sm"></span></td><td>Nav docks; fields go side-by-side; 8 columns</td></tr>
+        <tr><td><code>--breakpoint-lg</code></td><td><span class="resolved" data-token="--breakpoint-lg"></span></td><td>12 columns, side panels</td></tr>
+        <tr><td><code>--side-nav-width</code></td><td><span class="resolved" data-token="--side-nav-width"></span></td><td>The fixed nav rail</td></tr>
         <tr><td><code>--container-content</code></td><td><span class="resolved" data-token="--container-content"></span></td><td>Standard pages</td></tr>
         <tr><td><code>--container-narrow</code></td><td><span class="resolved" data-token="--container-narrow"></span></td><td>Reading, focused flows</td></tr>
         <tr><td><code>--gutter-screen</code></td><td><span class="resolved" data-token="--gutter-screen"></span></td><td>Screen edges — applied by the layout</td></tr>
@@ -370,9 +551,9 @@
       </ul>
     </section>
 
-    <section id="shape">
+    <section id="shape" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Shape &amp; border</h2>
+      <h1>Shape &amp; border</h1>
       <p class="lede">Three radii and a pill — rounder means bigger.</p>
       <div class="tiles">
         <div class="tile"><div class="box" style="border-radius:var(--radius-1)"></div><span class="caption"><code>--radius-1</code> badges, chips</span></div>
@@ -386,10 +567,18 @@
       </ul>
     </section>
 
-    <section id="elevation">
+    <section id="elevation" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Elevation</h2>
+      <h1>Elevation</h1>
       <p class="lede">Shadow and z-band travel together; only floating surfaces cast shadows.</p>
+      <figure class="figure">
+        <div class="stack" aria-hidden="true">
+          <div class="plane" style="left:0; top:var(--space-6); right:var(--space-6); box-shadow:var(--shadow-1)">raised · cards · <span class="mono">shadow-1</span></div>
+          <div class="plane" style="left:var(--space-5); top:var(--space-4); right:var(--space-4); box-shadow:var(--shadow-2)">overlay · menus · <span class="mono">shadow-2 · z-popover</span></div>
+          <div class="plane" style="left:var(--space-6); top:0; right:0; box-shadow:var(--shadow-3)">modal · dialogs · <span class="mono">shadow-3 · z-modal</span></div>
+        </div>
+        <figcaption>Higher surface, deeper shadow, higher z-band — never one without the others.</figcaption>
+      </figure>
       <div class="table-wrap"><table>
         <tr><th>Layer</th><th>Z</th><th>Shadow</th><th>Holds</th></tr>
         <tr><td>Chrome</td><td><span class="resolved" data-token="--z-chrome"></span></td><td>—</td><td>Sticky header, bottom nav</td></tr>
@@ -399,19 +588,15 @@
         <tr><td>Toast</td><td><span class="resolved" data-token="--z-toast"></span></td><td><code>--shadow-2</code></td><td>Toasts</td></tr>
         <tr><td>Tooltip</td><td><span class="resolved" data-token="--z-tooltip"></span></td><td><code>--shadow-1</code></td><td>Tooltips</td></tr>
       </table></div>
-      <div class="tiles">
-        <div class="tile"><div class="shadow-box" style="box-shadow:var(--shadow-1)"><code>--shadow-1</code></div><span class="caption">raised — cards</span></div>
-        <div class="tile"><div class="shadow-box" style="box-shadow:var(--shadow-2)"><code>--shadow-2</code></div><span class="caption">overlay — menus</span></div>
-        <div class="tile"><div class="shadow-box" style="box-shadow:var(--shadow-3)"><code>--shadow-3</code></div><span class="caption">modal — dialogs</span></div>
-      </div>
       <ul class="rules">
-        <li>Overlays and fixed chrome render in a top-level portal at their z-band — never where an ancestor's <code>transform</code> can trap them.</li>
+        <li>Overlays and fixed chrome render in a top-level portal at their z-band — never where an
+          ancestor's <code>transform</code> can trap them.</li>
       </ul>
     </section>
 
-    <section id="motion">
+    <section id="motion" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Motion</h2>
+      <h1>Motion</h1>
       <p class="lede">Three bands by surface size. Hover the lanes; reduced motion collapses all to zero.</p>
       <div class="motion-demo" tabindex="0" aria-label="Duration demo">
         <div class="motion-lane"><span class="caption"><code>fast</code> <span class="resolved" data-token="--duration-fast"></span> press, toggle</span><div class="lane"><div class="dot dot-fast"></div></div></div>
@@ -419,28 +604,32 @@
         <div class="motion-lane"><span class="caption"><code>slow</code> <span class="resolved" data-token="--duration-slow"></span> sheets, modals</span><div class="lane"><div class="dot dot-slow"></div></div></div>
       </div>
       <ul class="rules">
-        <li>Purposeful or absent — no ambient animation. <code>--ease-decelerate</code> for entrances, <code>--ease-standard</code> for everything else.</li>
+        <li>Purposeful or absent — no ambient animation. <code>--ease-decelerate</code> for entrances,
+          <code>--ease-standard</code> for everything else.</li>
       </ul>
     </section>
 
-    <section id="iconography">
+    <section id="iconography" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Icons</h2>
+      <h1>Icons</h1>
       <p class="lede">One library, two sizes, coloured by their label.</p>
       <div class="tiles">
         <div class="tile"><span class="icon-box" style="width:var(--space-5);height:var(--space-5)"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></svg></span><span class="caption"><code>--icon-size-sm</code> inline with text</span></div>
         <div class="tile"><span class="icon-box" style="width:var(--space-6);height:var(--space-6)"><svg width="24" height="24" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></svg></span><span class="caption"><code>--icon-size-lg</code> navigation, features</span></div>
       </div>
       <ul class="rules">
-        <li>One icon set per project, recorded once — never mix. Icons inherit the label's colour.</li>
-        <li>Icon-only needs an established metaphor <em>and</em> an accessible name; otherwise keep the label. Icons are seasoning — layout first.</li>
+        <li>One icon set per project, recorded once — never mix. Icons inherit the label's colour and
+          centre to its first line.</li>
+        <li>Icon-only needs an established metaphor <em>and</em> an accessible name; otherwise keep the
+          label. Icons are seasoning — layout first.</li>
       </ul>
     </section>
 
-    <section id="states">
+    <section id="states" hidden>
       <p class="kicker">Foundation</p>
-      <h2>States &amp; focus</h2>
-      <p class="lede">One ladder for every interactive element — shown on an abstract control, because the ladder is the spec.</p>
+      <h1>States &amp; focus</h1>
+      <p class="lede">One ladder for every interactive element — shown on an abstract control,
+        because the ladder is the spec.</p>
       <div class="states">
         <div class="state"><span class="sample">Rest</span><span class="caption">400</span></div>
         <div class="state"><span class="sample s-hover">Hover</span><span class="caption">500 (+1)</span></div>
@@ -451,26 +640,46 @@
       </div>
       <ul class="rules">
         <li>Hover = +1 step, pressed = +2 — arithmetic, not per-component colours.</li>
-        <li>Focus: <span class="resolved" data-token="--focus-ring-width"></span> <code>--color-focus-ring</code> ring, offset <span class="resolved" data-token="--focus-ring-offset"></span>, on <code>:focus-visible</code>. Never removed without this replacement.</li>
+        <li>Focus: <span class="resolved" data-token="--focus-ring-width"></span> <code>--color-focus-ring</code>
+          ring, offset <span class="resolved" data-token="--focus-ring-offset"></span>, on
+          <code>:focus-visible</code>. Never removed without this replacement.</li>
         <li>On touch, pressed carries the feedback — the touch path never goes silent.</li>
       </ul>
     </section>
 
-    <section id="accessibility">
+    <section id="accessibility" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Accessibility</h2>
-      <p class="lede">The floor, carried by the tokens. Full checkable baseline: <code>apps/frontend/CLAUDE.md</code>.</p>
+      <h1>Accessibility</h1>
+      <p class="lede">The floor, carried by the tokens. Full checkable baseline:
+        <code>apps/frontend/CLAUDE.md</code>.</p>
       <ul class="rules">
-        <li><strong>AA contrast</strong> in the semantic pairings · <strong>visible focus</strong> via the ring tokens · <strong>reduced motion</strong> at the token layer.</li>
-        <li><strong>Reflow at 320px</strong>, usable at 200% zoom · touch targets ≥ <span class="resolved" data-token="--touch-target-min"></span>.</li>
+        <li><strong>AA contrast</strong> in the semantic pairings · <strong>visible focus</strong> via the
+          ring tokens · <strong>reduced motion</strong> at the token layer.</li>
+        <li><strong>Reflow at 320px</strong>, usable at 200% zoom · touch targets ≥
+          <span class="resolved" data-token="--touch-target-min"></span>.</li>
         <li><strong>Meaning never by colour alone</strong> · heading outline = document structure.</li>
       </ul>
     </section>
 
-    <section id="content">
+    <section id="content" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Content</h2>
+      <h1>Content</h1>
       <p class="lede">Interfaces speak like a competent colleague: plain, direct, human.</p>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><div class="empty-demo">
+            <span class="glyph" aria-hidden="true">▢</span>
+            <strong>No invoices yet</strong>
+            <span class="caption">Create your first invoice to start getting paid.</span>
+            <span class="btn-demo">Create invoice</span>
+          </div></div>
+          <figcaption><strong>Do</strong> — an empty state explains and offers the next step.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><div class="empty-demo"><span class="caption">No data.</span></div></div>
+          <figcaption><strong>Don't</strong> — a dead end that blames the void.</figcaption>
+        </figure>
+      </div>
       <ul class="rules">
         <li>Sentence case everywhere. Actions verb-first: "Save changes", never "OK".</li>
         <li>Short sentences, no jargon, front-load the point. Never blame the user.</li>
@@ -485,15 +694,15 @@
       </table></div>
     </section>
 
-    <section id="data">
+    <section id="data" hidden>
       <p class="kicker">Foundation</p>
-      <h2>Data formatting</h2>
+      <h1>Data formatting</h1>
       <p class="lede">Decided once, via the platform's formatting libraries — never hand-rolled.</p>
       <div class="table-wrap"><table>
         <tr><th>Data</th><th>Rule</th><th>Example</th></tr>
         <tr><td>Dates</td><td>Month name written; ISO 8601 when numeric</td><td>Jan 12, 2026 · 2026-01-12</td></tr>
         <tr><td>Relative time</td><td>Just now → 13 min ago → Yesterday → Jan 12; absolute past a year</td><td>"Yesterday at 10:30 am"</td></tr>
-        <tr><td>Numbers</td><td>Numerals, thousands separators, tabular in columns</td><td>12,480</td></tr>
+        <tr><td>Numbers</td><td>Numerals, thousands separators, tabular in columns</td><td class="num">12,480</td></tr>
         <tr><td>Currency</td><td>ISO code on totals and anything multi-currency</td><td>$12.50 SGD · −$4.20</td></tr>
         <tr><td>Empty value</td><td>Em dash — never blank, "null", or fake 0</td><td>—</td></tr>
         <tr><td>Truncation</td><td>Free text truncates (full value accessible); atomic values never wrap or split</td><td>INV-2041 stays whole</td></tr>
@@ -503,38 +712,38 @@
       </ul>
     </section>
 
-    <section id="components">
+    <section id="components" hidden>
       <p class="kicker">Beyond</p>
-      <h2>Where are the components?</h2>
+      <h1>Where are the components?</h1>
       <p>Deliberately absent — apps differ too much to pin an inventory. What's fixed is what
         components are <em>made of</em>: semantic tokens, the state ladder, the focus ring, the
         motion bands, the accessibility floor. Two apps with different components should still
         read as one practice.</p>
       <div class="callout">
         <p><strong>Twice is a coincidence, thrice is a pattern.</strong> Recurs across features →
-        promote into the app's <code>atoms/</code>. Recurs across projects → earn a specimen here.
+        promote into the app's <code>atoms/</code>. Recurs across <em>projects</em> → earn a specimen here.
         The guide grows from evidence, not speculation.</p>
       </div>
+      <p class="caption">Keystone is the visual keystone gate (<code>apps/frontend/CLAUDE.md → Design
+        guide</code>). Source of truth: <code>design/tokens.css</code>. This guide is specimen #1 —
+        built exclusively from its own tokens, audited against its own rules.</p>
     </section>
 
-    <footer>
-      <p class="caption">Keystone · the visual keystone gate (<code>apps/frontend/CLAUDE.md → Design
-        guide</code>). Source of truth: <code>design/tokens.css</code>. Rebrand the primitive tier;
-        confirm this page before building screens. This page is specimen #1 — built exclusively from
-        its own tokens, audited against its own rules.</p>
-    </footer>
+    <nav class="pager" aria-label="Chapter navigation">
+      <a id="pager-prev" href="#"></a>
+      <a id="pager-next" href="#"></a>
+    </nav>
   </main>
 </div>
 
 <script>
   // Live mirror: annotations are computed from tokens.css at load.
   const cs = getComputedStyle(document.documentElement);
-
   document.querySelectorAll('.resolved[data-token]').forEach(el => {
     el.textContent = cs.getPropertyValue(el.dataset.token).trim();
   });
 
-  // Primitive ramps (5 steps; gray carries 6 for its content/border roles)
+  // Primitive ramps
   const RAMPS = {
     gray:   [50, 200, 300, 400, 600, 900],
     red:    [50, 200, 300, 400, 500, 600],
@@ -594,16 +803,26 @@
     el.textContent = cs.getPropertyValue(el.dataset.token).trim();
   });
 
-  // Scroll-spy
+  // Chapter router — each section is a page; hash is the address.
+  const pages = [...document.querySelectorAll('main > section')];
   const links = [...document.querySelectorAll('.sidebar a[href^="#"]')];
-  const byId = Object.fromEntries(links.map(a => [a.hash.slice(1), a]));
-  const spy = new IntersectionObserver(entries => entries.forEach(e => {
-    if (e.isIntersecting) {
-      links.forEach(a => a.classList.remove('active'));
-      byId[e.target.id]?.classList.add('active');
-    }
-  }), { rootMargin: '-20% 0px -70% 0px' });
-  document.querySelectorAll('main section, main header[id]').forEach(s => spy.observe(s));
+  const titles = Object.fromEntries(pages.map(s => [s.id, s.querySelector('h1').textContent]));
+  const prevEl = document.getElementById('pager-prev');
+  const nextEl = document.getElementById('pager-next');
+
+  function show(id) {
+    if (!titles[id]) id = 'intro';
+    pages.forEach(s => s.hidden = s.id !== id);
+    links.forEach(a => a.classList.toggle('active', a.hash.slice(1) === id));
+    const i = pages.findIndex(s => s.id === id);
+    const prev = pages[i - 1], next = pages[i + 1];
+    prevEl.hidden = !prev; nextEl.hidden = !next;
+    if (prev) { prevEl.href = '#' + prev.id; prevEl.textContent = '← ' + titles[prev.id]; }
+    if (next) { nextEl.href = '#' + next.id; nextEl.textContent = titles[next.id] + ' →'; }
+    window.scrollTo(0, 0);
+  }
+  addEventListener('hashchange', () => show(location.hash.slice(1)));
+  show(location.hash.slice(1));
 </script>
 </body>
 </html>
