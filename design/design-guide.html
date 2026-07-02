@@ -329,6 +329,8 @@
       <a href="#data">Data formatting</a>
       <div class="nav-group">Composition</div>
       <a href="#archetypes">Screen archetypes</a>
+      <a href="#forms">Forms</a>
+      <a href="#view-states">View states &amp; feedback</a>
       <div class="nav-group">Beyond</div>
       <a href="#components">Components &amp; reuse</a>
     </nav>
@@ -754,6 +756,7 @@
         <li>Sentence case everywhere. Actions verb-first: "Save changes", never "OK".</li>
         <li>Short sentences, no jargon, front-load the point. Never blame the user.</li>
         <li>All copy centralized (i18n dictionaries / strings module) — reviewable as one surface.</li>
+        <li>One action, one verb — the vocabulary below; an action never ships under two labels.</li>
       </ul>
       <div class="table-wrap"><table>
         <tr><th>Surface</th><th>The copy's job</th></tr>
@@ -761,6 +764,21 @@
         <tr><td>Error</td><td>What happened + what to do, with the reference id. Never a dead end.</td></tr>
         <tr><td>Success</td><td>Confirm and name the object: "Invoice sent to Acme."</td></tr>
         <tr><td>Destructive</td><td>Name the consequence and count: "Delete 3 invoices? This can't be undone."</td></tr>
+      </table></div>
+
+      <h2>One action, one verb</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Verb</th><th>Use for</th><th>Not</th></tr>
+        <tr><td>Create</td><td>Making a new record — "Create invoice"</td><td>New, Add</td></tr>
+        <tr><td>Add</td><td>Attaching something that exists — "Add member"</td><td>Create</td></tr>
+        <tr><td>Edit</td><td>Opening a record for change</td><td>Modify, Change</td></tr>
+        <tr><td>Save</td><td>Committing changes — "Save changes"</td><td>Update, Submit (Submit = send for processing)</td></tr>
+        <tr><td>Delete</td><td>Destroying data — confirmed, per the row above</td><td>Remove</td></tr>
+        <tr><td>Remove</td><td>Detaching without destroying — "Remove member"</td><td>Delete</td></tr>
+        <tr><td>Search</td><td>Free-text lookup across records</td><td>Find</td></tr>
+        <tr><td>Filter</td><td>Constraining the visible list</td><td>Refine</td></tr>
+        <tr><td>Export</td><td>Producing a file from data</td><td>Download (Download = fetch an existing file)</td></tr>
+        <tr><td>Cancel</td><td>Leaving without saving</td><td>Close (Close = dismiss, nothing pending)</td></tr>
       </table></div>
     </section>
 
@@ -944,6 +962,128 @@
         <li>No fit → extend this set in the guide first. A page shape invented on a screen is a
           one-off by definition.</li>
         <li>One density app-wide, set at the token layer — never mixed within a page hierarchy.</li>
+      </ul>
+    </section>
+
+    <section id="forms" hidden>
+      <p class="kicker">Composition</p>
+      <h1>Forms</h1>
+      <p class="lede">Labels on top, one column, actions where the flow ends —
+        whatever component library the app adopted.</p>
+
+      <h2>Field anatomy</h2>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><div style="display:grid;gap:var(--space-1);max-width:14rem">
+            <span style="font-size:var(--font-size-200);font-weight:var(--font-weight-medium)">Company name</span>
+            <span style="height:var(--control-height);border:var(--border-1) solid var(--color-border-strong);border-radius:var(--control-radius);background:var(--color-surface)"></span>
+            <span class="caption">As it appears on the invoice.</span>
+          </div></div>
+          <figcaption><strong>Do</strong> — label above, helper below; the field is its own row.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><div style="display:grid;gap:var(--space-1);max-width:14rem">
+            <span style="height:var(--control-height);border:var(--border-1) solid var(--color-border-strong);border-radius:var(--control-radius);background:var(--color-surface);display:flex;align-items:center;padding:0 var(--control-padding-x);font-size:var(--font-size-200);color:var(--color-content-disabled)">Company name</span>
+          </div></div>
+          <figcaption><strong>Don't</strong> — a placeholder as the label: it vanishes on focus
+            and fails as a label.</figcaption>
+        </figure>
+      </div>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><div style="display:grid;gap:var(--space-1);max-width:14rem">
+            <span style="font-size:var(--font-size-200);font-weight:var(--font-weight-medium)">Postal code</span>
+            <span style="height:var(--control-height);width:40%;border:var(--border-1) solid var(--color-border-strong);border-radius:var(--control-radius);background:var(--color-surface)"></span>
+          </div></div>
+          <figcaption><strong>Do</strong> — width mirrors the expected answer.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><div style="display:grid;gap:var(--space-1);max-width:14rem">
+            <span style="font-size:var(--font-size-200);font-weight:var(--font-weight-medium)">Postal code</span>
+            <span style="height:var(--control-height);border:var(--border-1) solid var(--color-border-strong);border-radius:var(--control-radius);background:var(--color-surface)"></span>
+          </div></div>
+          <figcaption><strong>Don't</strong> — a six-character answer in a paragraph-wide field.</figcaption>
+        </figure>
+      </div>
+
+      <h2>Validation &amp; recovery</h2>
+      <figure class="figure">
+        <div style="display:grid;gap:var(--space-1);max-width:14rem">
+          <span style="font-size:var(--font-size-200);font-weight:var(--font-weight-medium)">Email</span>
+          <span style="height:var(--control-height);border:var(--border-2) solid var(--color-danger);border-radius:var(--control-radius);background:var(--color-surface)"></span>
+          <span class="caption" style="color:var(--color-danger)">Enter an email with an @ — like name@company.com.</span>
+        </div>
+        <figcaption>The error replaces the helper, under the field it describes — what happened
+          plus what to do (<a href="#content">Content</a>).</figcaption>
+      </figure>
+      <ul class="rules">
+        <li>Label above the field, always visible; the placeholder is never the label.</li>
+        <li>Field width mirrors the expected answer; only short, related fields share a row
+          (from <code>sm</code>).</li>
+        <li>Mark optional fields "(optional)" — nothing is asterisked.</li>
+        <li>Helper text sits under the input; the error replaces it, names the fix, and focus
+          moves to the first failure on submit.</li>
+        <li>Fields sit <code>--space-3</code> apart; groups <code>--page-section-gap</code> apart
+          (<a href="#archetypes">Form archetype</a>).</li>
+        <li>Actions close the form — primary on the trailing edge, secondary beside it,
+          destructive apart on the leading edge. Same order in dialogs and inline.</li>
+        <li>The pattern outranks the library default: configure the library to match; what it
+          can't express is justified via the <a href="#components">reuse ladder</a>.</li>
+      </ul>
+    </section>
+
+    <section id="view-states" hidden>
+      <p class="kicker">Composition</p>
+      <h1>View states &amp; feedback</h1>
+      <p class="lede">A state replaces only the zone it describes — the page keeps its frame.
+        Feedback lands where the cause lives. The words: <a href="#content">Content</a>;
+        this chapter decides placement.</p>
+
+      <h2>Where states live</h2>
+      <div class="table-wrap"><table>
+        <tr><th>State</th><th>Where it renders</th><th>Shape</th></tr>
+        <tr><td>Loading, first</td><td>In the zone it describes</td><td>Skeleton mirroring that zone's skeleton</td></tr>
+        <tr><td>Loading, refresh</td><td>Stale content stays put</td><td>Subtle indicator on the zone or control — never a page wipe</td></tr>
+        <tr><td>Empty</td><td>In the zone, where records would be</td><td>Why it's empty + the next step</td></tr>
+        <tr><td>Error</td><td>In the zone that failed</td><td>What happened + what to do, with retry</td></tr>
+        <tr><td>Partial</td><td>Loaded zones render</td><td>Skeletons only where data is still due</td></tr>
+      </table></div>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><div class="pg" aria-hidden="true">
+            <div class="ph"><span class="ttl"></span><span class="act"></span></div>
+            <div class="row"><i style="width:70%"></i><i style="width:70%"></i></div>
+            <div class="card"><i style="border-style:dashed"></i><i style="border-style:dashed"></i><i style="border-style:dashed"></i></div>
+          </div></div>
+          <figcaption><strong>Do</strong> — the records zone skeletons; header and toolbar
+            stay interactive.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><div class="pg" aria-hidden="true" style="min-height:var(--space-6)">
+            <div class="ctr" style="padding:var(--space-4)"><i style="width:var(--space-4);height:var(--space-4);border-radius:var(--radius-round)"></i></div>
+          </div></div>
+          <figcaption><strong>Don't</strong> — one zone's wait wipes the whole page behind
+            a spinner.</figcaption>
+        </figure>
+      </div>
+
+      <h2>Feedback routing</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Outcome</th><th>Route</th></tr>
+        <tr><td>A control's own result — validation, toggle, press</td><td>Inline, at the control that caused it</td></tr>
+        <tr><td>Async action confirmed or failed after the fact</td><td>Toast — transient, non-blocking, names the object</td></tr>
+        <tr><td>A decision blocks the action — destructive, unsaved changes</td><td>Dialog — names the consequence and count</td></tr>
+        <tr><td>System-wide condition — offline, expiring plan</td><td>Banner atop the affected zone or page</td></tr>
+      </table></div>
+      <ul class="rules">
+        <li>A state replaces only the zone it describes; the page frame never blinks out.</li>
+        <li>Known shape → skeleton mirroring the zone; unknown wait on an action → indicator on
+          the control. Never both for one wait.</li>
+        <li>Refresh keeps stale content under a subtle indicator — no wipes, no layout jumps.</li>
+        <li>Route feedback by cause: inline → toast → dialog → banner, the lightest that fits;
+          it always lands on (or names) what caused it.</li>
+        <li>Every state's copy follows the <a href="#content">Content</a> table — placement here,
+          words there.</li>
       </ul>
     </section>
 

@@ -56,7 +56,7 @@ A route is part of the app's public contract; an internal file path is an implem
 
 ## Design guide — the visual keystone (confirm before building UI)
 
-**Lock the visual system before building any screen.** The project's visual system lives in the **design guide** (`design/design-guide.html` — "Keystone"): the design principles plus every foundation — colour, type, spacing, layout, shape, elevation, motion, iconography, states/focus, accessibility, content, data formatting — rendered live from the single design-token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`). A live mirror of the tokens, not a stale screenshot. **Foundations only, by design** — components stay flexible per app and are built *from* these foundations.
+**Lock the visual system before building any screen.** The project's visual system lives in the **design guide** (`design/design-guide.html` — "Keystone"): the design principles plus every foundation — colour, type, spacing, layout, shape, surfaces & elevation, motion, iconography, states/focus, accessibility, content, data formatting — and the composition chapters (screen archetypes, forms, view states & feedback) — rendered live from the single design-token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`). A live mirror of the tokens, not a stale screenshot. **Foundations only, by design** — components stay flexible per app and are built *from* these foundations.
 
 - ***Confirm* the design guide before building screens.** It is a gate: for a new project (or a rebrand) no screen or component work starts until the guide reflects the project's brand, has been reviewed in a browser, and signed off. Once the system is established small additions don't re-gate — but a new foundational token lands in the guide first.
 - **Customise by editing tokens, not screens.** A rebrand edits the **primitive** token tier — or has your AI assistant regenerate it from the brand — and the semantic tier and the whole guide re-derive. This is the "one token source, three tiers" rule below — the guide is its human-reviewable face.
@@ -69,6 +69,7 @@ A route is part of the app's public contract; an internal file path is an implem
 3. Surfaces follow the ladder: no card-like container inside another; separate in order whitespace → background shift → border → divider (tables/dense rows only) (guide → *Surfaces & elevation*).
 4. Reuse first: archetype → documented pattern → existing screens/primitives → extend a primitive → only then new, with the PR recording why nothing fit (guide → *Components & reuse*).
 5. One density app-wide, set at the token layer — never mixed within a page hierarchy (guide → *Screen archetypes*).
+6. Forms and view states follow the composition patterns — the pattern outranks the component library's defaults (guide → *Forms*, *View states & feedback*).
 
 ## Page layout & design tokens
 
