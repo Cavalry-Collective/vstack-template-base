@@ -320,7 +320,7 @@
       <a href="#spacing">Spacing</a>
       <a href="#layout">Layout</a>
       <a href="#shape">Shape &amp; border</a>
-      <a href="#elevation">Elevation</a>
+      <a href="#elevation">Surfaces &amp; elevation</a>
       <a href="#motion">Motion</a>
       <a href="#iconography">Icons</a>
       <a href="#states">States &amp; focus</a>
@@ -593,13 +593,49 @@
       </div>
       <ul class="rules">
         <li>Borders are <code>--border-1</code>; <code>--border-2</code> marks selection and focus only.</li>
+        <li>The concentric formula is the only nesting rule — it also governs surface insets
+          (<a href="#elevation">Surfaces &amp; elevation</a>): a nested corner never out-rounds its parent.</li>
       </ul>
     </section>
 
     <section id="elevation" hidden>
       <p class="kicker">Foundation</p>
-      <h1>Elevation</h1>
-      <p class="lede">Shadow and z-band travel together; only floating surfaces cast shadows.</p>
+      <h1>Surfaces &amp; elevation</h1>
+      <p class="lede">Four resting levels build the page; floating surfaces rise above them.
+        Surface, shadow, and z-band travel together — never one without the others.</p>
+
+      <h2>The resting ladder</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Level</th><th>Tokens</th><th>Holds</th><th>May contain</th></tr>
+        <tr><td>Recessed</td><td><code>--color-bg-subtle</code> · no shadow</td><td>Wells, table headers, insets, disabled fills</td><td>Flat content only — nothing raised</td></tr>
+        <tr><td>Page</td><td><code>--color-bg</code> · no shadow</td><td>The canvas: text, forms, tables</td><td>Recessed insets · cards</td></tr>
+        <tr><td>Card / panel</td><td><code>--color-surface</code> · <code>--shadow-1</code></td><td>A self-contained group of content</td><td>Flat content · a recessed inset — <strong>never another card</strong></td></tr>
+        <tr><td>Floating</td><td><code>--color-surface</code> · <code>--shadow-2/3</code> · z-band</td><td>Menus, dialogs, toasts (ladder below)</td><td>Its own content; stacks by z-band</td></tr>
+      </table></div>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><div style="background:var(--color-surface);border:var(--border-1) solid var(--color-border);border-radius:var(--radius-2);box-shadow:var(--shadow-1);padding:var(--box-padding);display:grid;gap:var(--space-2)"><span style="font-size:var(--font-size-200);font-weight:var(--font-weight-medium)">Billing</span><span style="font-size:var(--text-caption);color:var(--color-content-subtle)">Plan, seats, renewal date</span><div style="background:var(--color-bg-subtle);border-radius:var(--radius-1);padding:var(--space-2);font-size:var(--text-caption);color:var(--color-content-subtle)">A recessed inset groups the sub-content</div></div></div>
+          <figcaption><strong>Do</strong> — one card; spacing or a recessed inset groups within it.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><div style="background:var(--color-surface);border:var(--border-1) solid var(--color-border);border-radius:var(--radius-2);box-shadow:var(--shadow-1);padding:var(--box-padding);display:grid;gap:var(--space-2)"><span style="font-size:var(--font-size-200);font-weight:var(--font-weight-medium)">Billing</span><div style="background:var(--color-surface);border:var(--border-1) solid var(--color-border);border-radius:var(--radius-2);box-shadow:var(--shadow-1);padding:var(--space-2);font-size:var(--text-caption);color:var(--color-content-subtle)">A card inside the card</div></div></div>
+          <figcaption><strong>Don't</strong> — a card inside a card is noise, not hierarchy.</figcaption>
+        </figure>
+      </div>
+      <p class="caption">Inset corners follow the concentric formula
+        (<a href="#shape">Shape &amp; border</a>) — a nested surface never out-rounds its parent.</p>
+
+      <h2>Separation</h2>
+      <p>To separate adjacent content, work down this list and stop at the first that reads:</p>
+      <div class="table-wrap"><table>
+        <tr><th>Separator</th><th>Reach for it when</th></tr>
+        <tr><td>1 · Whitespace</td><td>Default. Proximity alone groups — <a href="#spacing">Spacing</a> owns the steps.</td></tr>
+        <tr><td>2 · Background shift</td><td>A zone needs enclosure without a line: recessed insets, table headers.</td></tr>
+        <tr><td>3 · Border</td><td>Dense UI where space is already spent: input edges, table wrap, split panes.</td></tr>
+        <tr><td>4 · Divider</td><td>Rows in tables and dense lists <strong>only</strong> — never between page sections.</td></tr>
+      </table></div>
+
+      <h2>The floating ladder</h2>
       <figure class="figure">
         <div class="stack" aria-hidden="true">
           <div class="plane" style="left:0; top:var(--space-6); right:var(--space-6); box-shadow:var(--shadow-1)">raised · cards · <span class="mono">shadow-1</span></div>
@@ -618,6 +654,11 @@
         <tr><td>Tooltip</td><td><span class="resolved" data-token="--z-tooltip"></span></td><td><code>--shadow-1</code></td><td>Tooltips</td></tr>
       </table></div>
       <ul class="rules">
+        <li>Every container sits on a named level; surface, shadow, and z-band travel together.</li>
+        <li>No card inside a card — group with spacing, a recessed inset, or (in dense data) a divider.</li>
+        <li>Separators in order: whitespace → background shift → border; dividers live in tables and
+          dense lists only.</li>
+        <li>Recessed holds nothing raised; only floating surfaces cast <code>--shadow-2</code> and above.</li>
         <li>Overlays and fixed chrome render in a top-level portal at their z-band — never where an
           ancestor's <code>transform</code> can trap them.</li>
       </ul>

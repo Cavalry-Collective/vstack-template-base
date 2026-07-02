@@ -72,12 +72,12 @@ Feature touches exactly three source files: `design/design-guide.html`, `design/
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Retitle the Elevation chapter to **Surfaces & elevation** in `design/design-guide.html` (nav label + h1; keep the `#elevation` id and all existing shadow/z-band content and rules intact per contracts/guide-chapters.md)
-- [ ] T017 [US2] Author the resting-surface ladder in `design/design-guide.html`: four levels (recessed · page · card/panel · floating) bound to existing background/surface + shadow + z tokens; extend the pairing rule to resting surfaces; may-contain / may-stack-above table making every combination checkable (FR-006/FR-009)
-- [ ] T018 [US2] Author the nesting prohibition in `design/design-guide.html`: no card-like container inside another — do/don't specimen pair with the sanctioned alternatives (spacing, background-shift inset, divider where permitted) (FR-007, FR-021)
-- [ ] T019 [US2] Author the separator decision rule in `design/design-guide.html` — one ordered list: whitespace (default) → background shift → border → divider (dense data rows/tables only) — and update the chapter's closing `ul.rules` (FR-008/FR-018)
-- [ ] T020 [US2] Add the Shape & border cross-reference line in `design/design-guide.html`: concentric formula also governs nested-surface rounding — single rounding rule, no second formula (research R4, FR-020, ≤2 lines)
-- [ ] T021 [US2] Verify US2 in the browser (quickstart §3 US2 row): ladder table complete, prohibited combos citable, do/don't renders, existing elevation rules unbroken, `#elevation` anchor still resolves; record evidence
+- [X] T016 [US2] Retitle the Elevation chapter to **Surfaces & elevation** in `design/design-guide.html` (nav label + h1; keep the `#elevation` id and all existing shadow/z-band content and rules intact per contracts/guide-chapters.md)
+- [X] T017 [US2] Author the resting-surface ladder in `design/design-guide.html`: four levels (recessed · page · card/panel · floating) bound to existing background/surface + shadow + z tokens; extend the pairing rule to resting surfaces; may-contain / may-stack-above table making every combination checkable (FR-006/FR-009)
+- [X] T018 [US2] Author the nesting prohibition in `design/design-guide.html`: no card-like container inside another — do/don't specimen pair with the sanctioned alternatives (spacing, background-shift inset, divider where permitted) (FR-007, FR-021)
+- [X] T019 [US2] Author the separator decision rule in `design/design-guide.html` — one ordered list: whitespace (default) → background shift → border → divider (dense data rows/tables only) — and update the chapter's closing `ul.rules` (FR-008/FR-018)
+- [X] T020 [US2] Add the Shape & border cross-reference line in `design/design-guide.html`: concentric formula also governs nested-surface rounding — single rounding rule, no second formula (research R4, FR-020, ≤2 lines)
+- [X] T021 [US2] Verify US2 in the browser (quickstart §3 US2 row): ladder table complete, prohibited combos citable, do/don't renders, existing elevation rules unbroken, `#elevation` anchor still resolves; record evidence
 
 **Checkpoint**: US1 and US2 both independently verifiable
 
