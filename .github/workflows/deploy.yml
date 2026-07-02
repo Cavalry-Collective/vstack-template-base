@@ -18,7 +18,11 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'main'
     steps:
+      # When filling in: check out the exact commit CI tested — a `workflow_run`
+      # checkout defaults to the latest main, which can deploy a commit CI never saw.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Deploy
         run: 'echo "TODO: replace with your deploy command"'
