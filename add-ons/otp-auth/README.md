@@ -21,6 +21,10 @@ One-time-code auth: a user proves control of a phone or email by entering a code
 
 ## Make it robust
 
+- **Generate codes with a CSPRNG, minimum 6 digits** — never `Math.random()` or anything timestamp-derived.
+- **A code is single-use** — consume it on a successful verify; a consumed code never verifies again.
+- **TTL is minutes, not hours.**
+- **Cap failed verify attempts per challenge** (e.g. 5); past the cap, invalidate the challenge and require a fresh send.
 - **Idempotent verify.** A retry or double-submit must never create a second account or double-consume. Put a unique constraint on the natural key (target + purpose) so the race resolves to `409`, and have the client treat `409` as "already done, proceed".
 - **A knowable test code.** Gate a knowable code behind **test mode** (a logged real code, or a fixed code valid *only* in test mode) so the flow is walkable without a live provider. The verify path still runs — only delivery is stubbed.
 - **Log every send and verify** with `{purpose, masked target, test-mode, provider status, correlation id}` — never the code or full contact.

@@ -2,8 +2,8 @@
 
 <!-- What changed and why. -->
 
-Spec: specs/<file>
-<!-- The spec this implements (specs/YYYY-MM-DD-<feature>.md) — or "N/A" with a one-line reason. -->
+Spec: specs/<feature>
+<!-- The spec this implements (specs/<feature> — see specs/README.md for the convention) — or "N/A" with a one-line reason. -->
 
 ## Test plan
 
