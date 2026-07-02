@@ -3,195 +3,145 @@
   (see apps/frontend/CLAUDE.md → "Design guide")
 
   Three tiers:
-    1. PRIMITIVE  — raw, context-free scales (ramps, sizes, durations). Rebrand HERE.
-    2. SEMANTIC   — role-named aliases pointing at primitives. Components use THESE.
+    1. PRIMITIVE  — raw scales. Rebrand HERE; everything re-derives.
+    2. SEMANTIC   — role-named aliases. Components use THESE, nothing deeper.
     3. COMPONENT  — per-component overrides, only where genuinely needed.
 
-  design/design-guide.html renders this file live; the app's token source
-  (src/tokens.<ext>) is seeded from it. A rebrand edits the primitive tier only —
-  the semantic tier and the whole guide re-derive. Pages and components never
-  reach past a semantic token to a raw primitive.
+  Deliberately small: 5 steps per colour family, 5 type sizes, 6 space steps.
+  If a screen needs a value that isn't here, extend the scale — never the screen.
 
-  Intent formula (keep it when adding a hue): subtle background = 50,
-  border = 200, content = 500–600 on light (300 on dark). Interactive state
-  ladder: hover = one ramp step stronger, active = two.
+  One light theme. Dark is a later remap of the SEMANTIC tier only, if a
+  project needs it. Intent formula: subtle bg = 50 · border = 200 ·
+  interactive/content = 400 · hover = 500 · active / text-on-tint = 600.
 
-  Breakpoints (custom properties can't drive media queries — keep in sync by
-  convention; informational copies below): sm 640 · md 768 · lg 1024 · xl 1440.
-  Author from the smallest width up.
+  Breakpoints can't be custom properties in media queries — keep in sync by
+  convention: sm 640 · lg 1024. Author from the smallest width up.
 */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
-  /* ════════════════════════ 1 · PRIMITIVE TIER ════════════════════════ */
+  /* ════════════════ 1 · PRIMITIVE ════════════════ */
 
-  /* Color ramps — neutral placeholder palette; swap for the brand's ramps */
+  /* Colour — one neutral, one accent, three intents. 5 steps each. */
   --white: #ffffff;
-  --black: #000000;
 
   --gray-50:  #f6f6f6;
-  --gray-100: #eeeeee;
   --gray-200: #e2e2e2;
   --gray-300: #cbcbcb;
   --gray-400: #afafaf;
-  --gray-500: #757575;
   --gray-600: #545454;
-  --gray-700: #333333;
-  --gray-800: #1f1f1f;
   --gray-900: #141414;
 
   --blue-50:  #eff3fe;
-  --blue-100: #d4e2fc;
   --blue-200: #a0bff8;
-  --blue-300: #5b91f5;
   --blue-400: #276ef1;
   --blue-500: #1e54b7;
   --blue-600: #174291;
-  --blue-700: #102c60;
 
   --green-50:  #e6f2ed;
-  --green-100: #addec9;
   --green-200: #66d19e;
-  --green-300: #06c167;
   --green-400: #05944f;
   --green-500: #03703c;
   --green-600: #03582f;
-  --green-700: #10462d;
 
   --yellow-50:  #fffaf0;
-  --yellow-100: #fff2d9;
   --yellow-200: #ffe3ac;
-  --yellow-300: #ffcf70;
   --yellow-400: #ffc043;
   --yellow-500: #bc8b2c;
   --yellow-600: #997328;
-  --yellow-700: #674d1b;
 
   --red-50:  #ffefed;
-  --red-100: #fed7d2;
   --red-200: #f1998e;
-  --red-300: #e85c4a;
   --red-400: #e11900;
   --red-500: #ab1300;
   --red-600: #870f00;
-  --red-700: #5a0a00;
 
-  --purple-50:  #f5f2fd;
-  --purple-100: #e2d9fa;
-  --purple-200: #c3aef4;
-  --purple-300: #9d7cec;
-  --purple-400: #7c4ce0;
-  --purple-500: #6134b8;
-  --purple-600: #4c2691;
-  --purple-700: #351a66;
-
-  /* Typography — Inter when the app loads it, system stack otherwise */
+  /* Type — Inter if the app loads it, else the system stack. 5 sizes. */
   --font-family-base: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
   --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* One modular scale — a new size is a new step here, never an ad-hoc value */
-  --font-size-100: 0.75rem;   /* 12 — caption, overline, meta      */
-  --font-size-200: 0.875rem;  /* 14 — secondary text, labels, UI   */
-  --font-size-300: 1rem;      /* 16 — body (reading default)       */
-  --font-size-400: 1.125rem;  /* 18 — emphasized body, lead        */
-  --font-size-500: 1.25rem;   /* 20 — heading 3                    */
-  --font-size-600: 1.5rem;    /* 24 — heading 2                    */
-  --font-size-700: 1.75rem;   /* 28 — heading 1                    */
-  --font-size-800: 2.25rem;   /* 36 — display                      */
-  --font-size-900: 3rem;      /* 48 — display XL (marketing moments) */
+  --font-size-100: 0.75rem;   /* 12 — caption, overline          */
+  --font-size-200: 0.875rem;  /* 14 — labels, tables, dense UI   */
+  --font-size-300: 1rem;      /* 16 — body (the default)         */
+  --font-size-400: 1.25rem;   /* 20 — headings                   */
+  --font-size-500: 1.75rem;   /* 28 — page title / display       */
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
-  --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  --line-height-display: 1.1;  /* display sizes  */
-  --line-height-tight: 1.25;   /* headings, controls */
-  --line-height-base: 1.5;     /* body copy      */
+  --line-height-tight: 1.25;  /* headings, controls */
+  --line-height-base: 1.5;    /* body copy          */
+  --tracking-tight: -0.02em;  /* titles             */
+  --tracking-caps: 0.06em;    /* uppercase overlines */
+  /* Tabular digits in tables/metrics: font-variant-numeric: tabular-nums */
 
-  --tracking-tight: -0.02em;   /* display & large headings */
-  --tracking-caps: 0.06em;     /* uppercase overline labels */
-
-  /* Tabular figures for data — apply in tables/metrics so digits align:
-     font-feature-settings: "tnum"; or font-variant-numeric: tabular-nums; */
-
-  /* Spacing — 4px base; every margin/padding/gap resolves to a step */
-  --space-0: 0;
-  --space-1: 0.25rem;  /*  4 */
-  --space-2: 0.5rem;   /*  8 */
-  --space-3: 0.75rem;  /* 12 */
-  --space-4: 1rem;     /* 16 */
-  --space-5: 1.5rem;   /* 24 */
-  --space-6: 2rem;     /* 32 */
-  --space-7: 3rem;     /* 48 */
-  --space-8: 4rem;     /* 64 */
-  --space-9: 6rem;     /* 96 */
-
-  /* Sizing */
-  --icon-size-sm: 1rem;      /* 16 — pairs with 12–14px text        */
-  --icon-size-md: 1.25rem;   /* 20 — pairs with 16px text           */
-  --icon-size-lg: 1.5rem;    /* 24 — nav, feature icons             */
-  --touch-target-min: 2.75rem; /* 44px — touch-primary form factors */
+  /* Space — 6 steps. Every margin, padding, and gap is one of these. */
+  --space-1: 0.25rem;  /*  4 — inside controls          */
+  --space-2: 0.5rem;   /*  8 — icon↔label, tight groups */
+  --space-3: 1rem;     /* 16 — component padding, gaps  */
+  --space-4: 1.5rem;   /* 24 — between components       */
+  --space-5: 2rem;     /* 32 — between sections         */
+  --space-6: 4rem;     /* 64 — page-level rhythm        */
 
   /* Shape — concentric nesting: outer radius = inner radius + padding */
-  --radius-1: 0.25rem;   /*  4 — badges, checkboxes, small chips     */
-  --radius-2: 0.5rem;    /*  8 — buttons, inputs, selects            */
-  --radius-3: 0.75rem;   /* 12 — cards, dropdown panels              */
-  --radius-4: 1rem;      /* 16 — modals, sheets, page containers     */
+  --radius-1: 0.25rem;   /*  4 — badges, chips, checkboxes */
+  --radius-2: 0.5rem;    /*  8 — buttons, inputs, cards    */
+  --radius-3: 0.75rem;   /* 12 — modals, sheets, panels    */
   --radius-round: 9999px;
 
-  /* Border */
-  --border-1: 1px;   /* default — dividers, inputs, cards */
-  --border-2: 2px;   /* selected states, focus, emphasis  */
+  --border-1: 1px;   /* default          */
+  --border-2: 2px;   /* selected, focus  */
 
-  /* Elevation — each level pairs a shadow with a layer role (see z-bands) */
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.08);              /* raised: cards        */
-  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.12);             /* overlay: menus, popovers */
-  --shadow-3: 0 16px 48px rgba(0, 0, 0, 0.22);            /* modal: dialogs, sheets   */
+  /* Elevation — shadow and z-band travel together */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.08);    /* raised: cards            */
+  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.12);   /* overlay: menus, popovers */
+  --shadow-3: 0 16px 48px rgba(0, 0, 0, 0.22);  /* modal: dialogs, sheets   */
 
-  /* Z-index bands — chrome and overlays render in a top-level portal */
-  --z-chrome: 100;    /* sticky header, bottom nav        */
-  --z-popover: 700;   /* dropdowns, menus, popovers       */
-  --z-overlay: 900;   /* scrims, sheets                   */
-  --z-modal: 1000;    /* dialogs                          */
-  --z-toast: 1100;    /* toasts, snackbars                */
-  --z-tooltip: 1200;  /* tooltips — above everything      */
+  --z-chrome: 100;   /* sticky header / bottom nav */
+  --z-popover: 200;  /* menus, dropdowns           */
+  --z-overlay: 300;  /* scrims, sheets             */
+  --z-modal: 400;    /* dialogs                    */
+  --z-toast: 500;    /* toasts                     */
+  --z-tooltip: 600;  /* above everything           */
 
-  /* Motion — bands by surface size; reduced motion collapses all to 0 */
-  --duration-fast: 100ms;  /* state feedback: press, toggle, hover   */
-  --duration-base: 200ms;  /* reveals: menu, tooltip, fade           */
-  --duration-slow: 400ms;  /* large surfaces: sheet, modal, drawer   */
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);    /* default, move/morph  */
-  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);  /* enter the screen     */
-  --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);  /* exit the screen      */
+  /* Motion — reduced motion collapses all to 0 */
+  --duration-fast: 100ms;  /* state feedback: press, toggle */
+  --duration-base: 200ms;  /* reveals: menu, tooltip, fade  */
+  --duration-slow: 400ms;  /* large surfaces: sheet, modal  */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);    /* default (exits too) */
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);  /* entrances           */
 
-  /* Focus — one visible ring spec everywhere; never removed without replacement */
+  /* Focus — one visible ring everywhere */
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
 
-  /* Breakpoints — informational copies (keep media queries in sync) */
-  --breakpoint-sm: 40rem;   /*  640 */
-  --breakpoint-md: 48rem;   /*  768 */
-  --breakpoint-lg: 64rem;   /* 1024 */
-  --breakpoint-xl: 90rem;   /* 1440 */
+  /* Sizing */
+  --icon-size-sm: 1rem;        /* 16 — inline with text      */
+  --icon-size-lg: 1.5rem;      /* 24 — navigation, features  */
+  --touch-target-min: 2.75rem; /* 44 — touch form factors    */
 
-  /* ════════════════════════ 2 · SEMANTIC TIER ═════════════════════════ */
+  /* Layout */
+  --breakpoint-sm: 40rem;      /*  640 — informational copy  */
+  --breakpoint-lg: 64rem;      /* 1024 — informational copy  */
+  --container-content: 72rem;  /* standard pages             */
+  --container-narrow: 42rem;   /* reading, focused flows     */
+  --measure: 65ch;             /* body copy cap              */
 
-  /* Surfaces */
+  /* ════════════════ 2 · SEMANTIC ════════════════ */
+
   --color-bg: var(--white);
   --color-bg-subtle: var(--gray-50);
   --color-surface: var(--white);
   --color-scrim: rgba(20, 20, 20, 0.4);
 
-  /* Content — AA against their intended surfaces (a token-set constraint) */
   --color-content: var(--gray-900);
   --color-content-subtle: var(--gray-600);
   --color-content-disabled: var(--gray-400);
   --color-content-inverse: var(--white);
 
-  /* Borders & focus */
   --color-border: var(--gray-200);
   --color-border-strong: var(--gray-300);
   --color-focus-ring: var(--blue-400);
@@ -204,8 +154,7 @@
   --color-on-accent: var(--white);
   --color-link: var(--blue-400);
 
-  /* Intent — meaning is never colour alone; pair with text or an icon.
-     Formula per intent: content / subtle bg (50) / border (200). */
+  /* Intent — never colour alone; pair with text or an icon */
   --color-success: var(--green-400);
   --color-success-subtle: var(--green-50);
   --color-success-border: var(--green-200);
@@ -218,78 +167,25 @@
   --color-info: var(--blue-400);
   --color-info-subtle: var(--blue-50);
   --color-info-border: var(--blue-200);
-  --color-highlight: var(--purple-500);          /* new/beta/discovery */
-  --color-highlight-subtle: var(--purple-50);
-  --color-highlight-border: var(--purple-200);
 
-  /* Type roles */
   --text-body: var(--font-size-300);
   --text-caption: var(--font-size-100);
-  --measure: 65ch; /* body copy cap, ~60–75ch */
 
-  /* Layout — the shared layout applies these; pages never re-derive them */
-  --gutter-screen: var(--space-4);
-  --container-content: 72rem;  /* dashboards, lists, standard pages */
-  --container-narrow: 42rem;   /* long-form reading, focused flows  */
+  /* The shared layout applies these; pages never re-derive them */
+  --gutter-screen: var(--space-3);
   --header-height: 3.5rem;
   --header-clearance: calc(var(--header-height) + env(safe-area-inset-top, 0px));
-  --bottom-nav-height: 3.5rem; /* applies when mobile is the primary form factor */
+  --bottom-nav-height: 3.5rem; /* mobile-first form factors */
   --bottom-nav-clearance: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 
-  /* ═══════════════════════ 3 · COMPONENT TIER ═════════════════════════ */
+  /* ════════════════ 3 · COMPONENT ════════════════ */
 
-  --control-height-sm: 2rem;
-  --control-height: 2.5rem;          /* buttons, inputs, selects (default) */
-  --control-height-lg: 3rem;
+  --control-height: 2.5rem;
   --control-radius: var(--radius-2);
-  --control-padding-x: var(--space-4);
+  --control-padding-x: var(--space-3);
 }
 
-/* Dark scheme — remap the SEMANTIC tier only; primitives never change.
-   Depth in dark mode comes from lighter surfaces more than shadows. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: var(--gray-900);
-    --color-bg-subtle: var(--gray-800);
-    --color-surface: var(--gray-800);
-    --color-scrim: rgba(0, 0, 0, 0.6);
-
-    --color-content: var(--gray-50);
-    --color-content-subtle: var(--gray-400);
-    --color-content-disabled: var(--gray-600);
-    --color-content-inverse: var(--gray-900);
-
-    --color-border: var(--gray-700);
-    --color-border-strong: var(--gray-600);
-    --color-focus-ring: var(--blue-300);
-
-    --color-accent: var(--blue-300);
-    --color-accent-hover: var(--blue-200);
-    --color-accent-active: var(--blue-100);
-    --color-accent-subtle: var(--blue-700);
-    --color-on-accent: var(--gray-900);
-    --color-link: var(--blue-300);
-
-    --color-success: var(--green-300);
-    --color-success-subtle: var(--green-700);
-    --color-success-border: var(--green-600);
-    --color-warning: var(--yellow-400);
-    --color-warning-subtle: var(--yellow-700);
-    --color-warning-border: var(--yellow-600);
-    --color-danger: var(--red-300);
-    --color-danger-subtle: var(--red-700);
-    --color-danger-border: var(--red-600);
-    --color-info: var(--blue-300);
-    --color-info-subtle: var(--blue-700);
-    --color-info-border: var(--blue-600);
-    --color-highlight: var(--purple-300);
-    --color-highlight-subtle: var(--purple-700);
-    --color-highlight-border: var(--purple-600);
-  }
-}
-
-/* Reduced motion — collapse durations at the token layer;
-   essential feedback is never conveyed by motion alone */
+/* Reduced motion — essential feedback never rides on motion alone */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0ms;
