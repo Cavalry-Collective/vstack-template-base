@@ -47,7 +47,7 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 
 ### UI mockup / design reference
 
-Design mockups live in the **`design/`** folder, kept as **reference only** — not part of the buildable workspace. Use it as the source for visual design, screen inventory, copy, and flows when planning UI work; **don't copy its code** (the mockup's framework is usually not the app's). When planning a UI-touching feature, point the relevant mockup files at the spec so screens, copy, and flows stay aligned.
+Design mockups live in the **`design/`** folder, kept as **reference only** — not part of the buildable workspace. **They are the reference for a screen's *initial build* only.** Use them as the source for visual design, screen inventory, copy, and flows when planning and first building a screen; **don't copy their code** (the mockup's framework is usually not the app's). After the first build, expect the screen to drift as it's iterated and improved — from then on the **running app is the reference, not the mockup**, so don't re-check later changes against it. When planning a *new* screen, point the relevant mockup files at the spec so it starts aligned.
 
 ## Coding standards
 
