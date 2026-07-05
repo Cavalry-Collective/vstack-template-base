@@ -50,7 +50,7 @@ The two entries share one `buildApp()`:
 
 ## Testing
 
-- **Runner: Vitest** (`pnpm test`). Base per-ring kinds, bound: **service** — drive the use case with the real Knex against the `*_test` schema (this stack keeps rules in services, not a pure domain ring, so most coverage sits here); **route** — Fastify `app.inject()`; **repo** — integration against the `*_test` MySQL schema. The suite is **destructive** and guarded — `./db.md` owns the `*_test` ritual. Unset `DEV_OTP_SINK` so OTP paths exercise the real verify.
+- **Runner: Vitest** (`pnpm test`). Base per-ring kinds, bound: **service** — drive the use case with the real Knex against the `*_test` schema (this stack keeps rules in services, not a pure domain ring, so most coverage sits here); **route** — Fastify `app.inject()`; **repo** — integration against the `*_test` MySQL schema. The suite is **destructive** and guarded — `./db.md` owns the `*_test` ritual. If `otp-auth` is adopted, unset `DEV_OTP_SINK` so OTP paths exercise the real verify.
 
 ## Conflict register
 

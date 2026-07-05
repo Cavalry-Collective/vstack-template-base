@@ -19,7 +19,7 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **Cyn
 
 ## Schema & MySQL-8 gotchas
 
-- snake_case tables/columns; every table carries `created_at`/`updated_at`. Index every FK and frequent filter/sort column explicitly.
+- Base schema conventions apply unchanged (`db/CLAUDE.md` *Schema conventions*); MySQL-8 specifics below.
 - **A `CHECK` constraint validates against *existing* rows on MySQL 8** — so you cannot add one to a table whose legacy rows already violate it. Enforce such invariants **in the service**, not with a late `CHECK`, when legacy or imported data may violate them.
 - **Fixed value sets: a native MySQL `ENUM` is acceptable** — widening it (`ALTER TABLE ... MODIFY ... ENUM(...)`) is a plain reversible migration (contrast Postgres, where the `vercel` pack avoids native enums). A new challenge `purpose` is added this way.
 

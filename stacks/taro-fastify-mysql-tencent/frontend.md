@@ -29,7 +29,7 @@ Taro's H5 router has sharp edges; each item binds a base *Navigation chrome, ove
 - **`Taro.redirectTo` collapses the stack and *skips* the enter transition** (it stamps `taro_page_show` + `taro_page_stationed` synchronously). Tab switches use `redirectTo` to keep a 1-deep stack; if you want a switch animation you drive your own keyframes — and then all `position: fixed` chrome must live **outside** the transformed subtree (portalled), per the base rule.
 - **Taro H5 `pushState` fires no navigation event.** Patch `history.pushState` / `replaceState` once to emit a custom event, and drive all chrome (nav visibility, active tab, keep-alive pane selection) off a single reactive `usePathname` subscribing to that event + `popstate`.
 - **Use capital `Px` for pixel values `postcss-pxtransform` must leave alone** (e.g. matching Taro's own prebuilt-component sizes); lowercase `px` is rem-rescaled and drifts against Taro's built-ins.
-- **Re-implement a Taro built-in (e.g. pull-to-refresh) when the real scroll container is a body-portalled shell** Taro can't auto-detect — the stencil behaviour silently won't attach.
+- **Re-implement a Taro built-in behaviour (e.g. pull-to-refresh) when the real scroll container is a body-portalled shell.** Taro attaches such behaviours to its own page scroller and can't detect a portalled container — the built-in silently does nothing there.
 
 ## Tokens & styling (base *Page layout & design tokens*)
 
