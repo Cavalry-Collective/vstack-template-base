@@ -12,115 +12,166 @@
   /* KEYSTONE — foundations only; components stay per-app, built from these
      tokens (apps/frontend/CLAUDE.md → "Design guide"). Every value resolves
      to tokens.css; annotations are computed at load. Each chapter is its own
-     page (hash-routed); without JS the guide degrades to one long page.
+     page (hash-routed); without JS the guide degrades to one long page —
+     JS stamps `.routed` on <html>, and everything router-dependent (the
+     compact chapter menu, the pager, page transitions) gates on it.
      This document is specimen #1 of its own rules. */
 
   * { box-sizing: border-box; }
   html { scroll-padding-top: var(--space-5); }
 
   body { margin: 0; font-family: var(--font-family-base); font-size: var(--text-body);
-    line-height: var(--line-height-base); background: var(--color-bg); color: var(--color-content); }
+    line-height: var(--line-height-base); background: var(--color-bg);
+    color: var(--color-content); -webkit-font-smoothing: antialiased; }
+
+  ::selection { background: var(--color-accent-subtle); }
+  :focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset); }
 
   .skip { position: absolute; left: -999px; }
   .skip:focus { left: var(--space-3); top: var(--space-3); z-index: var(--z-toast);
     background: var(--color-surface); padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-2); outline: var(--focus-ring-width) solid var(--color-focus-ring); }
+    border-radius: var(--radius-2); }
 
   .shell { display: grid; grid-template-columns: max-content minmax(0, 1fr); min-height: 100vh; }
 
-  /* —— Sidebar —— */
-  .sidebar { border-right: var(--border-1) solid var(--color-border);
-    padding: var(--space-4) var(--space-3); position: sticky; top: 0; height: 100vh;
-    overflow-y: auto; background: var(--color-bg-subtle); }
+  /* —— Sidebar / chapter nav —— */
+  .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: var(--space-5) var(--space-4);
+    border-right: var(--border-1) solid var(--color-border); background: var(--color-bg); }
   .brand { display: flex; align-items: center; gap: var(--space-2);
     font-family: var(--font-family-display); font-weight: var(--font-weight-bold);
     letter-spacing: var(--tracking-tight); }
   .brand-mark { width: var(--space-2); height: var(--space-2); flex: none;
     background: var(--color-accent); border-radius: var(--radius-1); transform: rotate(45deg); }
+  .tagline { margin: var(--space-1) 0 0; font-family: var(--font-family-mono);
+    font-size: var(--text-caption); color: var(--color-content-subtle); }
+
+  .menu summary { display: none; } /* the rail is always open; compact mode reveals it */
+
   .nav-group { margin: var(--space-4) 0 var(--space-1); font-size: var(--text-caption);
     font-weight: var(--font-weight-medium); text-transform: uppercase;
     letter-spacing: var(--tracking-caps); color: var(--color-content-subtle); }
-  .sidebar a { display: block; padding: var(--space-1) var(--space-2);
+  .menu nav { counter-reset: chapter; }
+  .menu nav a { counter-increment: chapter; display: flex; gap: var(--space-2);
+    align-items: baseline; padding: var(--space-1) var(--space-2);
     margin-left: calc(-1 * var(--space-2)); color: var(--color-content-subtle);
     text-decoration: none; font-size: var(--font-size-200); border-radius: var(--radius-1);
     border-left: var(--border-2) solid transparent; }
-  .sidebar a:hover { color: var(--color-content); background: var(--color-surface); }
-  .sidebar a.active { color: var(--color-content); font-weight: var(--font-weight-medium);
-    border-left-color: var(--color-accent); background: var(--color-surface); }
-  .sidebar a:focus-visible { outline: var(--focus-ring-width) solid var(--color-focus-ring); outline-offset: 0; }
+  .menu nav a::before { content: counter(chapter, decimal-leading-zero);
+    font-family: var(--font-family-mono); font-size: var(--text-caption);
+    color: var(--color-content-disabled); }
+  .menu nav a:hover { color: var(--color-content); background: var(--color-bg-subtle); }
+  .menu nav a.active { color: var(--color-content); font-weight: var(--font-weight-medium);
+    border-left-color: var(--color-accent); background: var(--color-bg-subtle); }
 
+  /* —— Compact chrome (below lg) —— */
   @media (max-width: 63.999rem) {
-    .shell { grid-template-columns: 1fr; }
-    .sidebar { position: static; height: auto; border-right: none;
+    .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: max-content 1fr; }
+    html.routed { scroll-padding-top: calc(var(--header-height) + var(--space-3)); }
+
+    /* No JS: the nav sits in flow at the top of the one long page */
+    .sidebar { position: static; height: auto; overflow: visible; border-right: none;
       border-bottom: var(--border-1) solid var(--color-border);
       padding: var(--space-3) var(--gutter-screen); }
-    .sidebar nav { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-    .sidebar .nav-group { flex-basis: 100%; margin: var(--space-2) 0 0; }
-    .sidebar a { margin-left: 0; border: var(--border-1) solid var(--color-border);
-      border-radius: var(--radius-round); background: var(--color-surface); }
-    .sidebar a.active { border-color: var(--color-accent); }
+
+    /* Routed: a sticky bar with a dropdown chapter menu */
+    .routed .sidebar { position: sticky; top: 0; z-index: var(--z-chrome);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-3); min-height: var(--header-height);
+      padding: 0 var(--gutter-screen); }
+    .routed .tagline { display: none; }
+    .routed .menu summary { display: inline-flex; align-items: center; gap: var(--space-2);
+      height: var(--control-height); padding: 0 var(--control-padding-x);
+      border: var(--border-1) solid var(--color-border); border-radius: var(--control-radius);
+      font-size: var(--font-size-200); font-weight: var(--font-weight-medium);
+      cursor: pointer; list-style: none; user-select: none; background: var(--color-surface); }
+    .routed .menu summary::-webkit-details-marker { display: none; }
+    .routed .menu summary::after { content: "▾"; color: var(--color-content-subtle);
+      transition: rotate var(--duration-fast) var(--ease-standard); }
+    .routed .menu[open] summary::after { rotate: 180deg; }
+    .routed .menu nav { position: absolute; left: var(--space-2); right: var(--space-2);
+      top: calc(100% + var(--space-1)); z-index: var(--z-popover);
+      background: var(--color-surface); border: var(--border-1) solid var(--color-border);
+      border-radius: var(--radius-3); box-shadow: var(--shadow-2);
+      padding: var(--space-2) var(--space-3) var(--space-3);
+      max-height: calc(100dvh - var(--header-clearance) - var(--space-3)); overflow-y: auto; }
+    .routed .menu nav .nav-group:first-child { margin-top: var(--space-2); }
+    .menu nav a { margin-left: 0; }
   }
 
   /* —— Main / pages —— */
-  main { max-width: var(--container-narrow); padding: var(--space-5) var(--gutter-screen) var(--space-6); }
+  main { max-width: min(var(--container-narrow), 100%); margin-inline: auto;
+    padding: var(--space-6) var(--gutter-screen); }
   section[hidden] { display: none; }
+  main > section + section { margin-top: var(--space-6); } /* the no-JS one-page fallback */
+  @keyframes page-in { from { opacity: 0; translate: 0 var(--space-2); } }
+  .routed main > section { animation: page-in var(--duration-base) var(--ease-decelerate); }
 
-  .kicker { font-size: var(--text-caption); font-weight: var(--font-weight-medium);
+  .kicker { font-family: var(--font-family-mono); font-size: var(--text-caption);
     text-transform: uppercase; letter-spacing: var(--tracking-caps);
-    color: var(--color-content-subtle); margin: 0 0 var(--space-1); }
-  h1 { font-family: var(--font-family-display); font-size: var(--font-size-500);
+    color: var(--color-content-subtle); margin: 0 0 var(--space-3); }
+  h1 { font-family: var(--font-family-display); font-size: var(--font-size-600);
     line-height: var(--line-height-tight); letter-spacing: var(--tracking-tight);
-    margin: 0 0 var(--space-3); }
+    margin: 0 0 var(--space-3); text-wrap: balance; }
   h2 { font-family: var(--font-family-display); font-size: var(--font-size-400);
-    line-height: var(--line-height-tight); margin: var(--space-5) 0 var(--space-2); }
+    line-height: var(--line-height-tight); letter-spacing: var(--tracking-tight);
+    margin: var(--page-section-gap) 0 var(--space-2); }
   p { max-width: var(--measure); margin: var(--space-2) 0; }
-  .lede { color: var(--color-content-subtle); margin: 0 0 var(--space-3); }
-  ul.rules { max-width: var(--measure); padding-left: 1.2em; margin: var(--space-2) 0; }
-  ul.rules li { margin: var(--space-1) 0; }
+  .lede { font-size: var(--font-size-400); line-height: var(--line-height-base);
+    color: var(--color-content-subtle); margin: 0 0 var(--page-title-gap);
+    max-width: var(--measure); text-wrap: pretty; }
+  ul.rules { max-width: var(--measure); padding-left: 1.2em; margin: var(--space-3) 0; }
+  ul.rules li { margin: var(--space-2) 0; }
+  ul.rules li::marker { color: var(--color-content-disabled); }
   code { font-family: var(--font-family-mono); font-size: var(--font-size-100);
-    background: var(--color-bg-subtle); border: var(--border-1) solid var(--color-border);
-    padding: 0 var(--space-1); border-radius: var(--radius-1); white-space: nowrap; }
-  a { color: var(--color-link); }
+    background: var(--color-bg-subtle); padding: 0 var(--space-1);
+    border-radius: var(--radius-1); white-space: nowrap; }
+  a { color: var(--color-link); text-decoration-thickness: var(--border-1); }
+  a:hover { color: var(--color-accent-hover); }
   .caption { font-size: var(--text-caption); color: var(--color-content-subtle); }
   .mono, .resolved { font-family: var(--font-family-mono); font-size: var(--font-size-100);
-    color: var(--color-content-subtle); white-space: nowrap; }
-
-  .chips { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: var(--space-3) 0; }
-  .chip { font-size: var(--text-caption); padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-round); border: var(--border-1) solid var(--color-border);
     color: var(--color-content-subtle); }
+  .resolved { white-space: nowrap; }
 
-  .callout { border-left: var(--border-2) solid var(--color-accent);
-    background: var(--color-accent-subtle); border-radius: var(--radius-2);
-    padding: var(--space-3) var(--space-4); margin: var(--space-4) 0; max-width: var(--measure); }
+  /* —— Cover meta line —— */
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2);
+    margin: 0 0 var(--space-5); font-family: var(--font-family-mono);
+    font-size: var(--text-caption); color: var(--color-content-subtle); }
+  .meta .dots { display: inline-flex; gap: var(--space-1); }
+  .meta .dots i { width: var(--space-2); height: var(--space-2); border-radius: var(--radius-1); }
+
+  .callout { background: var(--color-bg-subtle); border-radius: var(--radius-2);
+    padding: var(--box-padding-lg); margin: var(--space-4) 0; max-width: var(--measure); }
   .callout p { margin: 0; }
 
   /* —— Figures (the illustrations) —— */
-  .figure { border: var(--border-1) solid var(--color-border); border-radius: var(--radius-2);
-    padding: var(--box-padding); margin: var(--space-3) 0; background: var(--color-surface); }
+  .figure { background: var(--color-bg-subtle); border-radius: var(--radius-2);
+    padding: var(--box-padding-lg); margin: var(--space-3) 0; }
   .figure > figcaption { font-size: var(--text-caption); color: var(--color-content-subtle);
-    margin-top: var(--space-2); }
+    margin-top: var(--space-3); max-width: var(--measure); }
   figure { margin: 0; }
 
   /* —— Principles —— */
   .principles { display: grid; gap: var(--space-3);
     grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
   .principle { border: var(--border-1) solid var(--color-border);
-    border-radius: var(--radius-2); padding: var(--box-padding); background: var(--color-surface); }
+    border-radius: var(--radius-2); padding: var(--box-padding-lg); background: var(--color-surface); }
+  .principle .num { display: block; font-family: var(--font-family-mono);
+    font-size: var(--text-caption); color: var(--color-content-disabled);
+    margin-bottom: var(--space-3); }
   .principle h2 { margin: 0 0 var(--space-1); font-size: var(--font-size-300); }
-  .principle .num { font-family: var(--font-family-mono); font-size: var(--text-caption);
-    color: var(--color-accent); }
   .principle p { margin: 0; font-size: var(--font-size-200); color: var(--color-content-subtle); }
 
   /* —— Tier diagram —— */
   .tiers { display: grid; gap: var(--space-2); max-width: var(--measure); }
-  .tier { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3);
+  .tier { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-3);
     align-items: center; border: var(--border-1) solid var(--color-border);
     border-radius: var(--radius-2); padding: var(--space-2) var(--space-3);
     background: var(--color-surface); font-size: var(--font-size-200); }
   .tier .t-name { font-family: var(--font-family-mono); font-size: var(--font-size-100);
     padding: var(--space-1) var(--space-2); border-radius: var(--radius-1);
-    background: var(--color-accent-subtle); color: var(--color-accent-active); }
+    background: var(--color-bg-subtle); color: var(--color-content-subtle); white-space: nowrap; }
   .tier-arrow { text-align: center; color: var(--color-content-subtle); font-size: var(--text-caption); }
 
   /* —— Tables —— */
@@ -129,16 +180,17 @@
   table { border-collapse: collapse; width: 100%; font-size: var(--font-size-200); }
   th, td { text-align: left; padding: var(--space-2) var(--space-3);
     border-bottom: var(--border-1) solid var(--color-border); vertical-align: top; }
-  th { font-weight: var(--font-weight-medium); color: var(--color-content-subtle);
-    background: var(--color-bg-subtle); white-space: nowrap; }
+  th { font-size: var(--text-caption); font-weight: var(--font-weight-medium);
+    text-transform: uppercase; letter-spacing: var(--tracking-caps);
+    color: var(--color-content-subtle); background: var(--color-bg-subtle); white-space: nowrap; }
   tr:last-child td { border-bottom: none; }
   td.num { font-variant-numeric: tabular-nums; text-align: right; }
   td.num-prop { text-align: right; }
 
   /* —— Colour —— */
-  .ramp-row { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3);
+  .ramp-row { display: grid; grid-template-columns: 6ch 1fr; gap: var(--space-3);
     align-items: center; margin: var(--space-2) 0; }
-  .ramp-name { font-size: var(--font-size-200); font-weight: var(--font-weight-medium); min-width: 6ch; }
+  .ramp-name { font-size: var(--font-size-200); font-weight: var(--font-weight-medium); }
   .ramp { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--space-1); }
   .step { height: var(--space-5); border-radius: var(--radius-1);
     border: var(--border-1) solid var(--color-border); }
@@ -149,14 +201,18 @@
   /* —— Do / Don't —— */
   .dodont { display: grid; gap: var(--space-3);
     grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin: var(--space-3) 0; }
-  .dodont figure { border: var(--border-1) solid var(--color-border);
-    border-radius: var(--radius-2); overflow: hidden; background: var(--color-surface); }
-  .dodont .demo { padding: var(--box-padding); background: var(--color-bg-subtle); }
-  .dodont figcaption { padding: var(--space-2) var(--space-3); font-size: var(--text-caption); }
+  .dodont figure { display: grid; grid-template-rows: 1fr max-content;
+    border: var(--border-1) solid var(--color-border); border-radius: var(--radius-2);
+    overflow: hidden; background: var(--color-surface); }
+  .dodont .demo { padding: var(--box-padding); background: var(--color-bg-subtle);
+    display: grid; align-items: center; justify-items: start; }
+  .dodont .demo > .empty-demo { justify-self: stretch; }
+  .dodont figcaption { padding: var(--space-2) var(--space-3); font-size: var(--text-caption);
+    color: var(--color-content-subtle); }
   .dodont .do figcaption strong { color: var(--color-success); }
   .dodont .dont figcaption strong { color: var(--color-danger); }
-  .dodont figure.do { border-top: var(--border-2) solid var(--color-success); }
-  .dodont figure.dont { border-top: var(--border-2) solid var(--color-danger); }
+  .dodont .do figcaption strong::before { content: "✓ "; }
+  .dodont .dont figcaption strong::before { content: "✕ "; }
 
   /* —— Form-row demo (type line-height pair) —— */
   .form-row { display: flex; gap: var(--space-3); align-items: flex-start;
@@ -168,16 +224,15 @@
   .lh-base { line-height: var(--line-height-base); }
 
   /* —— Spacing —— */
-  .ruler { display: grid; grid-template-columns: max-content max-content 1fr;
-    gap: var(--space-2) var(--space-3); align-items: center; margin: var(--space-3) 0; }
-  .ruler .row { display: contents; }
-  .ruler .bar { background: var(--color-accent-subtle);
-    border: var(--border-1) solid var(--color-accent); height: var(--space-3);
+  .ruler { display: grid; gap: var(--space-2); margin: var(--space-3) 0; }
+  .ruler .srow { display: grid; grid-template-columns: 10ch var(--space-6) 1fr;
+    gap: var(--space-3); align-items: center; }
+  .ruler .bar { height: var(--space-2); background: var(--color-accent);
     border-radius: var(--radius-1); }
   .box-demo { display: flex; flex-wrap: wrap; gap: var(--space-3); }
   .box-demo .bx { border: var(--border-1) solid var(--color-border-strong);
-    border-radius: var(--radius-2); background: var(--color-bg-subtle); }
-  .box-demo .bx > div { background: var(--color-surface); border: var(--border-1) dashed var(--color-border-strong);
+    border-radius: var(--radius-2); background: var(--color-surface); }
+  .box-demo .bx > div { background: var(--color-bg-subtle); border: var(--border-1) dashed var(--color-border-strong);
     border-radius: var(--radius-1); font-size: var(--text-caption); color: var(--color-content-subtle);
     padding: var(--space-1) var(--space-2); }
   .rhythm { display: grid; gap: var(--space-2); max-width: var(--measure); }
@@ -205,14 +260,14 @@
     background: var(--color-bg-subtle); border: var(--border-1) solid var(--color-border);
     border-radius: var(--radius-1); }
   .badge-n { display: inline-grid; place-items: center; width: var(--space-4); height: var(--space-4);
-    border-radius: var(--radius-round); background: var(--color-accent);
-    color: var(--color-on-accent); font-size: var(--text-caption);
+    border-radius: var(--radius-round); background: var(--color-content);
+    color: var(--color-content-inverse); font-size: var(--text-caption);
     font-weight: var(--font-weight-bold); }
   .frames { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
 
   .grid-demo { display: grid; gap: var(--space-1); }
-  .grid-demo i { height: var(--space-5); background: var(--color-accent-subtle);
-    border: var(--border-1) solid var(--color-accent); border-radius: var(--radius-1); }
+  .grid-demo i { height: var(--space-5); background: var(--color-surface);
+    border: var(--border-1) solid var(--color-border); border-radius: var(--radius-1); }
   .g12 { grid-template-columns: repeat(12, 1fr); }
   .g8  { grid-template-columns: repeat(8, 1fr); }
   .g4  { grid-template-columns: repeat(4, 1fr); }
@@ -301,9 +356,26 @@
     background: var(--color-accent); color: var(--color-on-accent); }
 
   /* —— Pager —— */
-  .pager { display: flex; justify-content: space-between; gap: var(--space-3);
-    margin-top: var(--space-6); padding-top: var(--space-3);
-    border-top: var(--border-1) solid var(--color-border); font-size: var(--font-size-200); }
+  .pager { display: none; justify-content: space-between; gap: var(--space-3);
+    margin-top: var(--space-6); padding-top: var(--space-4);
+    border-top: var(--border-1) solid var(--color-border); }
+  .routed .pager { display: flex; }
+  .pager a { display: grid; gap: var(--space-1); font-size: var(--font-size-200);
+    font-weight: var(--font-weight-medium); color: var(--color-content);
+    text-decoration: none; }
+  .pager a[hidden] { display: none; }
+  .pager a:hover { color: var(--color-accent-hover); }
+  #pager-next { margin-left: auto; text-align: right; }
+
+  /* —— Small viewports —— */
+  @media (max-width: 39.999rem) {
+    main { padding-top: var(--space-5); }
+    h1 { font-size: var(--font-size-500); }
+    .lede { font-size: var(--font-size-300); }
+    .motion-demo { grid-template-columns: 1fr; }
+    .tier { grid-template-columns: 1fr; }
+    .tier .t-name { justify-self: start; }
+  }
 </style>
 </head>
 <body>
@@ -311,8 +383,13 @@
 <div class="shell">
 
   <aside class="sidebar">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"></span> Keystone</div>
-    <nav aria-label="Chapters">
+    <div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span> Keystone</div>
+      <p class="tagline">design guide</p>
+    </div>
+    <details class="menu" open>
+      <summary>Chapters</summary>
+      <nav aria-label="Chapters">
       <div class="nav-group">Start</div>
       <a href="#intro">Introduction</a>
       <a href="#principles">Principles</a>
@@ -336,7 +413,8 @@
       <a href="#view-states">View states &amp; feedback</a>
       <div class="nav-group">Beyond</div>
       <a href="#components">Components &amp; reuse</a>
-    </nav>
+      </nav>
+    </details>
   </aside>
 
   <main>
@@ -347,11 +425,7 @@
       <p class="lede">The foundation for every product built from this template — the principles,
         tokens, and rules that make ten different apps feel like one practice built them.
         Components stay flexible per app; everything they're made of starts here.</p>
-      <div class="chips">
-        <span class="chip">Cavalry palette</span>
-        <span class="chip">Token-driven</span>
-        <span class="chip">WCAG AA</span>
-      </div>
+      <p class="meta"><span class="dots" aria-hidden="true"><i style="background:var(--color-content)"></i><i style="background:var(--color-accent)"></i><i style="background:var(--color-info)"></i><i style="background:var(--color-success)"></i><i style="background:var(--color-warning)"></i></span>Cavalry palette · token-driven · WCAG AA</p>
       <ul class="rules">
         <li><strong>New project?</strong> Rebrand the primitive tier of <code>tokens.css</code>;
           every page here re-derives. Confirm in a browser before building screens — that's the gate.</li>
@@ -480,10 +554,11 @@
       <p class="kicker">Foundation</p>
       <h1>Typography</h1>
       <p class="lede">Space Grotesk for titles and headings, Inter for everything else —
-        five sizes, three weights; system stack when neither is loaded.</p>
+        six sizes, three weights; system stack when neither is loaded.</p>
       <div class="table-wrap"><table>
         <tr><th>Role</th><th>Specimen</th><th>Token</th><th>Use for</th></tr>
-        <tr><td>Title</td><td><span style="font-family:var(--font-family-display);font-size:var(--font-size-500);font-weight:var(--font-weight-bold);line-height:var(--line-height-tight);letter-spacing:var(--tracking-tight)">Page title</span></td><td><code>500</code> <span class="resolved" data-token="--font-size-500"></span> · display · bold</td><td>One per page; heroes</td></tr>
+        <tr><td>Display</td><td><span style="font-family:var(--font-family-display);font-size:var(--font-size-600);font-weight:var(--font-weight-bold);line-height:var(--line-height-tight);letter-spacing:var(--tracking-tight)">Display</span></td><td><code>600</code> <span class="resolved" data-token="--font-size-600"></span> · display · bold</td><td>Covers, heroes, full-page utility</td></tr>
+        <tr><td>Title</td><td><span style="font-family:var(--font-family-display);font-size:var(--font-size-500);font-weight:var(--font-weight-bold);line-height:var(--line-height-tight);letter-spacing:var(--tracking-tight)">Page title</span></td><td><code>500</code> <span class="resolved" data-token="--font-size-500"></span> · display · bold</td><td>One per page</td></tr>
         <tr><td>Heading</td><td><span style="font-family:var(--font-family-display);font-size:var(--font-size-400);font-weight:var(--font-weight-bold);line-height:var(--line-height-tight)">Section</span></td><td><code>400</code> <span class="resolved" data-token="--font-size-400"></span> · display · bold</td><td>Sections, cards, dialogs</td></tr>
         <tr><td>Body</td><td><span style="font-size:var(--font-size-300)">The reading default.</span></td><td><code>300</code> <span class="resolved" data-token="--font-size-300"></span> · regular</td><td>Paragraphs, forms</td></tr>
         <tr><td>Secondary</td><td><span style="font-size:var(--font-size-200)">Labels, tables, dense UI</span></td><td><code>200</code> <span class="resolved" data-token="--font-size-200"></span> · regular/medium</td><td>Controls, tables</td></tr>
@@ -563,7 +638,7 @@
           <div class="bx" style="padding:var(--box-padding)"><div>box · cards, dialogs (default)</div></div>
           <div class="bx" style="padding:var(--box-padding-lg)"><div>box-lg · spacious panels</div></div>
         </div>
-        <figcaption><code>--box-padding-sm / --box-padding / --box-padding-lg</code> —
+        <figcaption><code>--box-padding-sm</code> / <code>--box-padding</code> / <code>--box-padding-lg</code> —
           the spacing scale governs space <em>between</em> siblings; boxes the padding <em>within</em> a container.</figcaption>
       </figure>
 
@@ -1208,8 +1283,8 @@
           why nothing above fit.</li>
         <li>Promotion stays evidence-driven: twice a coincidence, thrice a pattern.</li>
       </ul>
-      <p class="caption">Keystone is the visual keystone gate (<code>apps/frontend/CLAUDE.md → Design
-        guide</code>). Source of truth: <code>design/tokens.css</code>. This guide is specimen #1 —
+      <p class="caption">Keystone is the visual keystone gate (<code>apps/frontend/CLAUDE.md</code>
+        → <em>Design guide</em>). Source of truth: <code>design/tokens.css</code>. This guide is specimen #1 —
         built exclusively from its own tokens, audited against its own rules.</p>
     </section>
 
@@ -1284,12 +1359,20 @@
   const SPACE_JOBS = ['inside controls', 'icon ↔ label, tight groups', 'component padding, gaps',
     'between components', 'between sections', 'page-level rhythm'];
   document.getElementById('space-ruler').innerHTML = [1,2,3,4,5,6].map(n =>
-    `<div class="row"><code>--space-${n}</code><span><span class="resolved" data-token="--space-${n}"></span> <span class="caption">· ${SPACE_JOBS[n-1]}</span></span><div><div class="bar" style="width:var(--space-${n})"></div></div></div>`).join('');
+    `<div class="srow"><code>--space-${n}</code><span class="bar" style="width:var(--space-${n})"></span><span class="caption"><span class="resolved" data-token="--space-${n}"></span> · ${SPACE_JOBS[n-1]}</span></div>`).join('');
   document.querySelectorAll('#space-ruler .resolved').forEach(el => {
     el.textContent = cs.getPropertyValue(el.dataset.token).trim();
   });
 
-  // Chapter router — each section is a page; hash is the address.
+  // Chapter router — each section is a page; hash is the address. `.routed`
+  // on <html> gates everything that only makes sense once the router runs.
+  document.documentElement.classList.add('routed');
+  const menu = document.querySelector('.menu');
+  const compact = matchMedia('(max-width: 63.999rem)');
+  const syncMenu = () => { menu.open = !compact.matches; };
+  syncMenu();
+  compact.addEventListener('change', syncMenu);
+
   const pages = [...document.querySelectorAll('main > section')];
   const links = [...document.querySelectorAll('.sidebar a[href^="#"]')];
   const titles = Object.fromEntries(pages.map(s => [s.id, s.querySelector('h1').textContent]));
@@ -1303,8 +1386,9 @@
     const i = pages.findIndex(s => s.id === id);
     const prev = pages[i - 1], next = pages[i + 1];
     prevEl.hidden = !prev; nextEl.hidden = !next;
-    if (prev) { prevEl.href = '#' + prev.id; prevEl.textContent = '← ' + titles[prev.id]; }
-    if (next) { nextEl.href = '#' + next.id; nextEl.textContent = titles[next.id] + ' →'; }
+    if (prev) { prevEl.href = '#' + prev.id; prevEl.innerHTML = `<span class="caption">Previous</span>${titles[prev.id]}`; }
+    if (next) { nextEl.href = '#' + next.id; nextEl.innerHTML = `<span class="caption">Next</span>${titles[next.id]}`; }
+    if (compact.matches) menu.open = false;
     window.scrollTo(0, 0);
   }
   addEventListener('hashchange', () => show(location.hash.slice(1)));
