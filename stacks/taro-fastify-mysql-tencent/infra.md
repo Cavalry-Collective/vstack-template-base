@@ -6,7 +6,7 @@ Binds `infra/CLAUDE.md` to the **`tencentcloud` Terraform provider**: the produc
 
 ## Workload shape
 
-- `infra/terraform/` with per-environment root modules (`envs/<env>/`) calling shared `modules/` (`network`, `compute`, `database`, `storage`, `edgeone`). The base prefers a flat per-workload layout, but two-or-more environments sharing the same shape is exactly when the base permits a `modules/` directory — keep each module focused, and keep the explicit-resource / no-`for_each` authoring style inside them.
+- `infra/terraform/` with per-environment root modules (`envs/<env>/`) calling shared `modules/` (`network`, `compute`, `database`, `storage`, `edgeone`). The base keeps a workload's environments as separate root modules and reserves a shared `modules/` directory for two-or-more *workloads* duplicating a shape; this stack instead factors one workload's shared shape into `modules/` across environments — a deliberate override (see the conflict register). Keep each module focused, and keep the explicit-resource / no-`for_each` authoring style inside them.
 - **Auth / context** (base start-of-session check, bound): the provider authenticates with `TENCENTCLOUD_SECRET_ID`/`KEY`; verify the active account + region with `tccli` before any plan or apply, and confirm the target environment with the user. Don't assume the previous context.
 
 ## Compute — SCF

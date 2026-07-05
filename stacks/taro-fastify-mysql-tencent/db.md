@@ -15,7 +15,7 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **Cyn
 
 - Live under `db/migrations/`, run via the root `migrate` verb (`knex migrate:latest`; rollback `migrate:rollback`). Each file exports `up(knex)` and `down(knex)`.
 - **Reversibility, bound:** every `up` ships its real `down`; a genuinely irreversible change carries the base's justification comment. Each migration runs in a transaction where MySQL DDL permits (note: most MySQL DDL auto-commits — keep one logical change per migration so a failure is diagnosable).
-- **Separate schema from data;** backfills are batched, idempotent, resumable (base rule) — add a column nullable, backfill it in an idempotent data migration, then enforce/consume it in a later one.
+- **Separate schema from data;** backfills are batched, idempotent, resumable and live under `db/backfills/`, invoked explicitly — never inside a schema migration (base rule). So: add a column nullable, backfill it via an explicit `db/backfills/` script, then enforce/consume it in a later migration.
 
 ## Schema & MySQL-8 gotchas
 
