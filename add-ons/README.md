@@ -15,7 +15,7 @@ A directory `add-ons/<name>/` with a `README.md` of agnostic guidance. `<name>` 
 
 ## Opt in — adoption is keeping the directory
 
-Keep the add-ons you want under `add-ons/`, delete the directories you don't. Opting out *is* deleting the directory; every directory still present is adopted. The Day-1 checklist (root `README.md`) is where a fresh project chooses.
+Keep the add-ons you want under `add-ons/`, delete the directories you don't. Opting out *is* deleting the directory; every directory still present is adopted. The instantiation checklist (`docs/getting-started.md`) is where a fresh project chooses.
 
 Activation is by instruction: the root `CLAUDE.md` tells agents to read every kept add-on's `README.md` and follow it when touching the capability it covers. Add-ons are cross-cutting (backend + frontend + db at once), so the pointer lives in the always-loaded root file rather than a per-area one. The README under `add-ons/` is the single source of truth — edit it in place; there is no generated copy.
 
@@ -39,4 +39,4 @@ Activation is by instruction: the root `CLAUDE.md` tells agents to read every ke
 
 1. Create `add-ons/<name>/README.md` — the agnostic approach + its "binds to a stack" and "interactions" sections, per the invariants.
 2. If it needs concrete bindings, add a short section to each active stack pack's appendices.
-3. Wire it into the root `README.md` Day-1 "choose your add-ons" step — a kept directory is picked up by the root `CLAUDE.md` pointer automatically.
+3. Wire it into the "choose your add-ons" step of `docs/getting-started.md` — a kept directory is picked up by the root `CLAUDE.md` pointer automatically.

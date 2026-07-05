@@ -1,9 +1,10 @@
 name: CI
 
 # Enforcement point for the Definition of Done (root CLAUDE.md). Every gate below is a
-# convention already stated in the CLAUDE.md files; CI is where it stops being prose.
-# Fill in each TODO with your stack's command. RULE: a failing check FAILS the build —
-# never `|| true`, never "warn". Wire the gates in the order listed; cheapest first.
+# convention already stated in the contracts; CI is where it stops being prose.
+# Fill in each TEMPLATE-TODO with your stack's command (an adopted stack pack's README
+# ships a ready-made CI block). RULE: a failing check FAILS the build — never `|| true`,
+# never "warn". Wire the gates in the order listed; cheapest first.
 
 on:
   pull_request:
@@ -17,29 +18,31 @@ jobs:
       - uses: actions/checkout@v4
 
       # - name: Install dependencies
-      #   run: # TODO: install command (e.g. pnpm install --frozen-lockfile)
+      #   run: # TEMPLATE-TODO: install command (e.g. pnpm install --frozen-lockfile)
 
       # - name: Lint
-      #   run: # TODO: lint all apps — root CLAUDE.md "Coding standards"
+      #   run: # TEMPLATE-TODO: lint all apps — root CLAUDE.md "Principles"
 
       # - name: Typecheck
-      #   run: # TODO: typecheck all apps (skip if the project is plain JS)
+      #   run: # TEMPLATE-TODO: typecheck all apps (skip if the project is plain JS)
 
       # - name: Test
-      #   run: # TODO: run all test suites — root CLAUDE.md "Testing".
+      #   run: # TEMPLATE-TODO: run all test suites — docs/testing.md.
       #   # Most coverage lives in the fast inner rings; this gate must be red on any failure.
 
       # - name: Build
-      #   run: # TODO: production build of every app — root CLAUDE.md "Definition of Done"
+      #   run: # TEMPLATE-TODO: production build of every app — root CLAUDE.md "Definition of Done"
 
       # - name: i18n key parity
-      #   run: # TODO: fail on any key missing from a locale — apps/frontend/CLAUDE.md "Internationalisation"
+      #   run: # TEMPLATE-TODO: fail on any key missing from a locale (either direction) — apps/frontend/CLAUDE.md "Internationalisation"
 
       # - name: Migration round-trip
-      #   run: # TODO: apply up → down → up on a scratch DB, fail on drift — db/CLAUDE.md
+      #   run: # TEMPLATE-TODO: apply up → down → up on a scratch DB, fail on drift — db/CLAUDE.md.
+      #   # Forward-only migration tools bind this differently (e.g. the Prisma pack's
+      #   # apply-from-zero + drift gate) — use the adopted pack's CI block.
 
       # - name: Accessibility scan
-      #   run: # TODO: run the a11y scanner against built pages — apps/frontend/CLAUDE.md "Accessibility baseline"
+      #   run: # TEMPLATE-TODO: run the a11y scanner against built pages — apps/frontend/CLAUDE.md "Accessibility baseline"
 
       # Optional structural checks — wire only if cheaply scriptable in your stack
       # (closer to custom lint rules than CI one-liners; candidates, not mandates):
@@ -47,4 +50,4 @@ jobs:
       #   - no network calls outside services/
       #   - route-registry completeness (no page without a route entry)
       - name: Placeholder
-        run: 'echo "TODO: replace this job''s steps with the gates commented above"'
+        run: 'echo "TEMPLATE-TODO: replace this job''s steps with the gates commented above"'

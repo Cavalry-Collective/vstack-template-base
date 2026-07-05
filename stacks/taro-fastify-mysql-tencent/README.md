@@ -17,7 +17,7 @@ This pack ships the optional `infra.md` (permitted by `../README.md`): the deplo
 
 ## Day-1 wiring
 
-Part of the root `README.md` Day-1 checklist. Delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Record in root `CLAUDE.md` **Learnings**: `Stack: taro-fastify-mysql-tencent; appendices under stacks/taro-fastify-mysql-tencent/`.
+Part of the instantiation checklist (`docs/getting-started.md`). Delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Record in root `CLAUDE.md` **Learnings**: `Stack: taro-fastify-mysql-tencent; appendices under stacks/taro-fastify-mysql-tencent/`.
 
 ## Suggested toolchain
 

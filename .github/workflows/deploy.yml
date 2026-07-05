@@ -25,4 +25,4 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Deploy
-        run: 'echo "TODO: replace with your deploy command"'
+        run: 'echo "TEMPLATE-TODO: replace with your deploy command"'
