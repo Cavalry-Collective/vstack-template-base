@@ -24,7 +24,7 @@ jobs:
       #   run: # TEMPLATE-TODO: lint all apps — root CLAUDE.md "Principles"
 
       # - name: Typecheck
-      #   run: # TEMPLATE-TODO: typecheck all apps (skip if the project is plain JS)
+      #   run: # TEMPLATE-TODO: typecheck all apps (explicit no-op script in plain JS — keep the step green, don't drop it)
 
       # - name: Test
       #   run: # TEMPLATE-TODO: run all test suites — docs/testing.md.

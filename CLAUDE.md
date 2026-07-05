@@ -22,7 +22,7 @@ A monorepo template: two apps, a database area, infrastructure, and the document
 
 Two conditional layers ride on the area contracts:
 
-- **Stack pack.** If exactly one directory exists under `stacks/`, it is adopted. Read its matching appendix (`backend.md`, `frontend.md`, `db.md`, `infra.md`) before working in that area — it binds the agnostic contract to the concrete stack.
+- **Stack pack.** If exactly one directory exists under `stacks/`, it is adopted. Read its matching appendix (`backend.md`, `frontend.md`, `db.md`, `infra.md` — the last is optional; some packs ship none) before working in that area — it binds the agnostic contract to the concrete stack.
 - **Add-ons.** Every directory kept under `add-ons/` is adopted. Read its `README.md` and follow it whenever you touch the capability it covers (they are cross-cutting: backend + frontend + db at once).
 
 ## Instruction precedence
@@ -66,7 +66,7 @@ How to make a change here. The full walkthrough is `docs/agents.md`; these rules
 
 **Deciding where code goes:**
 
-- Identify the correct layer/ring first, then place the change there — never wherever is convenient. Each area contract has a placement table; use it.
+- Identify the correct layer/ring first, then place the change there — never wherever is convenient. Each area contract's structure section says what goes where; the cross-area decision path is in `docs/project-structure.md`.
 - New capability → a new feature module/slice. Change to existing behaviour → inside the owning module/slice. Genuinely shared, pure helper → the area's shared/`lib` home, only once a second caller exists.
 - If no existing pattern fits, say so in the PR and propose one — don't invent silently, and don't fork a local variant of an existing pattern (fix the pattern repo-wide in its own change instead).
 
@@ -119,6 +119,7 @@ Guide: `docs/configuration.md`.
 - Tests are part of "done": every non-trivial slice ships its tests in the same change.
 - A bug fix starts with a failing test that reproduces the bug.
 - Pick the cheapest kind that proves the behaviour — unit (a rule in isolation), integration (a use case across layers), contract (an API or port boundary). Per-area placement lives in each area contract; strategy tour: `docs/testing.md`.
+- CI is the enforcement point and **fails hard**: a failing check fails the build — never `|| true`, never warn-only.
 
 ## Definition of Done
 

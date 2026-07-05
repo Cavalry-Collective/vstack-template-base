@@ -195,7 +195,7 @@ One language is the **reference**; every other stays in exact parity.
 - **Don't accumulate one-off helpers in `lib/`** — co-locate with the only caller until reuse appears.
 - **One shared formatting helper for dates, numbers, currency** — locale and timezone pinned; never inline per-component formatting. (Libraries-over-hand-rolling: root contract.)
 
-Security:
+Security baseline:
 
 - **No secrets in the bundle** — anything secret stays behind a backend endpoint.
 - **Treat rendered data as untrusted:** rely on the framework's default escaping; never bypass it with unsanitised raw HTML.

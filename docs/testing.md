@@ -41,7 +41,7 @@ Snapshot the data a component receives if you must snapshot anything — never i
 
 ## CI is the enforcement point
 
-`.github/workflows/ci.yml` runs the same verbs the Definition of Done names — lint, typecheck, test, build — plus the cross-cutting gates: i18n key parity, migration verification, accessibility scan. A failing check fails the build; `|| true` and warn-only checks are forbidden. Until the toolchain placeholders are filled, the gate is not delegated: the agent/human runs the checks and says so.
+`.github/workflows/ci.yml` runs the same verbs the Definition of Done names — lint, typecheck, test, build — plus the cross-cutting gates: i18n key parity, migration verification, accessibility scan. CI fails hard — never `|| true`, never warn-only (root contract → *Testing*). Until the toolchain placeholders are filled, the gate is not delegated: the agent/human runs the checks and says so.
 
 ## What we deliberately don't do
 

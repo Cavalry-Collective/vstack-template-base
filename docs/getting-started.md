@@ -24,7 +24,7 @@ They are the architecture; everything else hangs off them. ~30 minutes total:
 1. `rm -rf` every other `stacks/*` directory — the one left is the adopted one; each area contract already points agents at its appendices (mechanism: `stacks/README.md` → *Activation*).
 2. Copy the pack README's **dev** command block over the root `CLAUDE.md` *Common commands* placeholder (delete the banner); copy its **CI** block into `.github/workflows/ci.yml`. They are different blocks — never paste a dev-only migration command into CI.
 3. Record the choice in root `CLAUDE.md` → **Learnings**: `Stack: <pack-name>; appendices under stacks/<pack-name>/`.
-4. Follow any day-1 notes in the pack README (e.g. the `nextjs-nestjs-postgres` and `vercel` packs ask you to soften the "single-page app" wording in root files, since they are server-first; the repo name stays as-is).
+4. Follow any day-1 notes in the pack README (e.g. the server-first `nextjs-nestjs-postgres` and `vercel` packs override the base's SPA assumptions through their conflict registers; the `-spa` repo name stays as-is).
 
 **Agnostic path.** Delete `stacks/` (or keep it for reference) and fill in the toolchain yourself in step 5.
 
@@ -37,8 +37,8 @@ Under `add-ons/`, keep the capabilities you want (`test-mode`, `otp-auth`, `llm-
 (The pack did most of this in step 3; on the agnostic path, do it by hand.)
 
 - Root `CLAUDE.md` → *Common commands* — replace the seven `<pm>` commands, delete the banner.
-- `.github/workflows/ci.yml` — replace the TEMPLATE-TODO steps with real install/lint/typecheck/test/build, plus the i18n key-parity check and the migration verification your migration tool supports.
-- `.github/workflows/deploy.yml` — replace the TEMPLATE-TODO deploy step.
+- `.github/workflows/ci.yml` — replace the TEMPLATE-TODO steps with real install/lint/typecheck/test/build, plus the i18n key-parity check, the accessibility scan, and the migration verification your migration tool supports.
+- `.github/workflows/deploy.yml` — replace the TEMPLATE-TODO deploy step. (Some packs delete this stub instead — e.g. `vercel`, where deploying *is* the platform's Git integration; follow the pack README.)
 - `.env.example` — replace the stub with the project's real, comment-documented variable list (see [`configuration.md`](configuration.md)).
 
 ## 6. Declare the primary form factor

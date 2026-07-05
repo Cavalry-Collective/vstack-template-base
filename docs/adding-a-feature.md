@@ -15,15 +15,15 @@ Write the spec first (`specs/README.md`; Spec Kit: `/speckit-specify`). Priority
 
 ## 2. Backend module
 
-Create `apps/backend/src/modules/invoice/` with the rings it earns (a small module needn't use every folder):
+Create `apps/backend/src/modules/invoice/` with the rings it earns (a small module needn't use every folder). What each ring may and may never contain is the backend contract's four-rings table — don't re-derive it; the scaffold is:
 
-| Ring | You write | Never here |
-|---|---|---|
-| `domain/` | `Invoice` entity, invariants, the `InvoiceRepository` port | I/O, framework types, DB shapes |
-| `service/` | one file per use case (`issue-invoice`, `list-invoices`), transaction boundary | HTTP concepts, query building |
-| `repo/` | the port's DB implementation + mapper (row ↔ domain), external clients | business rules, branching beyond the query |
-| `controller/` | REST handlers on `/internal/v1/invoices`, guards, validation | logic, transactions, reaching past the service |
-| `dtos/` | request/response shapes — the module's edge contract | domain or DB types |
+| Ring | You write |
+|---|---|
+| `domain/` | `Invoice` entity, invariants, the `InvoiceRepository` port |
+| `service/` | one file per use case (`issue-invoice`, `list-invoices`), transaction boundary |
+| `repo/` | the port's DB implementation + mapper (row ↔ domain), external clients |
+| `controller/` | REST handlers on `/internal/v1/invoices`, guards, validation |
+| `dtos/` | request/response shapes — the module's edge contract |
 
 Wire ports to implementations in the composition root only. Follow the REST conventions (plural nouns, pagination envelope, one error envelope, status-code table) — they're the public contract the frontend mirrors.
 

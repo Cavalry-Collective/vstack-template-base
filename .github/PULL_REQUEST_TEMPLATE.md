@@ -9,7 +9,7 @@ Spec: specs/<feature-dir>
 
 <!-- Commands you ran and the output you observed — not "tests pass", the actual evidence. -->
 
-- [ ] lint / test / build pass locally (or note which check is not yet wired up, and why)
+- [ ] lint / typecheck / test / build pass locally (or note which check is not yet wired up, and why)
 - [ ] every acceptance criterion in the linked spec/issue is demonstrated (evidence above)
 - [ ] tests cover the changed behaviour, where the project has a test harness
 - [ ] states exercised: happy path + the error/empty paths the change can hit

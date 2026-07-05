@@ -91,7 +91,7 @@ Convention: [`specs/README.md`](../specs/README.md).
 
 ## `.github/` — automation and templates
 
-CI (`ci.yml`) enforces the Definition of Done; deploy (`deploy.yml`) runs only after green CI on `main`. PR and issue templates encode the evidence the contracts require. A failing check fails the build — never `|| true`, never "warn".
+CI (`ci.yml`) enforces the Definition of Done; deploy (`deploy.yml`) runs only after green CI on `main`. PR and issue templates encode the evidence the contracts require. CI fails hard — never `|| true`, never warn-only (root contract → *Testing*).
 
 ## Where does a new file go? (decision path)
 
