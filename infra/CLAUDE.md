@@ -111,6 +111,7 @@ infra/
 
 ### Workload directories
 - Each workload directory is a Terraform root module with its own `backend.tf` and `terraform.tfvars`.
+- **Environments are separate root modules.** A workload with more than one environment splits per environment (`infra/<workload>/<env>/`), each with its own backend and state — never one state file spanning environments, and no Terraform workspaces for prod/non-prod separation. A single-environment workload stays flat (`infra/<workload>/`).
 - Do not introduce cross-workload references or shared local modules without explicit approval — workloads are intentionally independent.
 - New workloads should follow the same self-contained pattern as existing ones under `infra/`.
 
@@ -131,6 +132,7 @@ infra/
   - security_secrets.tf
 
 ### Local artifacts and git hygiene
+- **Remote state from day 1.** Every root module uses a remote, access-controlled state backend with locking — local state only for first bootstrap. State can hold secrets and full resource detail: treat the state file as a credential; never commit it.
 - **Commit `.terraform.lock.hcl`.** The dependency lock file pins provider versions for every machine and CI run; use `terraform providers lock -platform=<os_arch>` to add the platforms teammates and CI use. Only `.terraform/` directories and plan artifacts stay out of version control.
 - Always keep Terraform plan artifacts such as `tfplan` and `*.tfplan` gitignored and out of version control.
 - Treat plan files as local ephemeral artifacts for review or apply only.

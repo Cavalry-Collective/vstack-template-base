@@ -121,6 +121,7 @@ These govern the **controller** ring — the default API contract; prefer a more
 - `/internal/v1` for internal APIs, `/external/v1` for external APIs.
 - Default to internal when visibility is unclear.
 - Do not expose an endpoint externally until its consumers, permissions, and contract are clear.
+- One unauthenticated, unversioned **`/health`** route answers liveness (no dependency fan-out, no auth guard) — deploy pipelines and uptime checks hit it. Anything deeper (a DB check) is a separate, authenticated route added only when needed.
 
 ### Methods
 
@@ -133,6 +134,7 @@ These govern the **controller** ring — the default API contract; prefer a more
 - List endpoints use `page`, `recordsPerPage`, `sortBy`, `sortOrder` (`sortOrder` is `asc` or `desc`).
 - List responses use one envelope: `{ "data": [<items>], "page": <n>, "recordsPerPage": <n>, "totalRecords": <total matching the filters> }`. `data` is always an array — an empty result is `200` with `[]`, never `404`.
 - Place pagination and sorting parameters after resource-specific filters.
+- Offset paging with `totalRecords` costs a COUNT per request. Where that or deep offsets are impractical (large or frequently-paged datasets), an endpoint may adopt **cursor pagination** — the same envelope minus `page`/`totalRecords`, plus `nextCursor` (`null` when exhausted) — as a documented per-endpoint decision, never silently.
 - Flag any endpoint that can return an unbounded collection with no pagination.
 
 ### Status codes

@@ -25,6 +25,7 @@ One-time-code auth: a user proves control of a phone or email by entering a code
 - **A knowable test code.** Gate a knowable code behind **test mode** (a logged real code, or a fixed code valid *only* in test mode) so the flow is walkable without a live provider. The verify path still runs — only delivery is stubbed.
 - **Log every send and verify** with `{purpose, masked target, test-mode, provider status, correlation id}` — never the code or full contact.
 - **Rate-limit send and verify** (per target, per challenge); answer `429` with a retry hint.
+- **Codes are single-use and attempt-capped.** A code is consumed on first successful verify and never verifies again; cap failed attempts per challenge (a small fixed number), then invalidate the challenge — per-target rate limits alone don't stop brute-forcing one code.
 - **Surface delivery failures** — "provider accepted" is not "user received". Classify transient (resend) vs permanent (terminal error); never swallow a failed send.
 - **Offer an admin-issued fallback** — a per-account, hashed, short-lived, revocable code behind its own flag — for users who genuinely can't receive one.
 - **Select credentials by the record's mode, not the caller's session;** live credentials never fall back to a test default.

@@ -10,6 +10,7 @@ A first-class runtime mode that stubs external side effects so the whole app run
 - **Stub the side effect, don't skip the flow.** The code path still runs — the code is still issued and verified, the order still records — only the external step (send, charge) is replaced by a sink, and any value the user would need is made knowable (fixed or logged). Don't branch business logic on the mode past that boundary, or test mode stops testing the real path.
 - **Select credentials by the record being acted on, not the caller's session.** When test and live data coexist, a test-flagged record uses the stub path even under a live session, and vice-versa.
 - **Every test-only affordance is gated on the mode and fails closed** — unreachable and empty/denied in production. Test mode is never a way for a real client to skip verification or payment.
+- **Test data stays out of production surfaces.** Where test and live records coexist, production lists, reports, dashboards, and analytics exclude test-flagged records by default; a production surface shows them only through an explicit, gated filter.
 
 ## Test-user picker
 

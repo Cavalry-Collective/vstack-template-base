@@ -51,10 +51,11 @@ A route is part of the app's public contract; a file path is an implementation d
 
 - **One central registry.** Every route lives in a single routing config (`routes.<ext>`), registered the moment its page is created — never ship a page without its route entry. Reading `routes.<ext>` is how you audit routing; do not maintain a second route→URL list anywhere. A CI check in the spirit of the i18n key-parity check can enforce completeness.
 - **Build URLs through the registry, never by hand.** Resolve links and redirects from named routes, not concatenated strings — internal structure can't leak into a URL, and renaming a route updates every link at once.
+- **Shareable state lives in the URL.** State a user expects a link, refresh, or back-button to preserve — filters, active tab, page, selected record — goes in the URL (path or query), not the store.
 
 ## Design guide — the visual keystone (confirm before building UI)
 
-The project's visual system lives in the design guide (`design/design-guide.html`): the design principles, every foundation (colour, type, spacing, layout, shape, surfaces, motion, iconography, states/focus, accessibility, content, data formatting), and the composition chapters (screen archetypes, forms, view states & feedback) — rendered live from the single token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`). Foundations only, by design: components stay flexible per app and are built from these foundations.
+The project's visual system lives in the design guide (`design/design-guide.html`): the design principles, every foundation (colour, type, spacing, layout, shape, surfaces, motion, iconography, states/focus, accessibility, content, data formatting), and the composition chapters (screen archetypes, tables & grids, forms, view states & feedback) — rendered live from the single token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`). Foundations only, by design: components stay flexible per app and are built from these foundations.
 
 - **The guide is a gate.** For a new project or a rebrand, no screen or component work starts until the guide reflects the brand, has been reviewed in a browser, and is signed off. Once the system is established, small additions don't re-gate — but a new foundational token lands in the guide first.
 - **Customise by editing tokens, not screens.** A rebrand edits the primitive token tier; the semantic tier and the whole guide re-derive from it.
@@ -67,7 +68,7 @@ The project's visual system lives in the design guide (`design/design-guide.html
 3. Surfaces follow the ladder: no card-like container inside another; separate in order whitespace → background shift → border → divider (guide → *Surfaces & elevation*).
 4. Reuse first: archetype → documented pattern → existing screens/primitives → extend a primitive → only then new, with the PR recording why nothing fit (guide → *Components & reuse*).
 5. One density app-wide, set at the token layer — never mixed within a page (guide → *Screen archetypes*).
-6. Forms and view states follow the composition patterns — the pattern outranks the component library's defaults (guide → *Forms*, *View states & feedback*).
+6. Tables, forms, and view states follow the composition patterns — the pattern outranks the component library's defaults (guide → *Tables & grids*, *Forms*, *View states & feedback*). A working table ships the standard kit (search, sort, column filters, pagination, column customisation, selection) by default; dropping a capability is the recorded decision.
 
 ## Page layout & design tokens
 
@@ -196,6 +197,7 @@ One language is the **reference**; every other language stays in exact parity wi
 - **Cross-cutting concerns belong in shared hooks/services.** Wrap repeated API/auth/error-reporting plumbing once and reuse it; don't copy it into every page.
 - **Don't accumulate one-off helpers in `src/lib/`.** Co-locate a helper with its only caller until reuse actually appears; `lib/` is for genuinely shared, side-effect-light code.
 - **Use libraries instead of hand-rolling — especially for dates.** See *Don't reinvent existing solutions* in the root `CLAUDE.md` Principles (the canonical statement of this rule).
+- **One shared formatting helper for dates, numbers, and currency** — locale and timezone pinned; never inline per-component formatting.
 
 Security baseline:
 

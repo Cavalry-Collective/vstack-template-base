@@ -17,6 +17,17 @@ Migrations are one of the highest-risk surfaces in any project — irreversible 
 - **Transactional where supported.** Run each migration in a transaction where the engine supports it, so a failed migration rolls back instead of leaving the schema half-changed.
 - **Seed/reset are non-production only.** Seed and reset scripts are idempotent and run only against local/throwaway databases — never against a shared or production database. Prefer **realistic, named** seed accounts and content (not `user1` / `user2`) so manual and e2e testing exercises lifelike data. (If the project adopts the **test-mode** add-on, those seeded accounts also back its test-user picker — see `add-ons/test-mode/`.)
 
+## Schema conventions (engine-agnostic)
+
+These hold whatever the engine; the active stack pack binds the mechanics.
+
+- snake_case table and column names.
+- Every table carries `created_at` and `updated_at`.
+- Store timestamps in UTC, in the engine's timezone-aware type; convert for display at the edge.
+- Index every foreign key and every frequent filter/sort column — engines don't do this for you.
+- Money and quantities use exact types (integer minor units or decimal) — never floats.
+- Unique constraints encode business invariants in the database, not in service-layer checks that race; map a violation to the domain conflict (`409`).
+
 ## Shared DB across worktrees
 
 The local DB is **global state** shared across worktrees by a fixed name (see *Working in a git worktree* in root `CLAUDE.md`). A migration, reset, or seed run in one worktree changes the schema every other worktree's app depends on. Run round-trip and destructive checks against a throwaway DB, never the shared one, while a parallel worktree depends on the current schema.

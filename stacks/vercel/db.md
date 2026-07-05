@@ -22,10 +22,9 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **Postgres** — **Ne
 
 ## Schema conventions
 
-- snake_case tables and columns. **uuid primary keys** via `gen_random_uuid()` (opaque, non-enumerable). Every table carries `created_at`/`updated_at` as `timestamptz` defaulted `now()`.
-- **Index every FK and frequent filter/sort column explicitly** — Postgres does not auto-index FKs.
+- Base schema conventions apply unchanged (`db/CLAUDE.md` *Schema conventions*) — bound here: `created_at`/`updated_at` as `timestamptz` defaulted `now()`; FK/filter indexes declared explicitly (Postgres does not auto-index FKs); money as integer minor units or `numeric(p,s)`; unique-violation → domain conflict → `409`.
+- **uuid primary keys** via `gen_random_uuid()` (opaque, non-enumerable).
 - **Fixed value sets are `text` + a `CHECK` constraint, not native enums.** Pack decision — rejected alternative: Postgres enum types (`ALTER TYPE … ADD VALUE` is non-transactional and effectively one-way; widening a `CHECK` is a plain reversible migration).
-- **Money is integer minor units (or `numeric(p,s)`) — never `float`/`real`.** Unique constraints encode business invariants in the database; map a unique-violation to the domain conflict → `409` (base status-code table).
 
 ## Repo ring binding (`pg`)
 
