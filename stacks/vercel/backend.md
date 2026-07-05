@@ -56,6 +56,11 @@ One file is both entrypoints:
 - **Runner: `node:test`** (`node --test tests/`; `tests/` mirrors `src/`). Pack decision — rejected alternative: Jest/Vitest (plain ESM JavaScript needs no transform; the built-in runner is zero-dependency).
 - Base per-ring kinds, bound: **domain** — plain units; **service** — build the app/container with `overrides` fakes; **controller** — Fastify `app.inject()` (no listener needed); **repo** — integration against the real local Postgres (use `--test-concurrency=1` where suites share it).
 
+## Add-on bindings (if adopted)
+
+- **test-mode** (`add-ons/test-mode/`): a `shared/aspects/` plugin resolves the mode signal from an inbound header onto the request context — fail closed: missing or unknown means production. In test mode the flag-gated integrations (the base default-off booleans) route to their stdout/no-op sinks. The test-user picker is a route gated on the same signal; it returns `[]` in production, and a test asserts that.
+- **otp-auth** (`add-ons/otp-auth/`): model A (self-managed) — an `otp_challenge` table (hashed code, short TTL, `purpose` column) via node-pg-migrate; hashing + timing-safe verify in `shared/utils/`; delivery through gateway adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`; a unique constraint on (target, purpose) resolves the double-submit race to `409` per the base status table.
+
 ## Conflict register
 
 - **Base says:** The stack is unchosen; the JS-style filenames and Express/Fastify-style HTTP layer are illustrative, not mandates. **In this stack:** bound for real — Fastify 5, plain JavaScript ESM, and no build/typecheck step. **Because:** the deploy target is a Vercel Node function running source directly; with duck-typed ports (base default), Zod-guarded edges, and JSDoc `@typedef`s, a transpile step adds weight without payoff here. **Concretely:** DON'T add a `tsconfig`/transpiler under `apps/backend/`; keep `build`/`typecheck` as explicit no-op scripts so workspace-wide commands stay green.

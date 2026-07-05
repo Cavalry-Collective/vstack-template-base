@@ -24,7 +24,7 @@ Binds `apps/backend/CLAUDE.md` and the root `CLAUDE.md` to **Fastify 4, plain Ja
 |---|---|
 | Config | validated at boot in the entry (below) — `handler.js`/`server.js` fail fast (exit non-zero) on a missing required env var; values flow inward, no `process.env` in rings |
 | DB access | `plugins/db.js` sets the single Knex instance (`getKnex()`); repos receive it (or a `trx`) as their first arg — never construct their own |
-| Request context | `plugins/ctx.js` packs `{ requestId, sourceIp, userAgent, logger }` into `request.ctx`, passed inward as a value (the base correlation-id rule; the id also rides `x-request-id` end to end) |
+| Request context | `plugins/ctx.js` packs `{ requestId, sourceIp, userAgent, logger }` into `request.ctx`, passed inward as a value (the base correlation-id rule: honour an inbound `x-request-id`/`x-correlation-id`, and return the id as the base's `x-correlation-id` response header on every response) |
 | Errors | one global handler in `app.js` maps `HttpError` (from `utils/httpError`) → the base *Error responses* envelope; rings never shape an HTTP response. A rate-limit sets `retryAfterSeconds` for the handler to surface |
 | Auth | `plugins/auth.js` — `fastify.requireAuth` / `fastify.requireCommunityRole` guards as `preHandler`s on the scopes that need them |
 | Mode signal | `plugins/tenant.js` — resolves the `x-tenant` header to `request.tenant`, selecting test vs `production` (missing/unknown ⇒ `production`, fail-closed), cached in memory; backs the optional **test-mode** add-on |

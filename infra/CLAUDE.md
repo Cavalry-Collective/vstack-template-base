@@ -146,6 +146,14 @@ Opinions on how to set up specific infrastructure concerns. These guide authorin
 - If existing resources are found on the default VPC, call it out and propose a migration path rather than extending usage.
 - On AWS/Azure the same intent holds: define the network, subnets, and security-group/firewall rules explicitly; never rely on a provider's default network or default-open ingress.
 
+## Verifying a change
+
+The root's "verified means observed" gate, applied to infrastructure:
+
+- Before apply: the plan was presented in the *Risk review checklist* format and approved.
+- After apply: the apply output matches the approved plan — no unexpected creates, changes, or destroys.
+- Then observe the outcome — the endpoint responds, the job runs, the log or metric appears — and state what you observed, not just that the apply succeeded.
+
 ## Guardrails
 
 ### Safety
