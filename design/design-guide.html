@@ -355,6 +355,55 @@
     font: inherit; font-size: var(--font-size-200); font-weight: var(--font-weight-medium);
     background: var(--color-accent); color: var(--color-on-accent); }
 
+  /* —— Data-table specimen (Tables & grids) —— */
+  .dt { background: var(--color-surface); border: var(--border-1) solid var(--color-border);
+    border-radius: var(--radius-2); overflow: hidden; font-size: var(--font-size-200); }
+  .dt-scroll { overflow-x: auto; }
+  .dt th, .dt td { padding: var(--box-padding-sm); }
+  .dt td { line-height: var(--line-height-tight); white-space: nowrap; }
+  .dt th[aria-sort] { color: var(--color-content); }
+  .dt tr.on td { background: var(--color-accent-subtle); }
+  .dt-toolbar, .dt-bulk, .dt-foot { display: flex; flex-wrap: wrap; align-items: center;
+    gap: var(--space-2) var(--space-3); padding: var(--space-2) var(--space-3); }
+  .dt-toolbar, .dt-bulk { border-bottom: var(--border-1) solid var(--color-border); }
+  .dt-bulk { background: var(--color-accent-subtle); font-weight: var(--font-weight-medium); }
+  .dt-search { flex: 1 1 8rem; max-width: 16rem; display: flex; align-items: center;
+    gap: var(--space-2); height: var(--control-height); padding: 0 var(--control-padding-x);
+    border: var(--border-1) solid var(--color-border-strong); border-radius: var(--control-radius);
+    color: var(--color-content-disabled); white-space: nowrap; overflow: hidden; }
+  .dt-btn { display: inline-flex; align-items: center; gap: var(--space-1);
+    height: var(--control-height); padding: 0 var(--control-padding-x);
+    border: var(--border-1) solid var(--color-border-strong); border-radius: var(--control-radius);
+    background: var(--color-surface); font-weight: var(--font-weight-medium); white-space: nowrap; }
+  .dt-trail { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); }
+  .dt-chip { display: inline-flex; align-items: center; gap: var(--space-1);
+    padding: var(--space-1) var(--space-2); border-radius: var(--radius-round);
+    background: var(--color-bg-subtle); border: var(--border-1) solid var(--color-border);
+    font-size: var(--text-caption); font-weight: var(--font-weight-medium); white-space: nowrap; }
+  .dt-chip .x { color: var(--color-content-subtle); }
+  .dt-foot { border-top: var(--border-1) solid var(--color-border);
+    font-size: var(--text-caption); color: var(--color-content-subtle); }
+  .dt-pages { margin-left: auto; display: flex; gap: var(--space-1); }
+  .dt-pages i { display: inline-grid; place-items: center; min-width: var(--space-4);
+    height: var(--space-4); padding: 0 var(--space-1); border-radius: var(--radius-1);
+    font-style: normal; }
+  .dt-pages .cur { background: var(--color-content); color: var(--color-content-inverse); }
+  .cbx { display: inline-grid; place-items: center; width: var(--space-3); height: var(--space-3);
+    border: var(--border-1) solid var(--color-border-strong); border-radius: var(--radius-1);
+    background: var(--color-surface); font-size: var(--text-caption); line-height: 1; }
+  .cbx.on { background: var(--color-accent); border-color: var(--color-accent);
+    color: var(--color-on-accent); }
+  .badge { display: inline-flex; align-items: center; gap: var(--space-1);
+    padding: 0 var(--space-2); border-radius: var(--radius-round);
+    font-size: var(--text-caption); font-weight: var(--font-weight-medium);
+    line-height: calc(var(--space-3) + var(--space-1)); }
+  .badge.ok { background: var(--color-success-subtle); color: var(--color-success);
+    border: var(--border-1) solid var(--color-success-border); }
+  .badge.warn { background: var(--color-warning-subtle); color: var(--color-warning);
+    border: var(--border-1) solid var(--color-warning-border); }
+  .badge.bad { background: var(--color-danger-subtle); color: var(--color-danger);
+    border: var(--border-1) solid var(--color-danger-border); }
+
   /* —— Pager —— */
   .pager { display: none; justify-content: space-between; gap: var(--space-3);
     margin-top: var(--space-6); padding-top: var(--space-4);
@@ -409,6 +458,7 @@
       <a href="#data">Data formatting</a>
       <div class="nav-group">Composition</div>
       <a href="#archetypes">Screen archetypes</a>
+      <a href="#tables">Tables &amp; grids</a>
       <a href="#forms">Forms</a>
       <a href="#view-states">View states &amp; feedback</a>
       <div class="nav-group">Beyond</div>
@@ -1009,7 +1059,8 @@
         </div>
         <figcaption>Zones: page header → toolbar (search · filters · view controls) → records →
           pagination. <code>--page-title-gap</code> under the header, <code>--space-3</code> between
-          the rest. Records sit in <code>box-sm</code> rows. Reflow: rows become cards below
+          the rest. The records zone is the <a href="#tables">Tables &amp; grids</a> pattern —
+          rows in <code>box-sm</code>. Reflow: rows become cards below
           <code>sm</code>; the toolbar wraps; row actions fold into a menu.</figcaption>
       </figure>
 
@@ -1115,6 +1166,141 @@
         <li>No fit → extend this set in the guide first. A page shape invented on a screen is a
           one-off by definition.</li>
         <li>One density app-wide, set at the token layer — never mixed within a page hierarchy.</li>
+      </ul>
+    </section>
+
+    <section id="tables">
+      <p class="kicker">Composition</p>
+      <h1>Tables &amp; grids</h1>
+      <p class="lede">The collection's workhorse. Enterprise data earns the full kit —
+        search, sort, filter, paginate, choose columns — as the norm, not as upgrades.</p>
+      <p>This pattern fills the records zone of the
+        <a href="#archetypes">Collection archetype</a>. The adopted component library's
+        data table implements it; configure the library to match — what it can't express
+        goes through the <a href="#components">reuse ladder</a>, same as Forms.</p>
+
+      <h2>Anatomy</h2>
+      <figure class="figure">
+        <div class="dt">
+          <div class="dt-toolbar">
+            <span class="dt-search">⌕ Search invoices…</span>
+            <span class="dt-chip">Issued: Q2 2026 <span class="x" aria-hidden="true">✕</span></span>
+            <span class="caption">Clear all</span>
+            <span class="dt-trail"><span class="dt-btn">Columns ▾</span><span class="dt-btn">Export</span></span>
+          </div>
+          <div class="dt-scroll">
+            <table>
+              <tr><th><span class="cbx" aria-hidden="true"></span></th><th>Invoice</th><th>Customer</th><th>Status</th><th aria-sort="descending">Issued ↓</th><th style="text-align:right">Amount</th><th></th></tr>
+              <tr><td><span class="cbx" aria-hidden="true"></span></td><td class="mono">INV-2041</td><td>Acme Corp</td><td><span class="badge bad">Overdue</span></td><td>Jun 28, 2026</td><td class="num">12,480.00</td><td>⋯</td></tr>
+              <tr><td><span class="cbx" aria-hidden="true"></span></td><td class="mono">INV-2040</td><td>Northwind</td><td><span class="badge ok">Paid</span></td><td>Jun 21, 2026</td><td class="num">3,150.00</td><td>⋯</td></tr>
+              <tr><td><span class="cbx" aria-hidden="true"></span></td><td class="mono">INV-2036</td><td>Globex</td><td><span class="badge warn">Pending</span></td><td>May 30, 2026</td><td class="num">890.50</td><td>⋯</td></tr>
+              <tr><td><span class="cbx" aria-hidden="true"></span></td><td class="mono">INV-2029</td><td>Initech</td><td><span class="badge ok">Paid</span></td><td>May 12, 2026</td><td class="num">24,000.00</td><td>⋯</td></tr>
+            </table>
+          </div>
+          <div class="dt-foot">
+            <span>Rows: 25 ▾</span>
+            <span>1–25 of 37 · filtered from 312</span>
+            <span class="dt-pages" aria-hidden="true"><i>‹</i><i class="cur">1</i><i>2</i><i>›</i></span>
+          </div>
+        </div>
+        <figcaption>Zones, top to bottom: <strong>toolbar</strong> (global search leading ·
+          active filters as chips · view controls trailing) → <strong>header row</strong>
+          (recessed, sortable, sticky) → <strong>rows</strong> in <code>box-sm</code> →
+          <strong>footer</strong> (page size · count · pages). The count carries the honesty:
+          a filtered table says <em>filtered from 312</em>, never just "37".</figcaption>
+      </figure>
+
+      <h2>The standard kit</h2>
+      <p>Every capability below is <strong>on by default</strong> for a working table.
+        Dropping one (pagination on a bounded ten-row list, selection where no bulk action
+        exists) is the decision to record — not adding them back one by one.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Capability</th><th>The norm</th></tr>
+        <tr><td>Global search</td><td>One box, leading in the toolbar; matches as you type across every searchable column; behaves as a filter and clears like one.</td></tr>
+        <tr><td>Sorting</td><td>Every column sorts unless order is meaningless; one column at a time; the active header shows its direction and announces <code>aria-sort</code>; every table declares a default sort.</td></tr>
+        <tr><td>Column filters</td><td>Each column filters from its own header menu — free text within the column, or pick-from-values; active criteria surface as toolbar chips, removable one by one or via Clear all.</td></tr>
+        <tr><td>Pagination</td><td>Numbered pages with an "x–y of z" count and a page-size picker — 10 / 25 / 50 / 100, default 25. Work tables never infinite-scroll.</td></tr>
+        <tr><td>Column customisation</td><td>A Columns control toggles visibility and order; the identity column can't be hidden; choices persist per user, per table.</td></tr>
+        <tr><td>Selection &amp; bulk</td><td>Leading checkbox column; the header checkbox selects the page and offers "select all z"; a bulk bar with the count replaces the toolbar while a selection exists.</td></tr>
+      </table></div>
+
+      <h2>Bulk actions</h2>
+      <figure class="figure">
+        <div class="dt">
+          <div class="dt-bulk">
+            <span><span class="cbx on" aria-hidden="true">–</span> 2 selected</span>
+            <span class="caption">Select all 312</span>
+            <span class="dt-trail"><span class="dt-btn">Export</span><span class="dt-btn" style="color:var(--color-danger)">Delete</span><span aria-hidden="true">✕</span></span>
+          </div>
+          <div class="dt-scroll">
+            <table>
+              <tr class="on"><td><span class="cbx on" aria-hidden="true">✓</span></td><td class="mono">INV-2041</td><td>Acme Corp</td><td class="num">12,480.00</td></tr>
+              <tr class="on"><td><span class="cbx on" aria-hidden="true">✓</span></td><td class="mono">INV-2040</td><td>Northwind</td><td class="num">3,150.00</td></tr>
+              <tr><td><span class="cbx" aria-hidden="true"></span></td><td class="mono">INV-2036</td><td>Globex</td><td class="num">890.50</td></tr>
+            </table>
+          </div>
+        </div>
+        <figcaption>A selection swaps the toolbar for a bulk bar: the count is the subject,
+          the actions apply to exactly that count, and ✕ dismisses. Destructive bulk actions
+          confirm with the count (<a href="#content">Content</a>).</figcaption>
+      </figure>
+
+      <h2>Column recipes</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Content</th><th>Recipe</th></tr>
+        <tr><td>Identity (name, number)</td><td>First after selection; links to the record; can't be hidden; one line, truncates with the full value reachable</td></tr>
+        <tr><td>Text</td><td>Left-aligned, one line</td></tr>
+        <tr><td>Numbers &amp; amounts</td><td>Right-aligned, tabular numerals, one precision per column (<a href="#data">Data formatting</a>)</td></tr>
+        <tr><td>Dates</td><td>Left-aligned, one format per table (<a href="#data">Data formatting</a>)</td></tr>
+        <tr><td>Status</td><td>A badge on the intent formula — text + tint, never colour alone (<a href="#colour">Colour</a>)</td></tr>
+        <tr><td>IDs &amp; codes</td><td>Mono, atomic — never truncated or wrapped</td></tr>
+        <tr><td>Actions</td><td>Trailing edge; at most two visible, the rest in a ⋯ menu</td></tr>
+      </table></div>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><table style="width:auto"><tr><th style="text-align:right">Amount</th></tr><tr><td class="num">12,480.00</td></tr><tr><td class="num">890.50</td></tr></table></div>
+          <figcaption><strong>Do</strong> — amounts right-aligned in tabular numerals, one precision: magnitudes compare at a glance.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><table style="width:auto"><tr><th>Amount</th></tr><tr><td>12480</td></tr><tr><td>890.5</td></tr></table></div>
+          <figcaption><strong>Don't</strong> — left-aligned, mixed precision: every comparison is a re-read.</figcaption>
+        </figure>
+      </div>
+      <div class="dodont">
+        <figure class="do">
+          <div class="demo"><div style="display:grid;gap:var(--space-2);justify-items:start"><span class="dt-chip">Status: Overdue <span class="x" aria-hidden="true">✕</span></span><span class="caption">1–8 of 8 · filtered from 312</span></div></div>
+          <figcaption><strong>Do</strong> — the narrowing is visible: a chip to remove, a count that names the whole.</figcaption>
+        </figure>
+        <figure class="dont">
+          <div class="demo"><span class="caption">8 items</span></div>
+          <figcaption><strong>Don't</strong> — a silently filtered table reads as "everything". The missing 304 are invisible.</figcaption>
+        </figure>
+      </div>
+
+      <ul class="rules">
+        <li>The toolbar's order is fixed: search leads, filters follow, view controls
+          (Columns, Export) trail. The collection's primary action stays in the page
+          header — never in the toolbar.</li>
+        <li>Filter state is always visible — chips with a Clear all, a count that reads
+          "x–y of z · filtered from total".</li>
+        <li>One row height per table: <code>box-sm</code> padding, <code>font-size-200</code>,
+          tight line-height. Cell content truncates (<a href="#typography">Typography</a>);
+          the row never grows.</li>
+        <li>The header is recessed and sticks while its table scrolls; row dividers are the
+          sanctioned divider use (<a href="#elevation">Surfaces</a>).</li>
+        <li>Wide tables scroll sideways inside their own wrap, selection and identity columns
+          pinned; the page never scrolls sideways (<a href="#layout">Layout</a>).</li>
+        <li>The row is the target: clicking it opens the record; the actions column carries
+          everything else.</li>
+        <li>Loading renders skeleton rows in place; empty distinguishes "no records yet"
+          (create) from "no matches" (clear filters) —
+          <a href="#view-states">View states</a>, <a href="#content">Content</a>.</li>
+        <li>Past one page of data, search, sort, filter, and pagination all run server-side
+          together — never a mix where search sees only the loaded page.</li>
+        <li>Table preferences — visible columns, order, page size, sort — persist per user,
+          per table.</li>
+        <li>Below <code>sm</code> the grid yields to cards (<a href="#archetypes">Collection</a>):
+          identity, one or two key facts, status. A grid is never pinched to fit a phone.</li>
       </ul>
     </section>
 
