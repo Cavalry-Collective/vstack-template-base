@@ -18,6 +18,8 @@ Run as part of the root `README.md` `## Day-1 checklist`: delete every other `st
 
 Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and the **CI** block into `.github/workflows/ci.yml` — never the same block in both, and never `prisma migrate dev` in CI.
 
+Record in root `CLAUDE.md` **Learnings**: `Stack: nextjs-nestjs-postgres; appendices under stacks/nextjs-nestjs-postgres/`.
+
 ## Suggested toolchain (pnpm workspaces)
 
 **Dev block → root `CLAUDE.md` "Common commands":**
@@ -35,6 +37,8 @@ pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
 **CI block → `.github/workflows/ci.yml` (non-interactive):** spin up a Postgres service container; `pnpm install --frozen-lockfile`; `prisma generate`; `prisma migrate deploy` (**never `prisma migrate dev` in CI — it can reset the DB or prompt**); `pnpm typecheck`; `next build` + `nest build`; non-watch `pnpm test`. Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
 
 **Validation:** **Zod** is the schema library at the NestJS controller edge and for Next form/response schemas; a shape shared across the two is defined once and reused (no class-validator). Details in `backend.md` / `frontend.md`.
+
+**Pack decisions recorded here** (referenced by `backend.md`): NestJS on the **Fastify adapter** (rejected: the default Express adapter); **Zod** for validation (rejected: class-validator); **`AsyncLocalStorage`** via `nestjs-cls` for request context (rejected: request-scoped providers). Build orchestrator: the Nest CLI and `next build` per app under pnpm workspaces — no Nx/Turbo by default.
 
 ## Deploy seam
 

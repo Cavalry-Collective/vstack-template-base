@@ -5,6 +5,7 @@ Non-trivial features start from a short written spec here before implementation.
 ## Convention
 
 - One file per feature: `YYYY-MM-DD-<feature-name>.md`
+- If a spec tool is adopted (e.g. Spec Kit's numbered feature directories), its layout wins over the one-file convention — record the tool in root `CLAUDE.md` **Learnings** and keep `specs/` the single home
 - Tag user stories with priority: `P1` = MVP (must ship), `P2` = next, `P3` = nice-to-have
 - Each story is independently shippable — avoid cross-story coupling that breaks that independence
 - P1 stories alone form a viable MVP

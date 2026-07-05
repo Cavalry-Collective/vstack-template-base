@@ -22,7 +22,7 @@ Every pack carries at least these four files (one may be thin, but all four exis
 - **Additions-only.** No restating base content — only (a) stack bindings and (b) explicit conflict resolutions. If a line is true without naming the stack, it does not belong.
 - **Register or obey.** A pack may override any base rule — even a structural one, like swapping the onion's feature-first axis for layer-first — but only through a conflict-register entry; a silent contradiction makes the pack invalid. What no pack may drop is the discipline itself: layers stay separated and dependencies point one way, whatever the axis.
 - **Precedence line atop every appendix** (verbatim): `> Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.`
-- **Conflict register ending every appendix.** The four registers are the single audit surface — where the appendix replaces a base statement, it is listed here, not left as a live contradiction. Each entry, ending in a checkable imperative:
+- **Conflict register ending every appendix.** The four registers are the single audit surface — where the appendix replaces a base statement, it is listed here, not left as a live contradiction. Each entry (bullet or blockquote — the fields matter, not the markup), ending in a checkable imperative:
   > **Base says:** … **In this stack:** … **Because:** … **Concretely:** … *(one DO/DON'T an agent can check or grep for)*
 
   A zero-conflict appendix states so: `_No conflicts — this appendix only adds bindings; the base contract is unchanged._`
@@ -38,6 +38,7 @@ Packs activate by **instruction, not machinery**. Each area's `CLAUDE.md` (`apps
 1. Create `stacks/<pack-name>/` with the four required files.
 2. Put the precedence line atop each appendix and a conflict register at the end; keep every line additions-only.
 3. Write the manifest `README.md` — identity, appendix→base mapping, suggested dev + CI `<pm>` blocks, deploy-seam pointer.
-4. Nothing else to wire — the per-area `CLAUDE.md` pointers pick the pack up as soon as it is the only directory under `stacks/` (see *Activation*).
+4. Bind the shipped add-ons: for each directory under `add-ons/`, add its concrete bindings to the matching appendix (what that add-on's *Binds to a stack* section asks for), or state in the manifest that the pack leaves it unbound.
+5. Nothing else to wire — the per-area `CLAUDE.md` pointers pick the pack up as soon as it is the only directory under `stacks/` (see *Activation*).
 
 A pack MAY add an optional `infra.md` later under the same invariants (infra is cloud-shaped, not app-stack-shaped — not required in v1).

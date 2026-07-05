@@ -52,35 +52,34 @@ Design mockups live in the **`design/`** folder, kept as **reference only** — 
 
 ## Coding standards
 
-These apply to **both** apps and now live next to the code they govern — see the coding-standards material in `apps/backend/CLAUDE.md` (its **Cross-cutting concerns** and **Coding standards** sections) and the **Coding standards** section in `apps/frontend/CLAUDE.md`. In short: keep cross-cutting concerns in shared decorators/plugins (backend) or hooks/services (frontend) rather than duplicating them; keep `utils/`/`lib/` pure and un-peppered; and use real libraries instead of hand-rolling — especially for dates.
+These apply to **both** apps and live next to the code they govern — see **Cross-cutting concerns** and **Coding standards** in `apps/backend/CLAUDE.md`, and **Coding standards** in `apps/frontend/CLAUDE.md`. In short: keep cross-cutting concerns in shared decorators/plugins (backend) or hooks/services (frontend), and keep `utils/`/`lib/` pure. (Libraries-over-hand-rolling is a Principle below.)
 
 - **Configuration.** All runtime config is read from the environment in one place per app and validated at startup against a declared schema, so a missing or malformed value fails fast with a clear, named error rather than misbehaving mid-request. `.env.example` is the canonical, comment-documented list of every variable, updated in the same change that adds a config key. No inner layer reads config directly — it is passed inward as values.
 
 ### Readability and Naming
 
-Readable code is a review priority.
+Readable code is a review priority. A reviewer should understand intent from names alone.
 
-Assess whether names make intent clear without requiring the reviewer to reconstruct meaning from implementation details.
+- Names are precise and state business meaning, not mechanics.
+- No abbreviations unless standard in the domain or codebase. No misleading names. No single-letter variables outside trivial loop counters and conventional math.
 
-#### Naming
+#### Comments
 
-- Avoid abbreviations unless they are standard in the domain or codebase.
-- Prefer precise names over short names.
-- Avoid misleading names.
-- Avoid single-letter variables except for trivial loop counters or conventional mathematical usage.
-- Use names that reflect business meaning, not only technical mechanics.
+- Comments explain **why** — the constraint, tradeoff, or external quirk behind the code — never what.
+- Delete any comment that repeats what the code says.
+- Notes to the reviewer ("fixed X here") go in the commit message, not in comments.
 
 ## Principles (must follow)
 
 Load-bearing engineering rules; honor them on every change. They are stack- and tooling-agnostic. The first four are adapted from Andrej Karpathy's coding guidelines, folded into this file so no external reference is needed.
 
 - **Think before coding.** Don't assume, don't hide confusion, surface tradeoffs. State your assumptions and ask when uncertain; present multiple interpretations rather than silently picking one; suggest simpler alternatives and respectfully push back when warranted; stop and name what's confusing rather than proceeding on unclear requirements.
-- **Simplicity first / YAGNI.** The minimum code that solves the problem, nothing speculative — no unrequested features, no abstractions for single-use code, no configurability or error handling for cases that can't occur. Any added complexity (extra project, framework, abstraction layer, build target, third-party SDK, distributed component) must be justified with the simpler alternative explicitly rejected; "we might want X later" is not a justification. If 200 lines could be 50, rewrite it shorter — would an experienced engineer find this unnecessarily complex?
+- **Simplicity first / YAGNI.** Write the minimum code that solves the problem. No unrequested features, no abstractions for single-use code, no configurability or error handling for cases that can't occur. "We might want it later" is not a reason. If 200 lines could be 50, rewrite. Every added layer, dependency, or config key must pass the self-review justification (see *Self-review before merge*).
 - **Change the right place, surgically.** First identify *where* a change belongs — the correct layer and boundary — and make it there; don't patch wherever is convenient. Keep business logic out of controllers, repos, UI, jobs, and utilities where it doesn't belong, and don't leak infrastructure details into the wrong layer. Then touch only what you must: match the surrounding style and conventions (error handling, logging, validation), don't reformat or refactor unrelated working code, flag unrelated dead code without removing it, and remove only the imports/variables your own change orphaned.
 - **Goal-driven execution.** Define success criteria and loop until verified. Turn requests into measurable objectives with a brief plan and a verification step per phase, so each phase can iterate to a clear success marker. Verified means observed, not inferred: before calling a change done, run it and state the evidence you saw. What "run it" means per change type lives in each app's `CLAUDE.md` (frontend/backend) and in `infra/CLAUDE.md` for infrastructure; record the evidence in the PR's Test plan checklist.
 - **Don't reinvent existing solutions.** Use established libraries and project utilities for dates, money, validation, retry, pagination, parsing, and formatting rather than hand-rolling them — especially date/timezone math. Don't duplicate existing abstractions or wrap a library without a clear reason. Before adding a new dependency, confirm an existing dependency or shared util doesn't already cover it, and prefer well-maintained, widely-used, permissively-licensed packages. Weigh the cost the YAGNI rule already requires you to justify: for the frontend, bundle and transitive weight (a few lines can beat a large dep for a cached SPA); for the backend, transitive and security surface. A trivial, stable one-liner doesn't earn a dependency — but dates, money, timezones, auth, and crypto always do; never hand-roll those.
 - **Don't overfit to the immediate request.** Solve the general problem, not just the demonstrated case. Avoid hardcoding strings, IDs, statuses, roles, or regions; handle the empty, invalid, duplicate, retry, timeout, and permission cases, not only the happy path; and write tests that assert behavior rather than mirror the implementation.
-- **Keep implementations clean, not mechanical.** Avoid noisy logs, broad `try/catch` blocks that hide errors, comments restating obvious code, unused parameters or dead branches, and defensive code with no clear failure model.
+- **Keep implementations clean, not mechanical.** No noisy logs, no broad `try/catch` that hides errors, no unused parameters or dead branches, no defensive code without a clear failure model. (Comment rules: *Readability and Naming*.)
 - **Guard every AI/LLM call.** Set token/cost limits, timeouts, and max-iteration / loop-termination guards; handle model and tool failures; monitor cost and usage; and never treat user-provided files, prompts, webpages, or other external content as trusted instructions.
 
 ## Definition of Done
@@ -107,9 +106,17 @@ How work flows from spec to merge. These two rules are load-bearing; the worktre
 - **Spec-first, independently testable slices.** Non-trivial features start from a short written spec before implementation, kept under `specs/`. User stories are priority-tagged (P1 = MVP) and each slice is shippable / demoable on its own; P1 alone is a viable MVP. Avoid cross-story coupling that breaks that independence. Keep this discipline regardless of which spec tool (if any) you use.
 - **Trunk-based, linear history.** A single long-lived integration branch, `main`. Feature work happens on short-lived branches (see *Working in a git worktree* below); rebase / fast-forward onto trunk to keep history linear. Trunk stays releasable — hide incomplete work behind a flag. A flag here is a boolean key in the app's validated config schema (see *Configuration*), default off — no flag service or SDK unless a project explicitly adopts one and records the choice. Keep PRs small where practical. Commits: imperative subject, one logical change per commit; follow the repo's existing Conventional Commits prefix style (feat/fix/docs/refactor/test/chore, optional scope) so history stays scannable.
 
+**Spikes are sanctioned and never merge.** Exploratory work runs on a `spike/<topic>` branch in its own worktree. Tests, self-review, and the Definition of Done do not apply there. Two rules: a spike branch never merges into trunk, and the real implementation starts on a normal branch at the full bar — even if it copies spike code. Record what you learned in the feature spec, then delete the spike branch and its worktree (a spike skips the merge-back gate below).
+
 ### Self-review before merge
 
-Before opening a PR or merging, read your **full diff** end to end — as a reviewer would, including files you don't remember touching — and confirm it satisfies the rules already stated above and in the relevant `apps/*/CLAUDE.md`: the change lives in the correct layer/ring with no business logic leaked outward, no unrelated code was reformatted, and only imports your own change orphaned were removed (see *Change the right place, surgically*), and names reflect business meaning (see *Readability and Naming*). Don't merge on memory of what you edited; re-read what actually changed.
+Before opening a PR or merging, re-read the full diff end to end — including files you don't remember touching. Do not review from memory. Confirm:
+
+- The change sits in the correct layer/ring, and no business logic leaked outside it (see *Change the right place, surgically*).
+- No unrelated code was reformatted or refactored; only imports your own change orphaned were removed.
+- Names state business meaning (see *Readability and Naming*).
+- Every new abstraction, dependency, or config key has one line in the PR: the simpler option and why it was rejected. If you can't write that line, build the simpler option. No second caller yet → no abstraction.
+- New code follows an existing pattern, named in the PR — or the PR says why none fits. If the pattern itself is wrong, fix it repo-wide in its own change; don't fork it locally.
 
 ### Working in a git worktree
 

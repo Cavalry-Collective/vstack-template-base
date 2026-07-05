@@ -129,6 +129,11 @@ JS stays supported but un-mandated. All JS-specific setup lives here; the body r
 - **DTOs / config schemas:** Zod schemas used directly (duck-typed, no inferred type).
 - **`@nestjs/config` validate and testing utilities** (`Test.createTestingModule`, Fastify `.inject()`) are identical in JS.
 
+## Add-on bindings (if adopted)
+
+- **test-mode** (`add-ons/test-mode/`): a `SharedModule` guard resolves the mode signal from an inbound header into the request context — fail closed: missing or unknown means production. In test mode the flag-gated integrations (the base default-off booleans) route to a stdout/no-op adapter bound in the module `providers` array. The test-user picker is a controller gated on the same signal; it returns `[]` in production, and a controller test asserts that.
+- **otp-auth** (`add-ons/otp-auth/`): model A (self-managed) — one `OtpChallenge` Prisma model (hashed code, short TTL, `purpose` discriminator); hashing + timing-safe verify in `shared/utils/`; delivery gateways are repo-ring adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`; a unique constraint on (target, purpose) resolves the double-submit race to `409` per the base status table.
+
 ## Conflict register
 
 Where this appendix and a base file disagree, these resolutions win for this stack.
