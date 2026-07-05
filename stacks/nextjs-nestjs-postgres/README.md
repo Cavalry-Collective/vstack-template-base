@@ -20,6 +20,8 @@ Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" pl
 
 Record in root `CLAUDE.md` **Learnings**: `Stack: nextjs-nestjs-postgres; appendices under stacks/nextjs-nestjs-postgres/`.
 
+**Add-ons:** this pack binds `test-mode` and `otp-auth` (`backend.md` → *Add-on bindings*) and **leaves `llm-calls` unbound** — it pins no LLM provider. A project adopting `llm-calls` binds the SDK, adapter home, canned-response sink (reuse the test-mode sink), and cost/usage metrics home in `backend.md` at adoption time.
+
 ## Suggested toolchain (pnpm workspaces)
 
 **Dev block → root `CLAUDE.md` "Common commands":**

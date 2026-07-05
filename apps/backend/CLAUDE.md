@@ -130,6 +130,7 @@ Each endpoint defines its required permissions, request schema, response schema,
 Concerns touching every request are **decorators/aspects** — declared once, applied to the ring they wrap, so handlers and use cases carry only their own logic. In Node that's the framework's middleware/plugin layer. **Scope each aspect to the subtree that needs it**, not globally. Every aspect obeys the dependency rule: it lives in its ring and passes data inward as plain values.
 
 - **Auth:** edge guards reject unauthenticated requests at the controller ring; rule-level authorisation that depends on domain state lives in the domain or use case.
+- **Rate limiting (where it exists):** an edge aspect at the controller ring — reject with `429` plus a retry hint; thresholds come from validated config; the key (per user, per target, per route) is defined by the owning feature or add-on.
 - **Request context / identity:** established at the edge, passed inward as an argument — never read from a global by an inner ring.
 - **Transactions:** the boundary wraps the use case (service ring).
 - **Logging & audit:** one shared path carrying the request's correlation id. Structured records (key/value, not concatenated strings) at meaningful levels — `error` handled failures, `warn` recoverable anomalies, `info` state changes, `debug` behind a flag. **Never log secrets, tokens, credentials, auth headers, or PII — redact at the logging boundary**; log identifiers, not payloads. Log a failure **once**, where handled.

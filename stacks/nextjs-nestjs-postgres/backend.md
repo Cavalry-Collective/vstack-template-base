@@ -56,6 +56,7 @@ Binds `apps/backend/CLAUDE.md` (the onion) and the root `CLAUDE.md` to NestJS. R
 | Structured logging | **global interceptor** (or `pino-http`) reading the id | bootstrap, once |
 | Error mapping | **one global exception filter** | bootstrap, once |
 | Audit / analytics | **one injectable `AuditService`** | injected where used |
+| Rate limiting | **Guard** (`@nestjs/throttler` `ThrottlerGuard`) | controller/route scope |
 | Transaction boundary | service-ring concern (see *Service ring*) | — |
 
 - **Scope-to-subtree (base rule), Nest form:** prefer `@UseGuards`/`@UseInterceptors`/module `providers` over `app.useGlobalX()`. The only global registrations are the two singletons base itself treats globally — the **error filter** and the **single correlation-id + logging path** (seeder + interceptor are two halves of *one* path, registered once at bootstrap).
@@ -133,7 +134,7 @@ JS stays supported but un-mandated. All JS-specific setup lives here; the body r
 ## Add-on bindings (if adopted)
 
 - **test-mode** (`add-ons/test-mode/`): a `SharedModule` guard resolves the mode signal from an inbound header into the request context — fail closed: missing or unknown means production. In test mode the flag-gated integrations (the base default-off booleans) route to a stdout/no-op adapter bound in the module `providers` array. The test-user picker is a controller gated on the same signal; it returns `[]` in production, and a controller test asserts that.
-- **otp-auth** (`add-ons/otp-auth/`): model A (self-managed) — one `OtpChallenge` Prisma model (hashed code, short TTL, `purpose` discriminator); hashing + timing-safe verify in `shared/utils/`; delivery gateways are repo-ring adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`; a unique constraint on (target, purpose) resolves the double-submit race to `409` per the base status table.
+- **otp-auth** (`add-ons/otp-auth/`): model A (self-managed) — one `OtpChallenge` Prisma model (hashed code, short TTL, `purpose` discriminator); hashing + timing-safe verify in `shared/utils/`; delivery gateways are repo-ring adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`; a unique constraint on (target, purpose) resolves the double-submit race to `409` per the base status table; the add-on's send/verify rate limits bind to **`@nestjs/throttler`** as an edge guard on the OTP controllers, keyed on the **canonicalised target** (custom tracker), thresholds from validated config — the default in-memory storage is per-instance, so swap in a shared throttler storage (Redis) once more than one instance runs — answering `429` with a **`Retry-After`** header (the base envelope is unchanged); the knowable test-mode code is a **fixed code valid only under the test-mode signal** — delivery goes to the sink, the verify path still runs.
 
 ## Conflict register
 

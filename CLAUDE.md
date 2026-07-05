@@ -22,7 +22,7 @@ A monorepo template: two apps, a database area, infrastructure, and the document
 
 Two conditional layers ride on the area contracts:
 
-- **Stack pack.** If exactly one directory exists under `stacks/`, it is adopted. Read its matching appendix (`backend.md`, `frontend.md`, `db.md`, `infra.md` — the last is optional; some packs ship none) before working in that area — it binds the agnostic contract to the concrete stack.
+- **Stack pack.** If exactly one directory exists under `stacks/`, it is adopted. Read its matching appendix (`backend.md`, `frontend.md`, `db.md`, `infra.md` — the last is optional; some packs ship none) before working in that area — it binds the agnostic contract to the concrete stack. Several directories mean the template is not yet instantiated and no pack binds (`docs/getting-started.md`); **Learnings** (bottom) records the adopted pack and add-ons — if the directory state and Learnings disagree, flag it, don't guess.
 - **Add-ons.** Every directory kept under `add-ons/` is adopted. Read its `README.md` and follow it whenever you touch the capability it covers (they are cross-cutting: backend + frontend + db at once).
 
 ## Instruction precedence
@@ -61,12 +61,12 @@ How to make a change here. The full walkthrough is `docs/agents.md`; these rules
 **Before changing anything:**
 
 - Read this file's relevant sections, the area contract, and — if adopted — the stack pack appendix and any add-on README covering what you touch.
-- Read the code you are about to change *and its neighbours*: the existing module or slice closest to your task is the pattern to follow. Never design from memory of "how projects usually do it".
+- Read the code you are about to change *and its neighbours*: the existing module or slice closest to your task is the pattern to follow. Never design from memory of "how projects usually do it". In a fresh project with no neighbours yet, the pattern is the area contract's structure plus `docs/adding-a-feature.md` — propose it, don't stall.
 - For a non-trivial feature, find or write the spec first (`specs/README.md`). No spec, no feature.
 
 **Deciding where code goes:**
 
-- Identify the correct layer/ring first, then place the change there — never wherever is convenient. Each area contract's structure section says what goes where; the cross-area decision path is in `docs/project-structure.md`.
+- Identify the correct layer/ring first, then place the change there — never wherever is convenient. Each area contract's structure section says what goes where; the cross-area decision path is in `docs/project-structure.md`, and the end-to-end slice walkthrough is `docs/adding-a-feature.md`.
 - New capability → a new feature module/slice. Change to existing behaviour → inside the owning module/slice. Genuinely shared, pure helper → the area's shared/`lib` home, only once a second caller exists.
 - If no existing pattern fits, say so in the PR and propose one — don't invent silently, and don't fork a local variant of an existing pattern (fix the pattern repo-wide in its own change instead).
 

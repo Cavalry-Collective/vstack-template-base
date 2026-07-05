@@ -77,7 +77,7 @@ The project's visual system lives in `design/design-guide.html`, rendered from t
 3. Surfaces follow the ladder — no card inside a card; separate in order whitespace → background shift → border → divider (guide → *Surfaces & elevation*).
 4. Reuse first: archetype → documented pattern → existing screens/primitives → extend a primitive → only then new, with the PR recording why nothing fit (guide → *Components & reuse*).
 5. One density app-wide, set at the token layer (guide → *Screen archetypes*).
-6. Tables, forms, and view states follow the composition patterns — the pattern outranks the component library's defaults. A working table ships the standard kit (search, sort, column filters, pagination, column customisation, selection) by default; dropping a capability is a recorded decision.
+6. Tables, forms, and view states follow the composition patterns (guide → *Tables & grids*, *Forms*, *View states & feedback*) — the pattern outranks the component library's defaults. A working table ships the standard kit (search, sort, column filters, pagination, column customisation, selection) by default; dropping a capability is a recorded decision.
 
 ## Page layout & design tokens
 

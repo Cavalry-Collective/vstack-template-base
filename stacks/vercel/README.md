@@ -19,6 +19,8 @@ This pack ships the optional `infra.md` (permitted by `../README.md`): the deplo
 
 Run as part of the instantiation checklist (`docs/getting-started.md`): delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Finally record in root `CLAUDE.md` **Learnings**: `Stack: vercel; appendices under stacks/vercel/ (4 appendices incl. infra)`.
 
+**Add-ons:** this pack binds `test-mode` and `otp-auth` (`backend.md` → *Add-on bindings*) and **leaves `llm-calls` unbound** — it pins no LLM provider. A project adopting `llm-calls` binds the SDK, adapter home, canned-response sink (reuse the test-mode sink), and cost/usage metrics home in `backend.md` at adoption time.
+
 ## Suggested toolchain (pnpm workspaces, ESM, Node 22)
 
 pnpm workspaces over `apps/*`; root `"type": "module"`; pin `packageManager` in the root manifest and keep the Node major in sync between `engines` and the Terraform `node_version` variable (Vercel reads the latter).
