@@ -22,7 +22,7 @@ They are the architecture; everything else hangs off them. ~30 minutes total:
 **Pack path (fast).** Pick the pack under `stacks/` matching your stack, then:
 
 1. `rm -rf` every other `stacks/*` directory — the one left is the adopted one; each area contract already points agents at its appendices (mechanism: `stacks/README.md` → *Activation*).
-2. Copy the pack README's **dev** command block over the root `CLAUDE.md` *Common commands* placeholder (delete the banner); copy its **CI** block into `.github/workflows/ci.yml`. They are different blocks — never paste a dev-only migration command into CI.
+2. Copy the pack README's **dev** command block over the root `CLAUDE.md` *Common commands* placeholder (delete the banner); wire `.github/workflows/ci.yml` from its **CI mapping/notes** (a step→command table, not always paste-able YAML). Dev and CI are different sets — never put a dev-only migration command in CI.
 3. Record the choice in root `CLAUDE.md` → **Learnings**: `Stack: <pack-name>; appendices under stacks/<pack-name>/`.
 4. Follow any day-1 notes in the pack README (e.g. the server-first `nextjs-nestjs-postgres` and `vercel` packs override the base's SPA assumptions through their conflict registers; the `-spa` repo name stays as-is).
 

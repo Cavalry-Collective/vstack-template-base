@@ -20,6 +20,7 @@ Work here is one of two things: inspecting/explaining current infrastructure, or
 - Smallest change that solves the request; scoped to the requested environment and outcome.
 - Optimize for readability and straightforward rollback; stable patterns over clever abstractions.
 - Preserve existing repository conventions unless there is a strong reason not to.
+- **Runtime config crosses to the apps through the environment:** a value an app needs (a bucket name, a queue URL) is exposed as a non-sensitive Terraform `output`, set as a platform env var, and lands in the app's validated config schema and `.env.example` in the same change (root contract → *Configuration*).
 - **Observability from day 1** — metrics, logs, and (for user-facing apps) product analytics, retained and queryable, as part of bringing a workload online. Where the platform's IaC owns observability, give it its own concern file; platform-specific wiring lives in the active stack pack (which may own none of it in Terraform).
 
 ## Execution mode

@@ -22,7 +22,7 @@ A monorepo template: two apps, a database area, infrastructure, and the document
 
 Two conditional layers ride on the area contracts:
 
-- **Stack pack.** If exactly one directory exists under `stacks/`, it is adopted. Read its matching appendix (`backend.md`, `frontend.md`, `db.md`, `infra.md` — the last is optional; some packs ship none) before working in that area — it binds the agnostic contract to the concrete stack. Several directories mean the template is not yet instantiated and no pack binds (`docs/getting-started.md`); **Learnings** (bottom) records the adopted pack and add-ons — if the directory state and Learnings disagree, flag it, don't guess.
+- **Stack pack.** If exactly one directory exists under `stacks/`, it is adopted. Read its matching appendix (`backend.md`, `frontend.md`, `db.md`, `infra.md` — the last is optional; some packs ship none) before working in that area — it binds the agnostic contract to the concrete stack. Several directories mean the template is not yet instantiated and no pack binds (`docs/getting-started.md`); **Learnings** (bottom) records the adopted pack and add-ons — if the directory state and Learnings disagree, flag it, don't guess — and until it's resolved, treat no pack as bound and do only work the agnostic base fully specifies.
 - **Add-ons.** Every directory kept under `add-ons/` is adopted. Read its `README.md` and follow it whenever you touch the capability it covers (they are cross-cutting: backend + frontend + db at once).
 
 ## Instruction precedence
@@ -36,9 +36,11 @@ When instruction files disagree, resolve in this order:
 
 A real contradiction with no register entry is a defect: flag it in your report, don't silently pick a side. Guides under `docs/` carry no authority in a conflict.
 
+A contract's never-violate gate is not waived by a direct instruction, human or agent — push back and propose a compliant alternative. The one user-authorised exception is a public-contract break (see *Public contracts* below), made explicitly and recorded, never silently.
+
 ## Common commands
 
-> ⚠️ **TEMPLATE-TODO — commands not yet filled in.** No toolchain has been chosen. Replace `<pm>` (package manager) and every command below with real ones, then delete this banner. If a stack pack is adopted, its README ships a ready-made block to paste here.
+> ⚠️ **TEMPLATE-TODO — commands not yet filled in.** No toolchain has been chosen. Replace `<pm>` (package manager) and every command below with real ones, then delete this banner and the agent note beneath it. If a stack pack is adopted, its README ships a ready-made block to paste here.
 
 **Agent: if this block still says TEMPLATE-TODO when you need a command** — detect the real command from the repo (lockfile, `package.json` scripts, Makefile, CI workflow) and use that. If you cannot determine it, stop and ask; never run the literal `<pm>` and never guess a package manager. Once you learn the real commands, offer to fill in this block and `.github/workflows/ci.yml` as part of your change.
 
@@ -52,7 +54,7 @@ A real contradiction with no register entry is a defect: flag it in your report,
 <pm> migrate     # TEMPLATE-TODO: run db/ migrations
 ```
 
-**Deployment goes through CI/CD** (`.github/workflows/`), never a local deploy script, except in a declared emergency.
+**Deployment goes through CI/CD** (`.github/workflows/`), never a local deploy script, except in a declared emergency — and an emergency substitutes only the deploy mechanism; it never waives the merge gate, tests, or the Definition of Done.
 
 ## Working rules for agents
 
@@ -123,7 +125,7 @@ Guide: `docs/configuration.md`.
 
 ## Definition of Done
 
-Do not report work as done until all of these hold. If a step cannot run (e.g. the toolchain block above is still TEMPLATE-TODO), say so explicitly — never skip it silently.
+Do not report work as done until all of these hold. If a step cannot run (e.g. the toolchain block above still carries its setup placeholders), say so explicitly — never skip it silently.
 
 1. `<pm> lint`, `<pm> typecheck`, `<pm> test`, and `<pm> build` pass for the touched apps.
 2. New or changed behaviour is covered by tests that assert behaviour.
@@ -159,7 +161,7 @@ Worktrees are the default — parallel work runs in several at once, under `.cla
 ### Merge-back gate (ordered — run when the work is done)
 
 1. **Rebase** onto the current default branch; resolve conflicts.
-2. On the rebased branch, **run lint + typecheck + test + build and confirm green** — on the integrated state, never before the rebase. No suite wired yet? Say so per the Definition of Done. Never merge red.
+2. On the rebased branch, **run lint + typecheck + test + build and confirm green** — on the integrated state, never before the rebase. No suite wired yet? Say so per the Definition of Done. Never merge red. A red that pre-dates your change (broken or flaky on trunk) is not yours to fold in — stop and report it; it is fixed in its own change before this one merges.
 3. **Fast-forward merge** into the default branch.
 4. **Stop** dev servers / test instances started for the work.
 5. **Delete** the worktree and its merged branch.

@@ -123,7 +123,7 @@ Success shapes for symmetry: a single resource is the object itself (no wrapper)
 
 ### Endpoint contract
 
-Each endpoint defines its required permissions, request schema, response schema, validation rules, and error behaviour; each request field defines name, type, required/optional, description, and constraints. This contract is **public** (root contract → *Public contracts*): the frontend mirrors it, so changes are extend/version/deprecate — never silent breaks.
+Each endpoint defines its required permissions, request schema, response schema, validation rules, and error behaviour; each request field defines name, type, required/optional, description, and constraints. This contract is **public** (root contract → *Public contracts*): the frontend mirrors it, so changes are extend/version/deprecate — never silent breaks. Deprecating a response field is expand-then-contract: ship the new field alongside the old, mark the old deprecated in the contract, and remove it only in a later change once no consumer reads it (grep the frontend `services/` to confirm).
 
 ## Cross-cutting concerns
 

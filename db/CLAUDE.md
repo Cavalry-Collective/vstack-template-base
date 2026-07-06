@@ -14,7 +14,7 @@ Migrations are one of the highest-risk surfaces in any project — irreversible 
 
 ## Migration rules
 
-- **Ordered, timestamp-prefixed naming:** `<timestamp>_<verb_noun>` (`20260601120000_add_orders_table`), monotonic, never reused. A timestamp, never a hand-incremented sequence — parallel branches must not claim the same number. Before merging, rebase and confirm your migration still sorts after everything on trunk.
+- **Ordered, timestamp-prefixed naming:** `<timestamp>_<verb_noun>` (`20260601120000_add_orders_table`), monotonic, never reused. A timestamp, never a hand-incremented sequence — parallel branches must not claim the same number. Before merging, rebase and confirm your migration still sorts after everything on trunk; if it no longer sorts last, regenerate it with a current timestamp.
 - **Prove the down path, not just the up.** Before merge: up → down → up on a throwaway scratch DB, confirming a clean round-trip. State the evidence observed. (A forward-only tool binds this differently — see the adopted pack's `db.md` register.)
 - **Expand → migrate → contract for destructive changes** (DROP, NOT NULL on populated tables, type narrowing): add the new shape → migrate data onto it → remove the old shape once nothing reads it — split across migrations/releases so a rollback never loses data.
 - **Separate schema from data.** Backfills live under `db/backfills/`, invoked explicitly, never inside a schema migration. Batched, idempotent, resumable — a large or interrupted run never half-applies.

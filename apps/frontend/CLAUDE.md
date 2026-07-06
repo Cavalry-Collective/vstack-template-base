@@ -31,7 +31,7 @@ src/
     organisms/
       <feature>/       # feature-meaningful sections, by feature — InvoiceTable, SiteHeader
     templates/         # page-level layout scaffolds — the shared layout, page chrome
-  i18n/                # one dictionary per language
+  i18n/                # one dictionary per language (single-language apps: one strings module instead)
   lib/                 # genuinely shared, side-effect-light helpers
   routes.<ext>         # the single central route registry
   tokens.<ext>         # the single design-token source
@@ -181,7 +181,9 @@ An automated a11y check (axe/lighthouse-style) belongs in CI — as the floor, n
 
 ## Internationalisation (if multilingual)
 
-One language is the **reference**; every other stays in exact parity.
+**Single-language projects** skip dictionaries and keep all copy in one strings module (e.g. `src/strings.<ext>`); the no-display-literals rule (*Never violate* #5) and by-meaning key naming still apply, and locales arrive only with a second language.
+
+When multilingual: one language is the **reference**; every other stays in exact parity.
 
 - Dictionaries under `src/i18n/`, one per language.
 - **Every new key lands in every language file in the same change.**
