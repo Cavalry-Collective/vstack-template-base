@@ -74,16 +74,16 @@ Enable both on the Vercel project in the dashboard. This is the frontend half of
 
 The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`next.config` `async headers()`**: emit `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and a **`Content-Security-Policy-Report-Only`** to start. Allow-list the origins this app actually loads — the Vercel Analytics / Speed Insights endpoints and any payment drop-in or embed — then promote to the enforcing `Content-Security-Policy` once violation reports are clean.
 
-## seo add-on bindings (if adopted)
+## Add-on bindings (if adopted)
 
-Full-stack Next.js is this add-on's best case: an indexable route is complete without client JS **by construction** — Server Components render the full HTML — provided its content never moves into a `'use client'` leaf. The homes the add-on asks for:
-
-- **Route classification** lives in the `routes` link-helper module — each entry carries its indexable flag, keeping the registry the single audit surface.
-- **Metadata** goes through one shared helper (`src/lib/seo.ts`) called from each indexable page's `generateMetadata()`: unique title/description, the share-preview (Open Graph) tags, and the canonical as an absolute URL built from `metadataBase` — which comes from the validated canonical-origin config key, never the incoming request. The copy lives in the i18n dictionaries / strings module per the base rule; a multilingual page declares `alternates.languages` (hreflang) from the same locale set.
-- **Sitemap and robots** are `app/sitemap.ts` and `app/robots.ts`, generated from the routes module's indexable entries (plus entity data for parameterized routes) — never a hand-kept URL list.
-- **Redirects** (host aliases, trailing slash, moved pages) are `next.config` `redirects()` entries with `permanent: true` — server-issued, never a client-side bounce.
-- **Honest 404:** a missing entity calls `notFound()` — a real 404 status via `not-found.tsx`, not a 200 error UI.
-- **Non-production is never indexable, fail closed:** `app/robots.ts` answers disallow-all unless the deployed environment is production (`VERCEL_ENV === 'production'` — environment config, not request inference), and a test asserts the non-production branch.
+- **seo** (`add-ons/seo/`) — bound, per seam item. Full-stack Next.js is this add-on's best case: an indexable route is complete without client JS **by construction** — Server Components render the full HTML — provided its content never moves into a `'use client'` leaf.
+  - **S1** rendering: Server Components render indexable routes complete on the server (by construction, above); static-generate where the data allows.
+  - **S2** metadata: one shared helper (`src/lib/seo.ts`) called from each indexable page's `generateMetadata()` — unique title/description, share-preview (Open Graph) tags incl. the share image, and the canonical as an absolute URL built from `metadataBase`; copy lives in the i18n dictionaries / strings module per the base rule.
+  - **S3** canonical origin + redirects: `metadataBase` comes from the validated canonical-origin config key, never the incoming request; host aliases, trailing slash, and moved pages are `next.config` `redirects()` entries with `permanent: true` — server-issued, never a client-side bounce.
+  - **S4** sitemap/robots: `app/sitemap.ts` + `app/robots.ts`, generated from the routes module's indexable entries (plus entity data for parameterized routes) — never a hand-kept URL list; the classification lives on each `routes` link-helper entry as an indexable flag, keeping the registry the single audit surface. Non-production is never indexable, fail closed: `app/robots.ts` answers disallow-all unless the deployed environment is production (`VERCEL_ENV === 'production'` — environment config, not request inference), and a test asserts the non-production branch (gate G3).
+  - **S5** missing entity: `notFound()` → a real 404 status via `not-found.tsx`, not a 200 error UI.
+  - **S6** structured data: one shared JSON-LD component fed by the page's own data.
+  - **S7** locale alternates: a multilingual page declares `alternates.languages` (hreflang) from the same locale set the dictionaries define.
 
 ## Testing — typecheck + build + Playwright e2e
 

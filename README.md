@@ -40,7 +40,7 @@ That's it. There is nothing to install and no generator to run — the template 
 | `design/` | UI mockups + the **design guide** (`design-guide.html` + `tokens.css`) — "Keystone", the visual keystone confirmed before UI work: design principles + full foundations as a token-driven SaaS system (Cavalry palette by default), rebranded per project; components deliberately left flexible; reference, not part of the build |
 | `specs/` | Feature specs — written before implementation |
 | `stacks/` | Optional stack packs — appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. See [`stacks/README.md`](stacks/README.md) |
-| `add-ons/` | Optional capability add-ons — agnostic patterns you opt into at Day-1 (test mode, OTP login, LLM calls, premium design); the active stack pack supplies their concrete bindings. See [`add-ons/README.md`](add-ons/README.md) |
+| `add-ons/` | Optional capability add-ons — agnostic patterns you opt into at Day-1 (test mode, OTP login, LLM calls, SEO, premium design); the active stack pack supplies their concrete bindings. See [`add-ons/README.md`](add-ons/README.md) |
 | `.github/workflows/` | CI and deploy stubs — fill in your toolchain commands |
 | `project.code-workspace` | VS Code workspace (hides agent worktrees from search and watchers) |
 
@@ -77,7 +77,7 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
      - Copy the pack README **dev** command block into the root `CLAUDE.md` "Common commands" placeholder (delete the banner); copy its **CI** block into `.github/workflows/ci.yml`. They are different blocks — never paste a dev-only migration command into CI.
      - Record the choice in root `CLAUDE.md` **Learnings**: `Stack: <pack-name>; appendices under stacks/<pack-name>/`.
    - **Agnostic path:** keep `stacks/` for reference (or delete it) and fill in the toolchain yourself — see step 6.
-6. **Choose your add-ons.** Under `add-ons/`, keep the optional capabilities you want (`test-mode`, `otp-auth`, `llm-calls`, `premium-design`, `enterprise-compliance`, …) and **delete the directories you don't** — every directory kept is adopted, and the root `CLAUDE.md` points agents at each kept add-on's README. The active stack pack supplies each adopted add-on's concrete bindings. See [`add-ons/README.md`](add-ons/README.md).
+6. **Choose your add-ons.** Under `add-ons/`, keep the optional capabilities you want (`test-mode`, `otp-auth`, `llm-calls`, `seo`, `premium-design`, `enterprise-compliance`, …) and **delete the directories you don't** — every directory kept is adopted, and the root `CLAUDE.md` points agents at each kept add-on's README. The active stack pack supplies each adopted add-on's concrete bindings. See [`add-ons/README.md`](add-ons/README.md).
 7. **Fill the toolchain placeholders** (agnostic path; the pack does this for you in step 5):
    - Root `CLAUDE.md` "Common commands" — replace the seven `<pm>`/`TODO` commands and delete the PLACEHOLDER banner.
    - `.github/workflows/ci.yml` — replace the TODO steps with real install/lint/typecheck/test/build, plus the i18n key-parity check and migration up/down round-trip.

@@ -8,7 +8,7 @@ Frontend **Next.js** (App Router, TypeScript) · Backend **Fastify** (plain Java
 
 | Appendix | Binds onto | Scope |
 |---|---|---|
-| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router, the `/api` proxy to the backend, REST-only data flow, Tailwind 4 + Radix, four-states mapping |
+| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router, the `/api` proxy to the backend, REST-only data flow, Tailwind 4 + Radix, four-states mapping, SEO bindings |
 | `backend.md` | `apps/backend/CLAUDE.md` | Fastify plugins → onion mapping, Awilix composition root, the Vercel function entrypoint, plain-JS stance |
 | `db.md` | `db/CLAUDE.md` + repo ring | node-pg-migrate (real up/down pairs), `pg` query layer, serverless pooling against Neon |
 | `infra.md` | `infra/CLAUDE.md` | Vercel Terraform provider, two-project workload shape, deploy seam |

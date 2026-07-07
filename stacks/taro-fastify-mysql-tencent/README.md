@@ -15,6 +15,8 @@ Frontend **Taro 4 H5** (React 18, plain JavaScript) · Backend **Fastify 4** (Co
 
 This pack ships the optional `infra.md` (permitted by `../README.md`): the deployment platform is load-bearing here. Each appendix opens with the verbatim precedence line and ends with its conflict register.
 
+> **Unbound add-on:** this pack leaves **`seo`** (`add-ons/seo/`) unbound (per `../README.md`, *How to add a pack* step 4). Unmeetable seam item: **S1** — the form factor is a phone-first, app-like H5/PWA client, and Taro H5's client-only rendering cannot serve indexable routes complete without client JS. Workable alternative: a project on this stack that grows a public crawlable surface serves it outside the Taro bundle (its own prerendered or server-rendered pages) and binds the add-on there. Residual posture: the add-on's R10 rule survives unbinding — a publicly reachable H5 origin that shouldn't appear in search results still serves a refuse-indexing response (deny-all robots / noindex header) regardless.
+
 ## Day-1 wiring
 
 Part of the root `README.md` Day-1 checklist. Delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Record in root `CLAUDE.md` **Learnings**: `Stack: taro-fastify-mysql-tencent; appendices under stacks/taro-fastify-mysql-tencent/`.
