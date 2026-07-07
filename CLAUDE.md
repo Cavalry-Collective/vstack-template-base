@@ -14,7 +14,7 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 - `infra/` — Terraform for the project's cloud resources. See `infra/CLAUDE.md`.
 - `design/` — design mockups / UI reference, **reference only** (not part of the buildable workspace). See *UI mockup / design reference* below.
 - `stacks/` — optional stack packs: appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. Each area's `CLAUDE.md` tells you to read the adopted pack's matching appendix before working there. See `stacks/README.md`.
-- `add-ons/` — optional capability add-ons: agnostic patterns for features the base leaves out (test mode, OTP login, LLM calls); zero or more chosen at instantiation, the rest deleted, the active stack pack supplying their concrete bindings. **Every directory kept under `add-ons/` is adopted — read its `README.md` and follow it whenever you touch the capability it covers.** See `add-ons/README.md`.
+- `add-ons/` — optional capability add-ons: agnostic patterns for features the base leaves out (test mode, OTP login, LLM calls, premium design); zero or more chosen at instantiation, the rest deleted, the active stack pack supplying their concrete bindings. **Every directory kept under `add-ons/` is adopted — read its `README.md` and follow it whenever you touch the capability it covers.** See `add-ons/README.md`.
 
 ## Instruction precedence
 

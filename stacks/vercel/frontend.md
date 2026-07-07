@@ -84,6 +84,10 @@ The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`nex
 - **Run the specs at a narrow viewport as well as desktop** (base *Testing* rule). Define a second Playwright project on a mobile device — `{ name: 'mobile', use: { ...devices['Pixel 7'] } }` beside the desktop project — so the four-state specs also run at phone width; a suite pinned to one desktop viewport ships mobile-layout regressions. Add mobile-only assertions (nav collapses, no horizontal scroll) where a screen's layout genuinely diverges.
 - See the conflict register for what this replaces. The moment a store slice or service accrues branching logic worth isolating, add a unit runner for that code — don't scaffold one speculatively.
 
+## Add-on bindings (if adopted)
+
+- **premium-design** (`add-ons/premium-design/`): motion primitives are atoms/molecules driven by `@theme` duration/easing tokens — CSS transitions/keyframes by default; reach for the **`motion`** library only at a `'use client'` interaction leaf when a sequence outgrows CSS, recording the choice per the base dependency rule. Scroll reveals go through one shared IntersectionObserver hook in `lib/` (client leaf). Fonts stay on `next/font`, imagery on `next/image` (see *Responsive layout*). Honour `prefers-reduced-motion` by collapsing the duration tokens under the media query, and watch Speed Insights for motion-caused Web Vitals regressions.
+
 ## Conflict register
 
 - **Base says:** `apps/frontend` is "the single-page app" (also root `CLAUDE.md` and `README.md`). **In this stack:** it is server-first Next.js App Router on Vercel, not a client-rendered SPA. **Because:** the chosen stack. **Concretely:** default every component to server; add `'use client'` only at interaction leaves. (Soften the root-file SPA framing on day 1 per the root README; the repo name stays stale.)

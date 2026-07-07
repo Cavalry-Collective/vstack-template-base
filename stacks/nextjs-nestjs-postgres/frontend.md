@@ -74,6 +74,10 @@ Next handles deployment skew for assets/RSC (deployment IDs, asset versioning, R
 
 The base already requires asserting behaviour over implementation — not repeated. Additions: test **data-access / Server Actions** with the NestJS API mocked at the network edge (assert request shape, auth + correlation-id forwarding, and revalidate behaviour); test the four-state + `not-found` + `global-error` segment files; assert parameterized hrefs resolve through the `routes` helper.
 
+## Add-on bindings (if adopted)
+
+- **premium-design** (`add-ons/premium-design/`): motion primitives are atoms/molecules driven by duration/easing tokens — CSS transitions/keyframes by default, so purely-presentational motion keeps Server Components server; an animation library (e.g. `motion`) enters only at a `'use client'` interaction leaf when a sequence outgrows CSS, recorded per the base dependency rule. Scroll reveals go through one shared IntersectionObserver hook (client leaf). Fonts via `next/font`; imagery via `next/image`. Honour `prefers-reduced-motion` by collapsing the duration tokens under the media query.
+
 ## Conflict register
 
 - **Base says:** `apps/frontend` is "the single-page app" (also root `CLAUDE.md` and `README.md`). **In this stack:** it is server-first Next.js App Router, not a client-rendered SPA — the State, boundary, primitives, and versioning bindings all inherit from this one resolution. **Because:** the chosen stack is App Router. **Concretely:** default every component to server; add `'use client'` only at an interaction leaf. (Root files are softened on day 1 per the README; the repo name stays stale.)

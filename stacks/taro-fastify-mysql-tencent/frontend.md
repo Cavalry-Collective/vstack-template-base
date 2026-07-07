@@ -64,6 +64,10 @@ This stack **keeps** the base's version.json approach (contrast the `vercel` pac
 - **i18n** (base *Internationalisation*): en/zh dictionaries under `src/i18n/`; the CI **`i18n:check`** enforces key parity both directions. Name keys by meaning.
 - **Test-user picker** (if you adopt the **test-mode** add-on, `add-ons/test-mode/`): the login screen offers a one-tap account picker fed by a `test`-tenant-gated unauthenticated endpoint that returns empty in `production`. Keep it on the login screen, gated on the same `x-tenant: test` signal the backend uses.
 
+## Add-on bindings (if adopted)
+
+- **premium-design** (`add-ons/premium-design/`): motion is CSS transitions/keyframes driven by duration/easing tokens in `src/styles/tokens.css` — no animation library by default (H5 bundle weight; the base dependency rule). Scroll reveals go through one shared IntersectionObserver hook in `lib/`. Fonts are self-hosted static assets loaded with `font-display: swap`; images ship pre-sized and compressed — this stack has no runtime image optimiser. Honour `prefers-reduced-motion` by collapsing the duration tokens under the media query; keep animated values that must match Taro built-ins in capital `Px` (see *Responsive layout*).
+
 ## Conflict register
 
 - **Base says:** every route lives in one central registry `routes.<ext>`, and URLs are built through it. **In this stack:** Taro splits it across **two** files — `app.config.js` (page registration) and `config/index.js` `customRoutes` (internal-path → clean-URL) — with no single `routes.<ext>`. **Because:** Taro owns page registration in its own config and maps H5 URLs separately; there is no place to collapse them into one registry without fighting the framework. **Concretely:** DO add both entries when creating a page and treat the pair as the routing surface to audit; DON'T maintain a third route→URL table (the base already forbids a second one), and DON'T hand-concatenate `/pages/...` paths into a browser URL.
