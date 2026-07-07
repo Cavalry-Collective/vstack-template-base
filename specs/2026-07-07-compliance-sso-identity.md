@@ -39,14 +39,14 @@ Let an organisation federate authentication to its own identity provider (SAML 2
 
 **Break-glass recovery.** 1. Org owner (IdP outage or misconfiguration) opens the break-glass screen. 2. Submits email + one-time code. 3. Code hash matched and consumed; a time-boxed session (max 1 hour) is issued via password-ring auth. 4. Owner fixes or disables the SSO config. 5. Both the code use and any enforcement change are audited.
 
-**Deprovisioning.** 1. Admin deactivates a member (existing member management, `members:manage`) or SCIM sends `active: false`. 2. The use case deactivates the membership, revokes every session of that member, and disables their API keys' org access in one transaction. 3. Subsequent SSO or password logins for that membership are denied (`USER_DEACTIVATED`). 4. Audited with actor (`user` or `system`/SCIM).
+**Deprovisioning.** 1. Admin deactivates a member (existing member management, `members:remove`) or SCIM sends `active: false`. 2. The use case deactivates the membership, revokes every session of that member, and disables their API keys' org access in one transaction. 3. Subsequent SSO or password logins for that membership are denied (`USER_DEACTIVATED`). 4. Audited with actor (`user` or `system`/SCIM).
 
 ## Admin capabilities
 
 - **View SSO configuration, domains, test history, SCIM token status** — `sso_config:read`. Secrets (OIDC client secret, SCIM token) are never returned; only a configured indicator, per the backend write-only-secrets rule.
 - **Create/update/delete the IdP config, upload/retire certificates, run tests, manage domains, toggle enforcement, manage group mappings (P3)** — `sso_config:manage`.
 - **Issue and revoke SCIM tokens (P2)** — `scim_tokens:manage`.
-- **Deactivate a member (triggers session revocation)** — `members:manage` (existing).
+- **Deactivate a member (triggers session revocation)** — `members:remove` (existing).
 - **Break-glass codes** — visible once at enforcement time to org owners only; not a permission, an owner-role gate.
 
 ## API behavior

@@ -9,7 +9,7 @@ Give every organisation a permission catalog, fixed least-privilege system roles
 ## Product requirements
 
 1. The backend defines one canonical permission catalog (below); every permission is `resource:action`, lowercase. Any permission string outside the catalog is rejected on write.
-2. Destructive/exfiltrating verbs — `export`, `bulk_delete`, `purge` — are separate permissions from `read`/`update`/`delete`; holding `contacts:update` never implies `contacts:export`.
+2. Destructive/exfiltrating verbs — `export`, `bulk_update`, `bulk_delete`, `purge` — are separate permissions from `read`/`update`/`delete`; holding `contacts:update` never implies `contacts:export`.
 3. Five fixed system roles exist in every organisation: **Owner, Admin, Manager, Member, Read-only**. System roles cannot be renamed, edited, or deleted.
 4. New members default to **Member** (least privilege that still allows day-to-day CRM work); invitations may specify any role the inviter is allowed to grant (req. 7).
 5. Custom roles (P2) are composed from catalog permissions only; an organisation can create, edit, and delete them. A custom role in use (assigned to ≥1 member) cannot be deleted.
@@ -24,19 +24,27 @@ Give every organisation a permission catalog, fixed least-privilege system roles
 
 | Resource | Actions |
 |---|---|
-| `contacts`, `companies`, `deals` | `read`, `create`, `update`, `delete`, `export`, `bulk_delete`, `purge` |
+| `contacts`, `companies`, `deals` | `read`, `create`, `update`, `delete`, `export`, `bulk_update`, `bulk_delete` |
 | `activities`, `notes` | `read`, `create`, `update`, `delete`, `export` |
+| `records` | `restore`, `purge` — recycle-bin operations spanning record classes; semantics owned by `2026-07-07-compliance-retention-deletion.md` |
 | `pipelines`, `custom_fields` | `read`, `create`, `update`, `delete` |
-| `members` | `read`, `invite`, `update`, `remove` |
+| `members` | `read`, `invite`, `update`, `remove`, `mfa_reset` |
 | `roles` | `read`, `create`, `update`, `delete`, `assign` |
 | `org_policy` | `read`, `update` |
 | `audit_logs` | `read`, `export` |
 | `exports` | `read` (export *jobs*; creating one requires the per-resource `…:export` verb — see `2026-07-07-compliance-export-bulk-controls.md`) |
 | `api_keys` | `read`, `create`, `update`, `revoke` |
 | `approvals` | `read`, `decide` |
-| `privacy_requests` | `read`, `manage` |
-| `retention` | `read`, `update` |
-| `sso_config` | `read`, `update` |
+| `privacy_requests` | `read`, `manage`, `execute` |
+| `retention` | `read`, `update`, `hold` |
+| `sso_config` | `read`, `manage` |
+| `scim_tokens` | `manage` |
+| `mfa_policy` | `read`, `update` |
+| `encryption_keys` | `read` (key status only, never material) |
+| `compliance_documents` | `read` |
+| `trust_notifications` | `manage` |
+
+Platform-operator, instance-scope permissions — `backups:read`, `backups:restore`, `recovery_drills:record`, `encryption_keys:rotate` — authenticate via the operator credential, not org roles, and live outside this catalog (see the backup-dr and encryption specs).
 
 ### System-role matrix (summary)
 
@@ -44,11 +52,11 @@ Give every organisation a permission catalog, fixed least-privilege system roles
 |---|---|---|---|---|---|
 | CRM records: `read` | ✓ | ✓ | ✓ | ✓ | ✓ |
 | CRM records: `create`/`update`/`delete` | ✓ | ✓ | ✓ | ✓ | — |
-| CRM records: `export`/`bulk_delete` | ✓ | ✓ | ✓ | — | — |
-| CRM records: `purge` | ✓ | ✓ | — | — | — |
+| CRM records: `export`/`bulk_update`/`bulk_delete` | ✓ | ✓ | ✓ | — | — |
+| `records:restore`/`records:purge` (recycle bin) | ✓ | ✓ | — | — | — |
 | `members:*`, `roles:*` | ✓ | ✓ (cannot grant Owner) | `members:read`, `roles:read` | — | — |
-| `org_policy:*`, `retention:*`, `sso_config:*` | ✓ | ✓ | — | — | — |
-| `audit_logs:*`, `exports:read`, `api_keys:*`, `approvals:*`, `privacy_requests:*` | ✓ | ✓ | — | — | — |
+| `org_policy:*`, `retention:*`, `sso_config:*`, `mfa_policy:*`, `scim_tokens:*` | ✓ | ✓ | — | — | — |
+| `audit_logs:*`, `exports:read`, `api_keys:*`, `approvals:*`, `privacy_requests:*`, `encryption_keys:read`, `compliance_documents:read`, `trust_notifications:manage` | ✓ | ✓ | — | — | — |
 
 Owner = every catalog permission. The "cannot grant Owner" restriction on Admin is rule 6, not a missing permission.
 
@@ -83,7 +91,7 @@ All under `/internal/v1/organisations/{organisationId}/…`; base pagination and
 | `POST …/roles` | Create custom role (P2) | `roles:create` | req: `{ name, permissions[] }`; `201` |
 | `PUT …/roles/{roleId}` | Replace custom role (P2) | `roles:update` | full-resource replace; system roles → `409 SYSTEM_ROLE_IMMUTABLE` |
 | `DELETE …/roles/{roleId}` | Delete custom role (P2) | `roles:delete` | `204`; in use → `409 ROLE_IN_USE` |
-| `PUT …/members/{memberId}/roles` | Set a member's roles | `roles:assign` | req: `{ roleIds[] }`; enforces rules 6–8; maker-checker may return the pending approval resource (`201`, status `pending`) per that spec |
+| `PUT …/members/{memberId}/roles` | Set a member's roles | `roles:assign` | req: `{ roleIds[] }`; enforces rules 6–8; maker-checker may capture it as an approval request instead (`202`, status `pending_approval`) per that spec |
 | `GET …/members/me/permissions` | Actor's effective permissions | any authenticated member | `{ memberId, roles[], permissions[] }` — no pagination (bounded by catalog size) |
 
 Role mutations are synchronous (small writes); nothing here streams or long-runs.
@@ -190,5 +198,5 @@ Emitted via the shared `record()` in the service ring, same transaction as the c
 ## Open questions
 
 - No `design/` mockup exists yet for the new screens (Members role management, Roles list & custom-role editor); required before initial build.
-- Should Manager hold `contacts:purge`-adjacent grace-period restore rights? Owner: product, before retention-deletion P1 lands.
+- Should Manager hold `records:restore` (grace-period recycle-bin restore)? Owner: product, before retention-deletion P1 lands.
 - Do we need per-role member caps or expiry on assignments for contractors? Owner: product; default is no (YAGNI) unless a customer commitment says otherwise.

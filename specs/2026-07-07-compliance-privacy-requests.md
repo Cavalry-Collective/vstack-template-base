@@ -146,7 +146,7 @@ Per the program envelope, via the shared `record()` call. Erasure jobs audit per
 | Download link used after expiry | 410 | `DOWNLOAD_LINK_EXPIRED` |
 | Package build or link mint on an expired package | 409 | `PACKAGE_EXPIRED` |
 | Starting erasure while an erasure job for the request is running | 409 | `ERASURE_ALREADY_RUNNING` |
-| Erasure without required maker-checker approval | 403 | `APPROVAL_REQUIRED` |
+| Erasure guarded by org policy is captured as an approval request instead of executing | 202 | `APPROVAL_REQUIRED` — not an error: the body is the pending-approval resource per `2026-07-07-compliance-maker-checker.md` |
 | Request, package, or suppression entry not found | 404 | `RESOURCE_NOT_FOUND` |
 | Subject search with no search field supplied / malformed body | 400 | `VALIDATION_FAILED` |
 

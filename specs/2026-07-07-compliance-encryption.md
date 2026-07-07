@@ -24,7 +24,7 @@ Encrypt by default and manage keys deliberately: TLS on every external interface
 
 ### Flow: marking a custom field sensitive (P2)
 
-1. Org admin opens the custom-field settings screen and sets an existing or new field's type/flag to `sensitive` (requires `custom_fields:manage`).
+1. Org admin opens the custom-field settings screen and sets an existing or new field's type/flag to `sensitive` (requires `custom_fields:update`).
 2. The API confirms the change; marking is **one-way** (unmarking would require a decrypt-and-reindex backfill and silently downgrade protection — rejected with `SENSITIVE_FIELD_IMMUTABLE`).
 3. A background job encrypts existing values for that field (batched, idempotent, resumable) and removes them from the search index.
 4. `encryption.field.marked_sensitive` is emitted; the field's values now render only to members with read permission on the record, are unsearchable, and export as a redaction marker.
@@ -45,7 +45,7 @@ Encrypt by default and manage keys deliberately: TLS on every external interface
 
 ## Admin capabilities
 
-- **Org admins:** mark custom fields sensitive (`custom_fields:manage`, the base custom-field permission — RBAC spec owns its definition); view their org's key status — key version, created/rotated dates, never key material — with `encryption_keys:read`; see rotation/destruction events in their audit log. At-rest and TLS posture are visible only as trust-page documentation (trust-transparency spec), not as settings.
+- **Org admins:** mark custom fields sensitive (`custom_fields:update`, the base custom-field permission — RBAC spec owns its definition); view their org's key status — key version, created/rotated dates, never key material — with `encryption_keys:read`; see rotation/destruction events in their audit log. At-rest and TLS posture are visible only as trust-page documentation (trust-transparency spec), not as settings.
 - **Platform operators:** trigger DEK rotation (`encryption_keys:rotate`) via the org-scoped endpoint. KEK rotation is a KMS/infra procedure (runbook under `infra/`), recorded in the audit store when performed.
 - Nobody — admin or operator — can read a stored secret back: write-only per the base security baseline.
 

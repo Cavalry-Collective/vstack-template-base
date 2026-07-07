@@ -43,7 +43,7 @@ Give every user a second authentication factor — TOTP (RFC 6238) now, WebAuthn
 
 - **View MFA policy and members' enrollment status** (enrolled yes/no + factor types, never secrets) — `mfa_policy:read` (status surfaces on the existing member list).
 - **Update MFA policy** (mode, grace period, remember-device duration, trust-IdP-claim) — `mfa_policy:update`.
-- **Reset a member's MFA** — `members:mfa_reset` (separate from `members:manage` per the index's destructive-verb rule; maker-checker eligible).
+- **Reset a member's MFA** — `members:mfa_reset` (separate from the plain `members:update`/`members:remove` verbs per the index's destructive-verb rule; maker-checker eligible).
 - Self-service enrollment/challenge/devices need no admin permission — only an authenticated (or pending-MFA) user.
 
 ## API behavior
