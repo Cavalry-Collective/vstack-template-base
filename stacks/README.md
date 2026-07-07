@@ -4,7 +4,7 @@ The base CLAUDE.md files are framework-agnostic on purpose. A **stack pack** bin
 
 ## What a pack is
 
-A pack is a directory `stacks/<pack-name>/` of **guidance-as-text** — concrete config and command snippets to copy, never installed dependencies, lockfiles, or generated scaffolding in the buildable tree. `<pack-name>` is `<frontend>-<backend>-<database>`, lowercase and hyphenated; **append the client/ORM when it is the distinguishing choice** (e.g. `nextjs-nestjs-postgres-prisma`) so a future TypeORM-on-Postgres pack doesn't collide. **Platform exception:** a pack whose identity is the deployment platform rather than the framework triple (e.g. `vercel`) may be named for the platform — its README records the would-be triple, and it is renamed to the convention form if a second pack on that platform ever appears.
+A pack is a directory `stacks/<pack-name>/` of **guidance-as-text** — concrete config and command snippets to copy, never installed dependencies, lockfiles, or generated scaffolding in the buildable tree. `<pack-name>` is `<frontend>-<backend>-<database>`, lowercase and hyphenated; **append the distinguishing choice as a suffix when the triple alone would collide or mislead** — the client/ORM (e.g. `nextjs-nestjs-postgres-prisma` vs a future TypeORM pack) or the deployment platform when it is load-bearing (e.g. `taro-fastify-mysql-tencent`). **Platform exception:** a pack whose identity is the deployment platform rather than the framework triple may be named for the platform (e.g. `vercel`) — its README records the would-be triple. Multiple packs on one platform coexist by suffixing the architectural shape that distinguishes them (e.g. `vercel` and `vercel-ssr`); each README names its sibling(s) and the contrast, so an adopter picks deliberately.
 
 ## Required file set
 
@@ -38,7 +38,7 @@ Packs activate by **instruction, not machinery**. Each area's `CLAUDE.md` (`apps
 1. Create `stacks/<pack-name>/` with the four required files.
 2. Put the precedence line atop each appendix and a conflict register at the end; keep every line additions-only.
 3. Write the manifest `README.md` — identity, appendix→base mapping, suggested dev + CI `<pm>` blocks, deploy-seam pointer.
-4. Bind the shipped add-ons: for each directory under `add-ons/`, add its concrete bindings to the matching appendix (what that add-on's *Binds to a stack* section asks for), or state in the manifest that the pack leaves it unbound.
+4. Bind the shipped add-ons: for each directory under `add-ons/`, add its concrete bindings to the matching appendix (what that add-on's *Binds to a stack* section asks for) — except where the add-on carries its own `bindings.md` (see `add-ons/README.md`), in which case add the new pack's bound-or-unbound section **there**. An add-on the pack covers in neither place is declared unbound in the manifest; silence is a defect.
 5. Nothing else to wire — the per-area `CLAUDE.md` pointers pick the pack up as soon as it is the only directory under `stacks/` (see *Activation*).
 
 A pack MAY add an optional `infra.md` later under the same invariants (infra is cloud-shaped, not app-stack-shaped — not required in v1).
