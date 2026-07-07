@@ -1,6 +1,6 @@
 # SSO & identity lifecycle — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -123,7 +123,7 @@ All new tables carry `organisation_id` (indexed) except `external_identities`, w
 
 - Full assertion/token validation before any DB lookup: signature against active certs / fetched keys, audience, issuer, `NotBefore`/`NotOnOrAfter` (±5 min skew), one-time assertion-ID replay cache. Signature verification uses the stack pack's library — never hand-rolled XML/JWT crypto.
 - Metadata URL fetches are server-side requests to admin-supplied URLs — apply the backend SSRF guard (scheme + public-host checks, at save and at fetch).
-- OIDC client secret field-level encrypted (see 2026-07-07-compliance-encryption.md); SCIM tokens and break-glass codes stored hashed only; all secrets write-only through the API.
+- OIDC client secret field-level encrypted (see encryption.md); SCIM tokens and break-glass codes stored hashed only; all secrets write-only through the API.
 - JIT never elevates: an existing member logging in via SSO keeps their role; only group mapping (P3) may change roles, and that is audited.
 - Enforced-SSO also disables password *reset* emails for the org's members, or reset becomes a bypass.
 - Break-glass sessions are time-boxed, single-code, owner-only; codes expire (90 days) and can be regenerated only via the enforcement screen.
@@ -199,7 +199,7 @@ Per the program index, SSO is **P2** — password + MFA is the P1 auth baseline,
 - Multiple simultaneous IdP connections per organisation.
 - SCIM `Groups` resource beyond the group-values consumed by P3 mapping; entitlement sync.
 - Per-IdP vendor certification checklists (index open question; product owns).
-- MFA policy interaction details — this spec only consumes the "trust IdP MFA claim" switch defined in 2026-07-07-compliance-mfa.md.
+- MFA policy interaction details — this spec only consumes the "trust IdP MFA claim" switch defined in mfa.md.
 
 ## Open questions
 

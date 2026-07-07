@@ -1,6 +1,6 @@
 # Backup & disaster recovery — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -10,9 +10,9 @@ Make recovery a drilled, evidenced control: automated encrypted backups of the p
 
 1. The primary datastore is backed up automatically and encrypted at rest. Where the stack pack's engine supports point-in-time recovery (PITR), continuous archiving is enabled so any moment inside the retention window is restorable; otherwise scheduled snapshots run at an interval no larger than the declared RPO. Both paths are valid; the active stack pack states which applies.
 2. Object storage (exports, DSAR packages, attachments) is backed up or versioned+replicated to the same retention window, per the stack pack's mechanics.
-3. Recovery objectives are declared as validated deployment config (root *Configuration*): `RECOVERY_RPO_MINUTES` (default **60**) and `RECOVERY_RTO_MINUTES` (default **240**). Startup fails on missing/malformed values. The declared values are what the trust page documents to customers (trust-transparency spec `2026-07-07-compliance-trust-transparency.md`).
-4. Backup retention is a validated config value `BACKUP_RETENTION_DAYS` (default **35**, bounds 7–365). This window bounds the erasure-in-backups promise: erased data disappears from all backups once the window elapses. The retention-deletion spec (`2026-07-07-compliance-retention-deletion.md`) depends on this value and must state it verbatim.
-5. Backups are readable only by a dedicated recovery role/credential. Application runtime credentials can neither read nor delete backups. Backup encryption keys are managed per the encryption spec (`2026-07-07-compliance-encryption.md`); key mechanics belong to the stack pack's KMS.
+3. Recovery objectives are declared as validated deployment config (root *Configuration*): `RECOVERY_RPO_MINUTES` (default **60**) and `RECOVERY_RTO_MINUTES` (default **240**). Startup fails on missing/malformed values. The declared values are what the trust page documents to customers (trust-transparency spec `trust-transparency.md`).
+4. Backup retention is a validated config value `BACKUP_RETENTION_DAYS` (default **35**, bounds 7–365). This window bounds the erasure-in-backups promise: erased data disappears from all backups once the window elapses. The retention-deletion spec (`retention-deletion.md`) depends on this value and must state it verbatim.
+5. Backups are readable only by a dedicated recovery role/credential. Application runtime credentials can neither read nor delete backups. Backup encryption keys are managed per the encryption spec (`encryption.md`); key mechanics belong to the stack pack's KMS.
 6. Every backup run's outcome (success/failure, size, reference) is recorded as a `backup_runs` evidence row by a verification job; a failed or missed run raises an operational alert (observability seam: `infra/CLAUDE.md`, *Set up observability from day 1*).
 7. A restore drill runs at least quarterly: restore a backup into an isolated environment, verify integrity (row counts vs source, checksums, application boots and serves authenticated requests), and record the outcome as a durable `recovery_drills` evidence record. The drill record is the auditable evidence SOC 2 asks for; a backup with no passing drill in the last quarter is a red control.
 8. A DR runbook lives under `infra/` covering at minimum: datastore loss, region loss, and bad deploy / data corruption. The corruption scenario requires point-in-time restore plus selective repair (restore to a side instance, extract, repair forward) — never blind full rollback of a live multi-tenant datastore.

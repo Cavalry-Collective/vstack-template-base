@@ -1,6 +1,6 @@
 # Subprocessors & compliance documentation — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 

@@ -1,6 +1,6 @@
 # Data retention & deletion — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -12,12 +12,12 @@ Make deletion a governed lifecycle — soft delete → grace period → irrevers
 2. Soft-deleted records appear in an admin **recycle bin**, restorable during a grace period. The grace period is org policy: default **30 days**, bounds **7–90 days**, validated on write, changes audited.
 3. Restore returns the record to full visibility with its prior data intact. Restore after grace expiry, or of a record already claimed by a purge batch, fails with a clear error — it never partially restores.
 4. A background **purge job** irreversibly hard-deletes records whose grace period has expired, in idempotent, resumable batches (per `db/CLAUDE.md` backfill rules). A purged record is unrecoverable from the primary store.
-5. Hard deletion covers the full **blast radius**: primary rows are deleted by the purge job; search-index entries are removed in the same run; caches and generated export files containing the record expire via their own bounded TTLs; backups age out per the backup retention window (see `2026-07-07-compliance-backup-dr.md`). **Documented customer commitment: erasure completes in the primary within grace + 24h, and in backups within the backup retention window — both stated in customer-facing documentation.**
-6. Per-record-class **retention policies** (contacts, companies, deals, activities, notes) auto-delete records not updated for N days. Off by default; N validated against declared bounds; enabling requires a fresh preview (req 7). Audit-event retention is **not** governed here — it belongs to `2026-07-07-compliance-audit-logs.md`.
+5. Hard deletion covers the full **blast radius**: primary rows are deleted by the purge job; search-index entries are removed in the same run; caches and generated export files containing the record expire via their own bounded TTLs; backups age out per the backup retention window (see `backup-dr.md`). **Documented customer commitment: erasure completes in the primary within grace + 24h, and in backups within the backup retention window — both stated in customer-facing documentation.**
+6. Per-record-class **retention policies** (contacts, companies, deals, activities, notes) auto-delete records not updated for N days. Off by default; N validated against declared bounds; enabling requires a fresh preview (req 7). Audit-event retention is **not** governed here — it belongs to `audit-logs.md`.
 7. Before a retention policy can be enabled, admins must run a **preview** stating "this policy would currently delete ~N records". Enabling without a recent preview is rejected. Retention sweeps perform **soft** deletes (actor `system`), so swept records still pass through the recycle bin and grace period.
-8. Retention policy changes are audited and **maker-checker eligible** (see `2026-07-07-compliance-maker-checker.md`) where org policy demands approval.
-9. **Legal holds**: named holds with a reason, attachable to explicit record sets or whole record classes. A held record is excluded from soft-delete purge, retention sweeps, **and** privacy-erasure jobs — erasure requests against held records are blocked with a distinct status (see `2026-07-07-compliance-privacy-requests.md`). Hold create/release requires `retention:hold` and is audited.
-10. **Org offboarding**: on account closure the organisation's data is frozen (read-only) for a contractual window (default **60 days**, documented to customers), then fully purged — including destruction of the org's encryption keys as crypto-shredding (see `2026-07-07-compliance-encryption.md`).
+8. Retention policy changes are audited and **maker-checker eligible** (see `maker-checker.md`) where org policy demands approval.
+9. **Legal holds**: named holds with a reason, attachable to explicit record sets or whole record classes. A held record is excluded from soft-delete purge, retention sweeps, **and** privacy-erasure jobs — erasure requests against held records are blocked with a distinct status (see `privacy-requests.md`). Hold create/release requires `retention:hold` and is audited.
+10. **Org offboarding**: on account closure the organisation's data is frozen (read-only) for a contractual window (default **60 days**, documented to customers), then fully purged — including destruction of the org's encryption keys as crypto-shredding (see `encryption.md`).
 11. Everything in this spec is org-scoped and permission-gated per the program index; denied attempts are audited.
 
 ## User flows

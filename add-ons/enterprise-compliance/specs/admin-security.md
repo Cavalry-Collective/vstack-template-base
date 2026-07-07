@@ -1,6 +1,6 @@
 # Admin security controls — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -8,11 +8,11 @@ Give org admins a security-settings surface — session policy and management, p
 
 ## Product requirements
 
-1. An org security policy exists per organisation, stored as data (never env config), readable with `org_policy:read` and changed only with `org_policy:update`. Every change validates against declared bounds and is audited; changes are maker-checker eligible per `2026-07-07-compliance-maker-checker.md`.
-2. **Session policy**: idle timeout (bounds 5 min–24 h, default 30 min) and absolute lifetime (bounds 1 h–30 days, default 12 h). Out-of-bounds values are rejected (`400 POLICY_OUT_OF_BOUNDS`); an expired session's next request gets `401 SESSION_EXPIRED`. Interactions with SSO-driven session semantics and MFA step-up lifetimes are defined in `2026-07-07-compliance-sso-identity.md` and `2026-07-07-compliance-mfa.md`; where an IdP mandates a shorter lifetime, the shorter value wins.
+1. An org security policy exists per organisation, stored as data (never env config), readable with `org_policy:read` and changed only with `org_policy:update`. Every change validates against declared bounds and is audited; changes are maker-checker eligible per `maker-checker.md`.
+2. **Session policy**: idle timeout (bounds 5 min–24 h, default 30 min) and absolute lifetime (bounds 1 h–30 days, default 12 h). Out-of-bounds values are rejected (`400 POLICY_OUT_OF_BOUNDS`); an expired session's next request gets `401 SESSION_EXPIRED`. Interactions with SSO-driven session semantics and MFA step-up lifetimes are defined in `sso-identity.md` and `mfa.md`; where an IdP mandates a shorter lifetime, the shorter value wins.
 3. **Session management**: sessions are server-side records. A member lists and revokes their own; an admin lists and revokes any member's. Revocation is server-side and immediate — the next request on a revoked session gets `401 SESSION_REVOKED`, regardless of token expiry.
 4. **Password policy** (password-auth orgs only): minimum length configurable ≥ 12 (default 12, upper bound 128); candidate passwords are rejected if found in a breach corpus via a k-anonymity-style check (concrete check supplied by the active stack pack, degradable to allow-with-warning if the corpus is unreachable — never a hard login outage); **no composition rules** (no mandatory symbol/case classes). Login attempts are throttled per account + IP with a temporary lockout after repeated failures (defaults: 10 failures / 15-min lockout, bounds validated).
-5. **IP allowlisting** (P2): a per-org list of CIDR entries applying to interactive sessions *and* API-key traffic. Modes: `off` (default) → `report_only` → `enforced`; an org must be able to observe report-only results before enforcing. Self-lockout guard: saving an enforced list (or switching to `enforced`) whose entries do not match the saving admin's current IP is rejected unless the request carries an explicit confirmation flag. Break-glass: an org Owner recovery path (defined with auth flows in `2026-07-07-compliance-sso-identity.md`) bypasses the allowlist to repair it.
+5. **IP allowlisting** (P2): a per-org list of CIDR entries applying to interactive sessions *and* API-key traffic. Modes: `off` (default) → `report_only` → `enforced`; an org must be able to observe report-only results before enforcing. Self-lockout guard: saving an enforced list (or switching to `enforced`) whose entries do not match the saving admin's current IP is rejected unless the request carries an explicit confirmation flag. Break-glass: an org Owner recovery path (defined with auth flows in `sso-identity.md`) bypasses the allowlist to repair it.
 6. **API keys**: org-scoped, permission scopes a subset of the creator's effective permissions at creation (same rule as RBAC's `GRANT_EXCEEDS_ACTOR`), optional expiry, `last_used_at` tracking, secret shown exactly once at creation/rotation, rotation issues a new secret and retires the old after a stated overlap, revocation is immediate. The secret is stored hashed; the stored prefix is the only recoverable fragment.
 7. **Security notification emails**: sent to the affected member on new-device login, password change, MFA change (enrolment/removal), and to admins on org policy change. Delivery goes through the mail port and is stubbed under the test-mode add-on; the control logic is never stubbed.
 8. **Members-security view**: admins see, per member: MFA enrolled?, last login at, active session count, SSO-linked?.
@@ -24,7 +24,7 @@ Give org admins a security-settings surface — session policy and management, p
 
 **F2 — Revoke a session (P1).** 1. A member (own sessions) or admin (any member, via the members-security view) lists active sessions — device/user-agent, IP, created, last seen. 2. Picks one (or "all others") and revokes. 3. Backend marks the session revoked and audits; the revoked session's next request gets `401 SESSION_REVOKED`.
 
-**F3 — Roll out an IP allowlist (P2).** 1. Admin adds CIDR entries with labels. 2. Sets mode `report_only`; traffic proceeds while would-block events accumulate. 3. Admin reviews the report (audit-log query, `2026-07-07-compliance-audit-logs.md`). 4. Switches to `enforced`; if the admin's own IP doesn't match, the save is rejected until re-submitted with explicit confirmation. 5. Non-matching requests now get `403 IP_NOT_ALLOWED`; lockout recovery goes through the Owner break-glass path.
+**F3 — Roll out an IP allowlist (P2).** 1. Admin adds CIDR entries with labels. 2. Sets mode `report_only`; traffic proceeds while would-block events accumulate. 3. Admin reviews the report (audit-log query, `audit-logs.md`). 4. Switches to `enforced`; if the admin's own IP doesn't match, the save is rejected until re-submitted with explicit confirmation. 5. Non-matching requests now get `403 IP_NOT_ALLOWED`; lockout recovery goes through the Owner break-glass path.
 
 **F4 — Create and rotate an API key (P2).** 1. Admin creates a key: name, scopes (UI offers only the creator's own permissions), optional expiry. 2. Secret displayed once with a copy control and a "you won't see this again" notice. 3. Later: rotate → new secret shown once, old secret valid for the overlap window, then rejected. 4. Revoke → key rejected immediately.
 
@@ -185,10 +185,10 @@ Emitted via the shared `record()` in the service ring, same transaction as the c
 
 ## Out of scope
 
-- MFA factor enrolment/enforcement mechanics — `2026-07-07-compliance-mfa.md` (this spec only reads enrolment status).
-- SSO/SCIM configuration and the Owner break-glass recovery mechanics — `2026-07-07-compliance-sso-identity.md`.
-- Export/bulk rate bounds — `2026-07-07-compliance-export-bulk-controls.md`.
-- Audit-log storage/query/export semantics — `2026-07-07-compliance-audit-logs.md`.
+- MFA factor enrolment/enforcement mechanics — `mfa.md` (this spec only reads enrolment status).
+- SSO/SCIM configuration and the Owner break-glass recovery mechanics — `sso-identity.md`.
+- Export/bulk rate bounds — `export-bulk-controls.md`.
+- Audit-log storage/query/export semantics — `audit-logs.md`.
 - Per-key IP pinning, key usage analytics, and anomaly detection (revisit post-GA).
 
 ## Open questions

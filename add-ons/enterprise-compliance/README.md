@@ -4,7 +4,7 @@
 
 Enterprise controls that make the product **compliance-ready** for customers pursuing SOC 2, ISO 27001, GDPR, and PDPA: access control, auditability, data protection, retention and deletion, recovery, and governance. The software provides the *controls and evidence*; certification itself is organisational work this add-on deliberately does not claim.
 
-This README is the durable SOP — the rules every change must honour once the add-on is adopted. The **buildable program** — per-area product requirements, flows, APIs, data models, and acceptance criteria — lives as specs under `specs/` (see the map at the bottom), per the repo's spec-first workflow.
+This README is the durable SOP — the rules every change must honour once the add-on is adopted. The **buildable program** — per-area product requirements, flows, APIs, data models, and acceptance criteria — ships with the add-on under `specs/` in this directory (see the map at the bottom), so keeping or deleting the add-on carries the whole program. When a project implements an area, that file is its feature spec: follow the repo's spec-first workflow against it (copy it into the top-level `specs/` first if the project prefers specs in one home).
 
 ## Approach
 
@@ -33,19 +33,19 @@ The active pack names: the SAML/OIDC library and session store; the MFA/WebAuthn
 
 ## Specification map
 
-The program index — shared conventions (event envelope, permission naming, org-policy model) and phasing — is `specs/2026-07-07-enterprise-compliance-controls.md`. Per-area specs:
+The program index — shared conventions (event envelope, permission naming, org-policy model) and phasing — is `specs/program-index.md`. Per-area specs:
 
 | Area | Spec |
 |---|---|
-| SSO & identity lifecycle (SAML/OIDC, SCIM, JIT) | `specs/2026-07-07-compliance-sso-identity.md` |
-| Multi-factor authentication | `specs/2026-07-07-compliance-mfa.md` |
-| Role-based access control | `specs/2026-07-07-compliance-rbac.md` |
-| Audit logs | `specs/2026-07-07-compliance-audit-logs.md` |
-| Data retention & deletion | `specs/2026-07-07-compliance-retention-deletion.md` |
-| Backup & disaster recovery (RTO/RPO) | `specs/2026-07-07-compliance-backup-dr.md` |
-| Encryption & key management | `specs/2026-07-07-compliance-encryption.md` |
-| Admin security controls | `specs/2026-07-07-compliance-admin-security.md` |
-| Export & bulk-action controls | `specs/2026-07-07-compliance-export-bulk-controls.md` |
-| Maker-checker workflows | `specs/2026-07-07-compliance-maker-checker.md` |
-| Privacy requests (DSAR) | `specs/2026-07-07-compliance-privacy-requests.md` |
-| Subprocessors & compliance documentation | `specs/2026-07-07-compliance-trust-transparency.md` |
+| SSO & identity lifecycle (SAML/OIDC, SCIM, JIT) | `specs/sso-identity.md` |
+| Multi-factor authentication | `specs/mfa.md` |
+| Role-based access control | `specs/rbac.md` |
+| Audit logs | `specs/audit-logs.md` |
+| Data retention & deletion | `specs/retention-deletion.md` |
+| Backup & disaster recovery (RTO/RPO) | `specs/backup-dr.md` |
+| Encryption & key management | `specs/encryption.md` |
+| Admin security controls | `specs/admin-security.md` |
+| Export & bulk-action controls | `specs/export-bulk-controls.md` |
+| Maker-checker workflows | `specs/maker-checker.md` |
+| Privacy requests (DSAR) | `specs/privacy-requests.md` |
+| Subprocessors & compliance documentation | `specs/trust-transparency.md` |

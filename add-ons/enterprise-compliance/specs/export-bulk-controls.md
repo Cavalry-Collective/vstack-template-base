@@ -1,6 +1,6 @@
 # Export & bulk-action controls — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -10,19 +10,19 @@ Gate every data exfiltration and mass mutation behind its own permission, org po
 
 1. Export is a separate permission per resource — `contacts:export`, `companies:export`, `deals:export`, `activities:export`, `notes:export` (per the RBAC catalog). Holding `read`/`update` never implies `export`.
 2. Every export is an asynchronous job: `POST …/exports` returns `201` with the job in status `pending`; clients poll the job resource. No endpoint streams an unbounded dataset synchronously.
-3. Supported formats: CSV and JSON. The artifact is stored **encrypted at rest in object storage** per `2026-07-07-compliance-encryption.md`, and is referenced by storage key — file bytes never live in the DB.
+3. Supported formats: CSV and JSON. The artifact is stored **encrypted at rest in object storage** per `encryption.md`, and is referenced by storage key — file bytes never live in the DB.
 4. Every artifact embeds a provenance manifest — a leading manifest row (CSV) or `manifest` object (JSON) carrying: exporting actor (type, id, display), organisation id, UTC timestamp, human-readable filter summary, and record count.
 5. Download happens only via a short-lived signed link (default expiry 24 h, org-configurable 1–72 h). Every link issuance and every download is audited.
 6. Export artifacts expire and are purged by a background job after a bounded TTL — default **7 days**, bounds 1–30 (the retention-deletion spec's blast-radius table relies on this bound). A purged export's job row remains as history in status `expired`.
 7. A failed job carries a `failure_reason`; a partial artifact is never downloadable.
 8. Org policy can additionally restrict export: to named roles (`export_allowed_role_ids`), by a per-export record cap (default 100,000; platform ceiling 1,000,000), and by a per-actor daily quota (default 25 jobs/UTC day). Violations are rejected at job creation and audited as denied.
-9. Bulk update and bulk delete are separate permissions per resource: `contacts:bulk_update` / `contacts:bulk_delete`, and likewise for `companies` and `deals`. Both verbs are registered in the RBAC permission catalog (`2026-07-07-compliance-rbac.md`).
+9. Bulk update and bulk delete are separate permissions per resource: `contacts:bulk_update` / `contacts:bulk_delete`, and likewise for `companies` and `deals`. Both verbs are registered in the RBAC permission catalog (`rbac.md`).
 10. Bulk actions are bounded: a server-enforced maximum matched-record count per intent (platform ceiling 10,000, validated; org policy may lower it). Requests matching more records are rejected, not truncated.
 11. Bulk actions require a mandatory server-computed **preview/confirm** step: the client creates a `bulk_action_intent` returning the exact matched count and a sample; execution happens only by confirming that intent id. **Chosen approach: the intent pins the matched record ids at preview time** (bounded by req. 10, so the pin is small); execution operates only on pinned ids, skipping records that were meanwhile deleted or moved out of scope and reporting the skipped count. (Rejected alternative: re-count at confirm within a tolerance — pinning eliminates filter drift entirely instead of bounding it.)
-12. Bulk delete is always **soft delete** — `deleted_at`/`deleted_by`, restorable via the recycle bin; lifecycle owned by `2026-07-07-compliance-retention-deletion.md`. No bulk hard-delete path exists.
+12. Bulk delete is always **soft delete** — `deleted_at`/`deleted_by`, restorable via the recycle bin; lifecycle owned by `retention-deletion.md`. No bulk hard-delete path exists.
 13. Per-actor bulk rate limit: default 20 intents/hour, org-configurable; store supplied by the active stack pack.
-14. Thresholds → approval: org policy may enable the maker-checker entries `export.large` and `bulk.delete.large` with record-count thresholds (`2026-07-07-compliance-maker-checker.md` owns the policy rows). Above threshold, the job/intent is captured as an approval request — `202`, status `pending_approval` — and executes only when approved.
-15. API-key actors (`2026-07-07-compliance-admin-security.md` scoped keys) pass the same permission, policy, cap, quota, and rate checks; quotas and rate limits count per actor, member or key.
+14. Thresholds → approval: org policy may enable the maker-checker entries `export.large` and `bulk.delete.large` with record-count thresholds (`maker-checker.md` owns the policy rows). Above threshold, the job/intent is captured as an approval request — `202`, status `pending_approval` — and executes only when approved.
+15. API-key actors (`admin-security.md` scoped keys) pass the same permission, policy, cap, quota, and rate checks; quotas and rate limits count per actor, member or key.
 16. Every creation, completion, failure, download, purge, execution, and **denial** is audited per the program envelope.
 
 ## User flows
@@ -184,7 +184,7 @@ When an action executed via approval, its event's `context` carries `approval_re
 ## Out of scope
 
 - Imports, scheduled/recurring exports, and export-completion webhooks.
-- The content and permissions of audit-log exports (`2026-07-07-compliance-audit-logs.md`) and DSAR packages (`2026-07-07-compliance-privacy-requests.md`) — they reuse this spec's job, storage, signed-link, and TTL mechanics only.
+- The content and permissions of audit-log exports (`audit-logs.md`) and DSAR packages (`privacy-requests.md`) — they reuse this spec's job, storage, signed-link, and TTL mechanics only.
 - Field-level export redaction/column selection beyond the resource's readable fields.
 - Bulk actions on non-CRM resources (members, roles, policies).
 - The recycle-bin UI and hard-delete lifecycle (retention-deletion spec).

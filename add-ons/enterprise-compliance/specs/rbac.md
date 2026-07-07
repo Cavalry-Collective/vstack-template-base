@@ -1,6 +1,6 @@
 # Role-based access control — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -16,9 +16,9 @@ Give every organisation a permission catalog, fixed least-privilege system roles
 6. Only an Owner may grant or revoke the Owner role.
 7. An actor can never grant, via role assignment or custom-role definition, a permission they do not themselves hold.
 8. Last-Owner protection: an organisation must always retain at least one active Owner. Removing/downgrading the last Owner (or deactivating that member) is rejected, race-safely (see Backend implementation requirements).
-9. Role and permission changes take effect on the next request: the member's permission cache entry is invalidated synchronously with the change. Nothing already granted is revoked retroactively — in-flight requests complete — except session-bound elevation (step-up grants from the MFA spec, `2026-07-07-compliance-mfa.md`), which is dropped immediately on role change.
+9. Role and permission changes take effect on the next request: the member's permission cache entry is invalidated synchronously with the change. Nothing already granted is revoked retroactively — in-flight requests complete — except session-bound elevation (step-up grants from the MFA spec, `mfa.md`), which is dropped immediately on role change.
 10. Every member can read their own effective permissions; the frontend uses that read to render or hide gated UI.
-11. All role mutations are audited (table below) and are maker-checker eligible: when the org's policy requires approval for role changes, the mutation routes through the shared approval flow (`2026-07-07-compliance-maker-checker.md`) instead of applying directly.
+11. All role mutations are audited (table below) and are maker-checker eligible: when the org's policy requires approval for role changes, the mutation routes through the shared approval flow (`maker-checker.md`) instead of applying directly.
 
 ### Permission catalog
 
@@ -26,13 +26,13 @@ Give every organisation a permission catalog, fixed least-privilege system roles
 |---|---|
 | `contacts`, `companies`, `deals` | `read`, `create`, `update`, `delete`, `export`, `bulk_update`, `bulk_delete` |
 | `activities`, `notes` | `read`, `create`, `update`, `delete`, `export` |
-| `records` | `restore`, `purge` — recycle-bin operations spanning record classes; semantics owned by `2026-07-07-compliance-retention-deletion.md` |
+| `records` | `restore`, `purge` — recycle-bin operations spanning record classes; semantics owned by `retention-deletion.md` |
 | `pipelines`, `custom_fields` | `read`, `create`, `update`, `delete` |
 | `members` | `read`, `invite`, `update`, `remove`, `mfa_reset` |
 | `roles` | `read`, `create`, `update`, `delete`, `assign` |
 | `org_policy` | `read`, `update` |
 | `audit_logs` | `read`, `export` |
-| `exports` | `read` (export *jobs*; creating one requires the per-resource `…:export` verb — see `2026-07-07-compliance-export-bulk-controls.md`) |
+| `exports` | `read` (export *jobs*; creating one requires the per-resource `…:export` verb — see `export-bulk-controls.md`) |
 | `api_keys` | `read`, `create`, `update`, `revoke` |
 | `approvals` | `read`, `decide` |
 | `privacy_requests` | `read`, `manage`, `execute` |
@@ -114,7 +114,7 @@ No sensitive columns; nothing encrypted or hashed here. Seeding the five system 
 - **Cache**: effective permissions may be cached per member (store supplied by the active stack pack). The role-mutation use cases invalidate the affected members' entries in the same use case, after commit; cache misses fall through to the DB. TTL as a backstop, bounded ≤ 5 minutes.
 - **Last-Owner race safety**: the downgrade/removal use case runs in one transaction that locks the org's Owner assignments (e.g. `SELECT … FOR UPDATE` on `member_roles` rows for the Owner role, or an equivalent DB-level constraint) before counting; two concurrent "remove Owner" requests cannot both pass the check. Constraint mechanics bound by the active stack pack's `db.md`.
 - **Idempotency**: `PUT …/members/{memberId}/roles` is a full replace — replaying it is a no-op; no-op replacements emit no audit event.
-- **Maker-checker hand-off**: when org policy requires approval, the use case creates the approval request via the shared approval port instead of mutating, per `2026-07-07-compliance-maker-checker.md`.
+- **Maker-checker hand-off**: when org policy requires approval, the use case creates the approval request via the shared approval port instead of mutating, per `maker-checker.md`.
 - No background jobs.
 
 ## Audit log events
@@ -192,8 +192,8 @@ Emitted via the shared `record()` in the service ring, same transaction as the c
 
 - **Record-level visibility (P3)** — team/ownership scoping of CRM records (a Member seeing only their own deals). Named here explicitly; a future spec revision owns it. Nothing in this spec's data model may preclude it, but nothing implements it.
 - Cross-organisation roles or platform-level (super-admin) roles.
-- Permission checks inside exports/bulk jobs beyond gating their creation (owned by `2026-07-07-compliance-export-bulk-controls.md`).
-- SCIM-driven role mapping (owned by `2026-07-07-compliance-sso-identity.md`).
+- Permission checks inside exports/bulk jobs beyond gating their creation (owned by `export-bulk-controls.md`).
+- SCIM-driven role mapping (owned by `sso-identity.md`).
 
 ## Open questions
 

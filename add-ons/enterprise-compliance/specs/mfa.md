@@ -1,6 +1,6 @@
 # Multi-factor authentication — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -16,10 +16,10 @@ Give every user a second authentication factor — TOTP (RFC 6238) now, WebAuthn
 6. In `required` mode, an unenrolled member may only reach the enrollment screen until enrolled; after the grace period (counted from when the policy became required or the member joined, whichever is later) all other API access returns `403 MFA_ENROLLMENT_REQUIRED`.
 7. Remember-this-device: after a successful challenge the user may opt in; the server issues a revocable device token (hashed server-side, HTTP-only cookie client-side) valid for the org-policy duration; a valid token skips the login challenge but **never** satisfies step-up; users and the server can revoke tokens at any time.
 8. Step-up verification: a reusable mechanism (shared controller guard + service check) other specs reference for sensitive actions — a fresh factor challenge marks the session step-up-verified for 10 minutes; guarded endpoints otherwise return `403 STEP_UP_REQUIRED`. Removing a factor, regenerating recovery codes, and revoking devices are themselves step-up-guarded.
-9. An org admin can reset a member's MFA (removes the user's factors, recovery codes, and trusted devices, forcing re-enrollment at next login); the action is audited and maker-checker eligible — when org policy marks it approval-required it routes through the shared approval flow (2026-07-07-compliance-maker-checker.md) instead of executing directly.
-10. SSO interaction: when `mfa_trust_idp_claim` is on, an SSO login whose assertion/token carries a verified MFA/AMR claim skips our challenge (no double challenge); without the claim, or with the switch off, SSO users are challenged like everyone else. See 2026-07-07-compliance-sso-identity.md.
+9. An org admin can reset a member's MFA (removes the user's factors, recovery codes, and trusted devices, forcing re-enrollment at next login); the action is audited and maker-checker eligible — when org policy marks it approval-required it routes through the shared approval flow (maker-checker.md) instead of executing directly.
+10. SSO interaction: when `mfa_trust_idp_claim` is on, an SSO login whose assertion/token carries a verified MFA/AMR claim skips our challenge (no double challenge); without the claim, or with the switch off, SSO users are challenged like everyone else. See sso-identity.md.
 11. Challenge attempts are rate-limited: 5 consecutive failures across factors/recovery codes lock MFA verification for that user for 15 minutes (counters in the stack pack's rate-limit store); lockout is audited and does not reveal which part was wrong.
-12. TOTP seeds are stored field-level encrypted (see 2026-07-07-compliance-encryption.md); recovery codes and device tokens are stored hashed; no secret ever appears in logs, audit payloads, or API reads.
+12. TOTP seeds are stored field-level encrypted (see encryption.md); recovery codes and device tokens are stored hashed; no secret ever appears in logs, audit payloads, or API reads.
 13. Enrollment, challenge outcomes (success/failure), lockout, resets, policy changes, and device-token lifecycle emit audit events per the table below.
 14. Ships behind a default-off platform flag per the index; the org policy switch governs tenant-visible enforcement so the flag flip alone never changes a tenant's posture.
 
@@ -31,7 +31,7 @@ Give every user a second authentication factor — TOTP (RFC 6238) now, WebAuthn
 
 **Trusted-device login.** 1. Enrolled user with a valid device token passes the primary credential. 2. Server validates the token hash and expiry, skips the challenge, issues the session. 3. Revoked/expired token → normal challenge (no error surfaced).
 
-**Step-up for a sensitive action.** 1. User invokes a step-up-guarded endpoint (e.g. an export per 2026-07-07-compliance-export-bulk-controls.md). 2. If the session's step-up window is stale, the API returns `403 STEP_UP_REQUIRED`; the frontend opens the shared re-verification dialog. 3. User completes a factor challenge at the step-up endpoint; the session is marked verified for 10 minutes. 4. Original call is retried and proceeds.
+**Step-up for a sensitive action.** 1. User invokes a step-up-guarded endpoint (e.g. an export per export-bulk-controls.md). 2. If the session's step-up window is stale, the API returns `403 STEP_UP_REQUIRED`; the frontend opens the shared re-verification dialog. 3. User completes a factor challenge at the step-up endpoint; the session is marked verified for 10 minutes. 4. Original call is retried and proceeds.
 
 **Recover with a recovery code.** 1. User lost the authenticator; chooses "use a recovery code" at the challenge. 2. Valid unused code → session issued, code consumed, audited; user is prompted to re-enroll and regenerate codes.
 
@@ -130,7 +130,7 @@ Reversible migrations per `db/CLAUDE.md`; snake_case, `created_at`/`updated_at`,
 | Factor/device id not found or not the caller's | 404 | `MFA_FACTOR_NOT_FOUND` / `TRUSTED_DEVICE_NOT_FOUND` |
 | Removing the last active factor while org mode is `required` | 409 | `LAST_FACTOR_REMOVAL_BLOCKED` |
 | Policy value outside declared bounds | 400 | `MFA_POLICY_OUT_OF_BOUNDS` |
-| MFA reset requiring approval (maker-checker) | 202 | not an error — approval-request envelope per 2026-07-07-compliance-maker-checker.md |
+| MFA reset requiring approval (maker-checker) | 202 | not an error — approval-request envelope per maker-checker.md |
 
 ## User stories & acceptance criteria
 
@@ -165,7 +165,7 @@ Reversible migrations per `db/CLAUDE.md`; snake_case, `created_at`/`updated_at`,
 - [ ] Registration and challenge ceremonies work alongside TOTP; sign-count regression is rejected. *Verify: integration tests with a software authenticator fake via the `WebAuthnVerifier` port — register, challenge succeeds, replay with regressed sign count returns `401 MFA_CODE_INVALID` and a failure event.*
 
 **S9 (P2)** — As an org admin using SSO, I want to trust the IdP's MFA claim, so that SSO users aren't double-challenged.
-- [ ] With `mfa_trust_idp_claim` on, an SSO login carrying a verified MFA claim skips the challenge; without the claim (or with the switch off) the challenge applies. *Verify: SSO-callback integration tests (per 2026-07-07-compliance-sso-identity.md stubs) across the four claim×switch combinations, asserting challenge vs. direct session.*
+- [ ] With `mfa_trust_idp_claim` on, an SSO login carrying a verified MFA claim skips the challenge; without the claim (or with the switch off) the challenge applies. *Verify: SSO-callback integration tests (per sso-identity.md stubs) across the four claim×switch combinations, asserting challenge vs. direct session.*
 
 ## UX & non-functional notes
 
@@ -176,9 +176,9 @@ Reversible migrations per `db/CLAUDE.md`; snake_case, `created_at`/`updated_at`,
 ## Out of scope
 
 - OTP over email/SMS as an MFA factor — deliberately excluded (recommend TOTP/WebAuthn only). If ever added, delivery uses the `otp-auth` add-on as the channel; the decision needs its own spec revision.
-- Admin session controls beyond MFA (session lifetime, IP allowlists) — 2026-07-07-compliance-admin-security.md.
-- The approval workflow mechanics — 2026-07-07-compliance-maker-checker.md.
-- Field-level encryption mechanics and key rotation — 2026-07-07-compliance-encryption.md.
+- Admin session controls beyond MFA (session lifetime, IP allowlists) — admin-security.md.
+- The approval workflow mechanics — maker-checker.md.
+- Field-level encryption mechanics and key rotation — encryption.md.
 - Passwordless login (passkey as the *only* factor).
 
 ## Open questions

@@ -85,15 +85,15 @@ Build order note: **audit-logs and RBAC first** — every other area depends on 
 
 | # | Area | File |
 |---|---|---|
-| 1 | SSO & identity lifecycle | `2026-07-07-compliance-sso-identity.md` |
-| 2 | Multi-factor authentication | `2026-07-07-compliance-mfa.md` |
-| 3 | Role-based access control | `2026-07-07-compliance-rbac.md` |
-| 4 | Audit logs | `2026-07-07-compliance-audit-logs.md` |
-| 5 | Data retention & deletion | `2026-07-07-compliance-retention-deletion.md` |
-| 6 | Backup & disaster recovery | `2026-07-07-compliance-backup-dr.md` |
-| 7 | Encryption & key management | `2026-07-07-compliance-encryption.md` |
-| 8 | Admin security controls | `2026-07-07-compliance-admin-security.md` |
-| 9 | Export & bulk-action controls | `2026-07-07-compliance-export-bulk-controls.md` |
-| 10 | Maker-checker workflows | `2026-07-07-compliance-maker-checker.md` |
-| 11 | Privacy requests (DSAR) | `2026-07-07-compliance-privacy-requests.md` |
-| 12 | Subprocessors & compliance documentation | `2026-07-07-compliance-trust-transparency.md` |
+| 1 | SSO & identity lifecycle | `sso-identity.md` |
+| 2 | Multi-factor authentication | `mfa.md` |
+| 3 | Role-based access control | `rbac.md` |
+| 4 | Audit logs | `audit-logs.md` |
+| 5 | Data retention & deletion | `retention-deletion.md` |
+| 6 | Backup & disaster recovery | `backup-dr.md` |
+| 7 | Encryption & key management | `encryption.md` |
+| 8 | Admin security controls | `admin-security.md` |
+| 9 | Export & bulk-action controls | `export-bulk-controls.md` |
+| 10 | Maker-checker workflows | `maker-checker.md` |
+| 11 | Privacy requests (DSAR) | `privacy-requests.md` |
+| 12 | Subprocessors & compliance documentation | `trust-transparency.md` |

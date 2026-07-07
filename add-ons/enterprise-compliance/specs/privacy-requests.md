@@ -1,6 +1,6 @@
 # Privacy requests (DSAR) — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -13,14 +13,14 @@ Give org admins a per-organisation registry and tooling to fulfil data-subject r
 1. Each organisation has a **privacy-request registry**. A request has a type — `access`, `portability`, `erasure`, `rectification`, `restriction` (covering objection) — and is linked to an identified subject.
 2. **Subject locate**: creating a request starts from a search across contacts by email, name, or phone that finds **all** matching records, including soft-deleted ones (via the retention spec's explicit `includeDeleted` capability). The matched record set is snapshotted on the request as the working scope.
 3. A request tracks **status** (`received → in_progress → completed | rejected`, plus `blocked_by_hold` for erasure), a **due date** (default 30 days from receipt per GDPR/PDPA; org-adjustable **downward only**), an **assignee** (a member), and a **completion evidence note**. Invalid transitions are rejected.
-4. **Access/portability** generate an asynchronous, machine-readable **package** (JSON + CSV) of every record referencing the subject. Packages are stored encrypted with an **expiring, audited download link**; storage, TTL, and link mechanics follow the export job conventions in `2026-07-07-compliance-export-bulk-controls.md`.
-5. **Erasure** first validates legal holds: if any matched record is under an active hold, the request enters `blocked_by_hold` and no data changes until the hold is released (see `2026-07-07-compliance-retention-deletion.md`). Otherwise an **erasure job** runs: subject-owned records (the contact and records that exist only about the subject) are hard-deleted through the retention spec's purge machinery; records that must persist for business integrity are **anonymised in place**.
+4. **Access/portability** generate an asynchronous, machine-readable **package** (JSON + CSV) of every record referencing the subject. Packages are stored encrypted with an **expiring, audited download link**; storage, TTL, and link mechanics follow the export job conventions in `export-bulk-controls.md`.
+5. **Erasure** first validates legal holds: if any matched record is under an active hold, the request enters `blocked_by_hold` and no data changes until the hold is released (see `retention-deletion.md`). Otherwise an **erasure job** runs: subject-owned records (the contact and records that exist only about the subject) are hard-deleted through the retention spec's purge machinery; records that must persist for business integrity are **anonymised in place**.
 6. **Anonymisation rule**: on a record that persists (e.g. a closed deal keeps its amounts, stage history, and ownership), every subject-identifying field is overwritten with an irreversible placeholder — a fixed label plus a random token generated for the request (e.g. name → `Erased subject a1b2c3`), never derived from the original value (no hashes of the original), and the record is stamped `anonymised_at`. Anonymisation is not reversible by anyone, including the vendor.
 7. Completed erasure adds the subject's identifiers to a per-org **suppression list**, stored as **salted hashes** (never plaintext). Imports and inbound syncs check the list and **skip matching rows, reporting them** in the import result — an erased subject cannot be silently resurrected.
 8. **Rectification** is fulfilled through normal record-edit flows; the registry records the request and its completion evidence — no parallel edit path.
 9. **Restriction/objection** sets a processing-restriction flag on the subject's matched records; while set, those records are excluded from exports, bulk actions, and outbound integrations. Applying/clearing the flag is audited.
 10. Completing any request emits **evidence** — who fulfilled it, what was done, when, and record counts — persisted on the request and mirrored in the audit trail, suitable for a regulator response.
-11. Running erasure requires `privacy_requests:execute` and is **maker-checker eligible** (see `2026-07-07-compliance-maker-checker.md`) where org policy demands approval.
+11. Running erasure requires `privacy_requests:execute` and is **maker-checker eligible** (see `maker-checker.md`) where org policy demands approval.
 12. Everything is org-scoped and permission-gated per the program index; denied attempts are audited.
 
 ## User flows
@@ -146,7 +146,7 @@ Per the program envelope, via the shared `record()` call. Erasure jobs audit per
 | Download link used after expiry | 410 | `DOWNLOAD_LINK_EXPIRED` |
 | Package build or link mint on an expired package | 409 | `PACKAGE_EXPIRED` |
 | Starting erasure while an erasure job for the request is running | 409 | `ERASURE_ALREADY_RUNNING` |
-| Erasure guarded by org policy is captured as an approval request instead of executing | 202 | `APPROVAL_REQUIRED` — not an error: the body is the pending-approval resource per `2026-07-07-compliance-maker-checker.md` |
+| Erasure guarded by org policy is captured as an approval request instead of executing | 202 | `APPROVAL_REQUIRED` — not an error: the body is the pending-approval resource per `maker-checker.md` |
 | Request, package, or suppression entry not found | 404 | `RESOURCE_NOT_FOUND` |
 | Subject search with no search field supplied / malformed body | 400 | `VALIDATION_FAILED` |
 
@@ -200,7 +200,7 @@ Per the program envelope, via the shared `record()` call. Erasure jobs audit per
 - Consent management, cookie banners, and lawful-basis tracking.
 - Vendor-level DSARs from our own members beyond the account-settings link noted above.
 - Identity verification of the subject — the controller verifies identity before registering the request.
-- Deletion mechanics themselves (grace, purge, holds, blast radius) — owned by `2026-07-07-compliance-retention-deletion.md`.
+- Deletion mechanics themselves (grace, purge, holds, blast radius) — owned by `retention-deletion.md`.
 
 ## Open questions
 

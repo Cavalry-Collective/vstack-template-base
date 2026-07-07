@@ -1,6 +1,6 @@
 # Audit logs — enterprise compliance controls
 
-> Part of the enterprise-compliance program — shared conventions and phasing: 2026-07-07-enterprise-compliance-controls.md. Status: proposed.
+> Part of the enterprise-compliance program — shared conventions and phasing: program-index.md. Status: proposed.
 
 ## Goal
 
@@ -14,10 +14,10 @@ Provide the program's spine: one append-only, per-organisation audit store imple
 4. Denied and failed attempts are recorded, not only successes. **Convention (binding on all area specs):** a denied attempt is recorded under the *attempted* action with `outcome: denied`; a failed one with `outcome: failure`. This is what the index's "…denied audit event" refers to — the action name itself does not fork.
 5. An admin audit viewer lists events filtered by actor, action prefix, target, outcome, and date range, with a detail drawer showing the full envelope including the before/after diff. Gated by `audit_logs:read`.
 6. Reading audit logs is itself audited **at the search level, not per row**: one `audit.events.viewed` event per executed query or detail read — never one event per returned row.
-7. A filtered range can be exported asynchronously to CSV or JSON, gated by `audit_logs:export`; the export itself is audited (`audit.events.exported`). Job mechanics (job resource, status polling, object-storage delivery, size/rate bounds) follow `2026-07-07-compliance-export-bulk-controls.md`; this spec defines only the audit-specific parameters.
+7. A filtered range can be exported asynchronously to CSV or JSON, gated by `audit_logs:export`; the export itself is audited (`audit.events.exported`). Job mechanics (job resource, status polling, object-storage delivery, size/rate bounds) follow `export-bulk-controls.md`; this spec defines only the audit-specific parameters.
 8. Audit-event retention is org-configurable and **governed by this spec** (the retention-deletion spec governs CRM data, not audit events): default **400 days**, compliance floor **90 days**, maximum **2,555 days (7 years)**. A background purge job is the only deletion path; it hard-deletes events older than the org's horizon in batches.
 9. The events listing uses **cursor pagination** (documented per-endpoint decision per the backend contract): an offset `COUNT` per request is impractical at audit volume.
-10. `organisation_id` is nullable **only** for platform-scope events (operator actions defined in `2026-07-07-compliance-trust-transparency.md`); platform-scope events never appear in tenant queries.
+10. `organisation_id` is nullable **only** for platform-scope events (operator actions defined in `trust-transparency.md`); platform-scope events never appear in tenant queries.
 
 ## User flows
 
@@ -54,7 +54,7 @@ All under `/internal/v1/organisations/{organisationId}/…`; base error envelope
 | POST | `…/audit-events/exports` | `audit_logs:export` | Start an async export. Body: `format` (`csv` \| `json`) + the same filters as the list. Returns `201` with the job in status `pending`. Job resource shape per the export-controls spec. |
 | GET | `…/audit-events/exports/{exportId}` | `audit_logs:export` | Poll the job: `status` (`pending` \| `running` \| `completed` \| `failed`), `downloadUrl` (short-lived, only when `completed`), row count. |
 
-The retention setting is a key (`audit_retention_days`) on the shared org-policy resource (`…/policies`, endpoints owned by `2026-07-07-compliance-admin-security.md`), permission `org_policy:update`; this spec owns its bounds and default.
+The retention setting is a key (`audit_retention_days`) on the shared org-policy resource (`…/policies`, endpoints owned by `admin-security.md`), permission `org_policy:update`; this spec owns its bounds and default.
 
 ## Data model changes
 
