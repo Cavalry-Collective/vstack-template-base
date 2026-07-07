@@ -4,6 +4,8 @@
 
 The "data" of a docs-only capability is the structured content of its documents. This model **extends** 003's — nothing below renumbers or redefines an existing ID.
 
+> **Historical record:** the Pack Binding Entry and Adoption Choice Point deltas below were later relocated — bindings live in `add-ons/seo/bindings.md`, and the registry row (removed by the folder-isolation relocation, later restored by a consistency review) states the capability only. See [quickstart.md](quickstart.md)'s notes.
+
 ## Entity: Add-on Guidance Document (delta)
 
 `add-ons/seo/README.md`, extended in place.

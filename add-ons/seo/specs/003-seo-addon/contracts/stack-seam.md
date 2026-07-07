@@ -1,6 +1,6 @@
 # Contract: Stack Seam (add-on ⇄ stack packs)
 
-**Consumers**: stack-pack authors (the three shipped packs now; future packs via `stacks/README.md` step 4).
+**Consumers**: stack-pack authors (the shipped packs — four since `vercel-ssr`; future packs via `stacks/README.md` step 4).
 **Provider**: the *Binds to a stack* section of `add-ons/seo/README.md`.
 
 ## The seam

@@ -47,22 +47,23 @@ Read the unbound declaration in `add-ons/seo/bindings.md` (the `taro-fastify-mys
 
 **A6 — Registry row tracks the expansion** (FR-015)
 
-> **Superseded by the folder-isolation relocation:** the registry row was removed on purpose — the add-on's footprint is its directory, and the boundary + S1–S10 seam now read from `add-ons/seo/README.md` alone.
+> **Superseded by the folder-isolation relocation:** the registry row was removed on purpose — the add-on's footprint is its directory, and the boundary + S1–S10 seam now read from `add-ons/seo/README.md` alone. *(A later consistency review restored the row in `add-ons/README.md` — the Day-1 registry lists every shipped add-on — stating the capability only; the seam detail still reads from this add-on's own files.)*
 
 ```bash
 grep -n "S1–S10" add-ons/seo/README.md
 ```
 
-Expect (post-relocation): the seam span reads from the add-on's own README; `add-ons/README.md` carries no `seo/` row.
+Expect: the seam span reads from the add-on's own README; `add-ons/README.md`'s restored `seo/` row states the capability and points at `bindings.md`, nothing more.
 
 **A7 — No stale exclusion anywhere** (FR-015, SC-002)
 
 ```bash
 grep -rn "keyword strategy, paid search, rank tracking" --include="*.md" . \
-  | grep -v "add-ons/seo/specs/003-seo-addon" | grep -v "add-ons/seo/specs/004-seo-structural-expansion"
+  | grep -v "add-ons/seo/specs/003-seo-addon" | grep -v "add-ons/seo/specs/004-seo-structural-expansion" \
+  | grep -v "add-ons/seo/README.md"   # its boundary sentence names the four areas as structurally IN scope — not a stale exclusion
 ```
 
-Expect: zero hits claiming the four areas are out of scope (historical spec records exempt).
+Expect: zero hits claiming the four areas are out of scope (historical spec records and the add-on's own boundary sentence exempt).
 
 **A8 — Size discipline** (FR-013, SC-003)
 
