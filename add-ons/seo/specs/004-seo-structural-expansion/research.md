@@ -1,6 +1,6 @@
 # Phase 0 Research: SEO Add-on — Structural Expansion
 
-**Feature**: `004-seo-structural-expansion` · **Date**: 2026-07-07 · **Input**: [spec.md](spec.md), shipped `add-ons/seo/README.md` (R1–R11, S1–S7, G1–G3), `specs/003-seo-addon/` design artifacts
+**Feature**: `004-seo-structural-expansion` · **Date**: 2026-07-07 · **Input**: [spec.md](spec.md), shipped `add-ons/seo/README.md` (R1–R11, S1–S7, G1–G3), `add-ons/seo/specs/003-seo-addon/` design artifacts
 
 The open judgments behind the spec, resolved as decisions. D1, D4, D8 restate what `/speckit-clarify` ratified (they anchor the rest); D2 resolves the item clarify deferred to planning.
 

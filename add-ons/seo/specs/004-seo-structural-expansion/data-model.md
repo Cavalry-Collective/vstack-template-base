@@ -1,6 +1,6 @@
 # Phase 1 Data Model: SEO Add-on — Structural Expansion
 
-**Feature**: `004-seo-structural-expansion` · **Date**: 2026-07-07 · **Input**: [spec.md](spec.md), [research.md](research.md), `specs/003-seo-addon/data-model.md` (defines R1–R11, S1–S7, G1–G3)
+**Feature**: `004-seo-structural-expansion` · **Date**: 2026-07-07 · **Input**: [spec.md](spec.md), [research.md](research.md), `add-ons/seo/specs/003-seo-addon/data-model.md` (defines R1–R11, S1–S7, G1–G3)
 
 The "data" of a docs-only capability is the structured content of its documents. This model **extends** 003's — nothing below renumbers or redefines an existing ID.
 

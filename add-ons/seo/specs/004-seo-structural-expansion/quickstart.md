@@ -29,10 +29,12 @@ Read the *Verify by observing* section: each of R12–R20 referenced exactly onc
 
 **A4 — Bound packs answer S8–S10** (FR-014, SC-005)
 
+> Binding home relocated after 004 shipped: pack stances live in `add-ons/seo/bindings.md`, one section per pack, not in the packs' own files.
+
 ```bash
 for pack in vercel vercel-ssr nextjs-nestjs-postgres; do
   for id in S8 S9 S10; do
-    grep -q "\*\*${id}\b" "stacks/${pack}/frontend.md" && echo "ok  ${pack} ${id}" || echo "MISSING ${pack} ${id}"
+    sed -n "/^## ${pack} /,/^## /p" add-ons/seo/bindings.md | grep -q "\*\*${id}\b" && echo "ok  ${pack} ${id}" || echo "MISSING ${pack} ${id}"
   done
 done
 ```
@@ -41,21 +43,23 @@ Expect: 9 × `ok`.
 
 **A5 — Unbound pack declaration still accurate** (FR-014)
 
-Read the unbound-declaration blockquote in `stacks/taro-fastify-mysql-tencent/README.md` against the expanded add-on: reason (S1 unmeetable), workable alternative, residual refuse-indexing posture — all still true (research D9). Extend only if wording no longer holds.
+Read the unbound declaration in `add-ons/seo/bindings.md` (the `taro-fastify-mysql-tencent — unbound` section) against the expanded add-on: reason (S1 unmeetable), workable alternative, residual refuse-indexing posture — all still true (research D9). Extend only if wording no longer holds.
 
 **A6 — Registry row tracks the expansion** (FR-015)
 
+> **Superseded by the folder-isolation relocation:** the registry row was removed on purpose — the add-on's footprint is its directory, and the boundary + S1–S10 seam now read from `add-ons/seo/README.md` alone.
+
 ```bash
-grep -n "seo" add-ons/README.md
+grep -n "S1–S10" add-ons/seo/README.md
 ```
 
-Expect: the `seo/` row's capability wording reflects the new boundary and the pack-supplies cell spans **S1–S10**.
+Expect (post-relocation): the seam span reads from the add-on's own README; `add-ons/README.md` carries no `seo/` row.
 
 **A7 — No stale exclusion anywhere** (FR-015, SC-002)
 
 ```bash
 grep -rn "keyword strategy, paid search, rank tracking" --include="*.md" . \
-  | grep -v "specs/003-seo-addon" | grep -v "specs/004-seo-structural-expansion"
+  | grep -v "add-ons/seo/specs/003-seo-addon" | grep -v "add-ons/seo/specs/004-seo-structural-expansion"
 ```
 
 Expect: zero hits claiming the four areas are out of scope (historical spec records exempt).
@@ -70,7 +74,7 @@ Expect: ≤ ~110 lines (hard ceiling well under 150 — clarification 3, researc
 
 **A9 — Agnostic wording** (FR-013, SC-003)
 
-Read the diff of `add-ons/seo/README.md`: no framework, SDK, vendor, cloud, or vendor-metric names (the three loading-experience axes described generically — research D5). Root `README.md` and `CLAUDE.md` add-on mentions still true (no edit expected).
+Read the diff of `add-ons/seo/README.md`: no framework, SDK, vendor, cloud, or vendor-metric names (the three loading-experience axes described generically — research D5). Root `README.md` and `CLAUDE.md` carry no seo mentions (removed by the folder-isolation relocation — the footprint is this directory).
 
 ## Part B — project-level checks (documented for instantiated apps)
 

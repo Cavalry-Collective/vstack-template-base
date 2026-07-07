@@ -9,7 +9,7 @@ Binds `apps/frontend/CLAUDE.md` to **Next.js (App Router, TypeScript)** — the 
 - **App Router under `src/app/`**, TypeScript. A file is a Server Component unless it opens `'use client'`; place the directive at the smallest interaction leaf — never on a page/layout "to be safe".
 - **Data flow is function calls, not HTTP.** Server Components read by importing a module's `controller/queries.ts`; client components mutate by invoking its `controller/actions.ts` Server Actions. No internal REST API, no fetch wrapper, and no react-query/SWR (add a client cache library only when client-side invalidation needs genuinely appear). See the conflict register.
 - **State: React Context providers under `src/store/`** — one provider per domain, seeded with server-fetched data passed down from Server Components. After a successful mutation the action calls `revalidatePath`/`revalidateTag` (or the client calls `router.refresh()`), so the seeded provider re-hydrates from fresh server data. Pack decision — rejected alternative: an external store library (Redux/Zustand); context + props cover this architecture's client-state needs.
-- **Authenticated screens are dynamically rendered by construction** (they read the session cookie); don't fight that with route-level cache tuning. Static/ISR rendering is for the public indexable surface (see the seo bindings).
+- **Authenticated screens are dynamically rendered by construction** (they read the session cookie); don't fight that with route-level cache tuning. Static/ISR rendering is for the public indexable surface.
 
 ## Folder mapping (base `src/` shape → App Router)
 
@@ -73,20 +73,6 @@ Enable both on the Vercel project in the dashboard. This is the frontend half of
 ## Security headers (binding)
 
 The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`next.config` `async headers()`**: emit `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and a **`Content-Security-Policy-Report-Only`** to start. Allow-list the origins this app actually loads — the Vercel Analytics / Speed Insights endpoints and any payment drop-in or embed — then promote to the enforcing `Content-Security-Policy` once violation reports are clean.
-
-## Add-on bindings (if adopted)
-
-- **seo** (`add-ons/seo/`) — bound, per seam item. Full-stack Next.js is this add-on's best case: an indexable route is complete without client JS **by construction** — Server Components render the full HTML — provided its content never moves into a `'use client'` leaf.
-  - **S1** rendering: Server Components render indexable routes complete on the server (by construction, above); static-generate where the data allows.
-  - **S2** metadata: one shared helper (`src/lib/seo.ts`) called from each indexable page's `generateMetadata()` — unique title/description, share-preview (Open Graph) tags incl. the share image, and the canonical as an absolute URL built from `metadataBase`; copy lives in the i18n dictionaries / strings module per the base rule.
-  - **S3** canonical origin + redirects: `metadataBase` comes from the validated canonical-origin config key, never the incoming request; host aliases, trailing slash, and moved pages are `next.config` `redirects()` entries with `permanent: true` — server-issued, never a client-side bounce.
-  - **S4** sitemap/robots: `app/sitemap.ts` + `app/robots.ts`, generated from the routes module's indexable entries (plus entity data for parameterized routes) — never a hand-kept URL list; the classification lives on each `routes` link-helper entry as an indexable flag, keeping the registry the single audit surface. Non-production is never indexable, fail closed: `app/robots.ts` answers disallow-all unless the deployed environment is production (`VERCEL_ENV === 'production'` — environment config, not request inference), and a test asserts the non-production branch (gate G3).
-  - **S5** missing entity: `notFound()` → a real 404 status via `not-found.tsx`, not a 200 error UI.
-  - **S6** structured data: one shared JSON-LD component fed by the page's own data.
-  - **S7** locale alternates: a multilingual page declares `alternates.languages` (hreflang) from the same locale set the dictionaries define.
-  - **S8** intent record + inventory: each indexable entry in the routes module carries its target-intent phrase (per locale); a route handler (e.g. `app/page-intents.json/route.ts`) serves the derived page↔intent pairs the same way `app/sitemap.ts` derives the sitemap — generated, never hand-kept.
-  - **S9** ownership verification: a validated env key (e.g. `SEARCH_CONSOLE_VERIFICATION_TOKEN`) feeds the root layout's Metadata API `verification` field — absent key, absent tag.
-  - **S10** budget + measurement: a checked-in per-route payload budget asserted in CI against `next build` output (gate G6); the three loading-experience axes are the Core Web Vitals (LCP, INP, CLS) — Lighthouse for lab runs, Vercel Speed Insights for field data (already CSP-allow-listed above).
 
 ## Testing — typecheck + build + Playwright e2e
 

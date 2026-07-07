@@ -9,7 +9,7 @@ A pack MUST take exactly one of two stances, and the stance MUST be determinable
 
 ### Stance A — bound
 
-Home: the pack's `frontend.md`, under `## Add-on bindings (if adopted)`, entry `**seo**`.
+Home: `add-ons/seo/bindings.md`, section `## <pack> — bound`. (Originally the pack's `frontend.md` `## Add-on bindings (if adopted)` entry; relocated so the add-on's whole footprint lives in its own directory.)
 Format: one short line per seam item, **keyed by S-id** so completeness is greppable:
 
 | ID | The pack must name | Answer form (example shape, not content) |
@@ -26,9 +26,9 @@ Rules: additions-only (never restate the base or the add-on); no project-specifi
 
 ### Stance B — unbound-declared
 
-Home: the pack's manifest `README.md` (per `stacks/README.md` step 4).
+Home: `add-ons/seo/bindings.md`, section `## <pack> — unbound`. (Originally the pack's manifest `README.md` per `stacks/README.md` step 4; relocated with Stance A.)
 Must contain: (1) **which seam item(s) are unmeetable and why** (e.g. S1: client-only rendering); (2) **the workable alternative** for a project that grows a public surface; (3) **the residual posture** — a publicly reachable origin that shouldn't appear in search results still serves the refuse-indexing response (R10 posture survives unbinding).
 
 ## Compliance check
 
-For each pack directory under `stacks/`: grep its files for `add-ons/seo`. Exactly one stance present; if Stance A, all of S1–S6 present (S7 present or explicitly n/a). Anything else = FR-012 violation.
+For each pack directory under `stacks/`: grep `add-ons/seo/bindings.md` for a section named after the pack. Exactly one stance present; if Stance A, all of S1–S6 present (S7 present or explicitly n/a). Anything else = FR-012 violation.

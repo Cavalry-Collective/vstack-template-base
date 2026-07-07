@@ -6,7 +6,7 @@
 
 ## Stance A — bound (extended)
 
-Home unchanged: the pack's `frontend.md`, under `## Add-on bindings (if adopted)`, entry `**seo**`.
+Home unchanged from the 003 contract: `add-ons/seo/bindings.md`, section `## <pack> — bound`.
 Format unchanged: one short line per seam item, **keyed by S-id**. Three items join:
 
 | ID | The pack must name | Answer form (example shape, not content) |
@@ -19,8 +19,8 @@ Rules unchanged: additions-only; no project-specific values; concrete vendor met
 
 ## Stance B — unbound-declared (accuracy re-scoped)
 
-Home unchanged: the pack's manifest `README.md`. The declaration MUST remain accurate against the **expanded** add-on: with no indexable surface the new rules attach to nothing, so the residual posture remains the refuse-indexing response (R10). If the existing wording already holds, no edit is required — accuracy, not enumeration, is the obligation (research D9).
+Home unchanged from the 003 contract: `add-ons/seo/bindings.md`, section `## <pack> — unbound`. The declaration MUST remain accurate against the **expanded** add-on: with no indexable surface the new rules attach to nothing, so the residual posture remains the refuse-indexing response (R10). If the existing wording already holds, no edit is required — accuracy, not enumeration, is the obligation (research D9).
 
 ## Compliance check
 
-For each pack directory under `stacks/`: grep its files for `add-ons/seo`. Exactly one stance present. If Stance A: all of S1–S6 and S8–S10 present (S7 present or explicitly n/a). If Stance B: reason + alternative + residual posture, still true of the expanded doc. Anything else = FR-014 violation. Four packs; zero silent (SC-005).
+For each pack directory under `stacks/`: grep `add-ons/seo/bindings.md` for a section named after the pack. Exactly one stance present. If Stance A: all of S1–S6 and S8–S10 present (S7 present or explicitly n/a). If Stance B: reason + alternative + residual posture, still true of the expanded doc. Anything else = FR-014 violation. Four packs; zero silent (SC-005).

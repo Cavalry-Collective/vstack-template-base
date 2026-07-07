@@ -2,7 +2,7 @@
 
 **Branch**: `004-seo-structural-expansion` | **Date**: 2026-07-07 | **Spec**: [spec.md](spec.md)
 
-**Input**: Feature specification from `/specs/004-seo-structural-expansion/spec.md`, with three clarifications ratified 2026-07-07 (spec *Clarifications*): the `003-seo-addon` exclusion is reversed (structural work of keyword strategy, paid search, rank tracking, and page-speed ranking factors in scope; the ongoing practice of each out); day-1 gates are exactly the registry-derivable checks plus the payload budget; the expansion stays in the single existing document, trimmed to fit.
+**Input**: Feature specification from `/add-ons/seo/specs/004-seo-structural-expansion/spec.md`, with three clarifications ratified 2026-07-07 (spec *Clarifications*): the `003-seo-addon` exclusion is reversed (structural work of keyword strategy, paid search, rank tracking, and page-speed ranking factors in scope; the ongoing practice of each out); day-1 gates are exactly the registry-derivable checks plus the payload budget; the expansion stays in the single existing document, trimmed to fit.
 
 ## Summary
 
@@ -12,7 +12,7 @@ Extend the shipped SEO add-on's shared ID vocabulary with the structural half of
 
 **Language/Version**: English Markdown (GitHub-flavored) instruction files; no programming language.
 
-**Primary Dependencies**: None installable. Governing contracts: `add-ons/README.md` (add-on invariants), `stacks/README.md` (pack invariants, bind-or-declare step 4), root `CLAUDE.md` (precedence, principles), the shipped `add-ons/seo/README.md` (the R/S/G/O vocabulary this feature extends), `specs/003-seo-addon/` design artifacts (ID definitions).
+**Primary Dependencies**: None installable. Governing contracts: `add-ons/README.md` (add-on invariants), `stacks/README.md` (pack invariants, bind-or-declare step 4), root `CLAUDE.md` (precedence, principles), the shipped `add-ons/seo/README.md` (the R/S/G/O vocabulary this feature extends), `add-ons/seo/specs/003-seo-addon/` design artifacts (ID definitions).
 
 **Storage**: N/A — git-tracked markdown.
 
@@ -53,7 +53,7 @@ Extend the shipped SEO add-on's shared ID vocabulary with the structural half of
 ### Documentation (this feature)
 
 ```text
-specs/004-seo-structural-expansion/
+add-ons/seo/specs/004-seo-structural-expansion/
 ├── spec.md              # Feature specification (/speckit-specify + /speckit-clarify)
 ├── plan.md              # This file
 ├── research.md          # Phase 0: decisions D1–D9
@@ -90,7 +90,7 @@ README.md                              # VERIFY ONLY: folder table + Day-1 step 
 CLAUDE.md                              # VERIFY ONLY: repo-map add-on list wording still true
 ```
 
-**Structure Decision**: Extend in place — the same file set 003 shipped, plus the registry row whose seam range changes. One document absorbs the expansion (clarification 3); no new files outside `specs/004-seo-structural-expansion/`.
+**Structure Decision**: Extend in place — the same file set 003 shipped, plus the registry row whose seam range changes. One document absorbs the expansion (clarification 3); no new files outside `add-ons/seo/specs/004-seo-structural-expansion/`.
 
 ## Phase 0 → 1 outcomes
 

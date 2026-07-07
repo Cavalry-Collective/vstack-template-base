@@ -8,7 +8,7 @@ One **full-stack Next.js** app (App Router, TypeScript) owning both the UI and t
 
 | Appendix | Binds onto | Scope |
 |---|---|---|
-| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router UI, queries/actions data flow, Tailwind 4 + Radix, four-states mapping, seo add-on bindings |
+| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router UI, queries/actions data flow, Tailwind 4 + Radix, four-states mapping |
 | `backend.md` | `apps/backend/CLAUDE.md` (relocated Day-1 — see below) | the onion under `src/server/`, the queries/actions controller edge, composition root, aspects, test-mode / otp-auth / llm-calls bindings |
 | `db.md` | `db/CLAUDE.md` + repo ring | node-pg-migrate (real up/down pairs), `pg` query layer, serverless pooling against Neon |
 | `infra.md` | `infra/CLAUDE.md` | Vercel Terraform provider, single-project workload shape, deploy seam |
@@ -52,7 +52,7 @@ pnpm migrate     # node-pg-migrate up (rollback: pnpm migrate:down)
 
 ## Add-ons
 
-Bindings for the shipped add-ons live in the appendices: **test-mode**, **otp-auth**, and **llm-calls** in `backend.md`; **seo** in `frontend.md` (full-stack Next.js is that add-on's best case — indexable routes are server-rendered by construction).
+Bindings for the shipped add-ons live in the appendices: **test-mode**, **otp-auth**, and **llm-calls** in `backend.md`. An add-on that carries its own bindings file names this pack there instead.
 
 ## Deploy seam
 

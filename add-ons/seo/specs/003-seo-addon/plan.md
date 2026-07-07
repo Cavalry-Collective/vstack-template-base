@@ -2,7 +2,7 @@
 
 **Branch**: `003-seo-addon` | **Date**: 2026-07-07 | **Spec**: [spec.md](spec.md)
 
-**Input**: Feature specification from `/specs/003-seo-addon/spec.md`, plus the user's planning directive: the first implementation (currently uncommitted in the working tree) "is poorly implemented" — this plan defines the redo. Amended 2026-07-07 for the spec refinement that ratified the scope boundary (spec *Scope* section, FR-014, SC-006): structural work only; keyword strategy, paid search, rank tracking, and page-speed ranking factors are out of scope.
+**Input**: Feature specification from `/add-ons/seo/specs/003-seo-addon/spec.md`, plus the user's planning directive: the first implementation (currently uncommitted in the working tree) "is poorly implemented" — this plan defines the redo. Amended 2026-07-07 for the spec refinement that ratified the scope boundary (spec *Scope* section, FR-014, SC-006): structural work only; keyword strategy, paid search, rank tracking, and page-speed ranking factors are out of scope.
 
 ## Summary
 
@@ -53,7 +53,7 @@ Rework the SEO add-on so its quality is *mechanically auditable* instead of revi
 ### Documentation (this feature)
 
 ```text
-specs/003-seo-addon/
+add-ons/seo/specs/003-seo-addon/
 ├── spec.md              # Feature specification (/speckit-specify)
 ├── plan.md              # This file
 ├── research.md          # Phase 0: critique C1–C10, decisions D1–D8
@@ -92,7 +92,7 @@ README.md                              # folder table + Day-1 step 6 (kept; veri
 CLAUDE.md                              # repo-map add-on list (kept; verify)
 ```
 
-**Structure Decision**: Same file set as the first attempt — the redo replaces content in place (all of it uncommitted), so no migration or dual state exists. No new files outside `specs/003-seo-addon/`.
+**Structure Decision**: Same file set as the first attempt — the redo replaces content in place (all of it uncommitted), so no migration or dual state exists. No new files outside `add-ons/seo/specs/003-seo-addon/`.
 
 ## Phase 0 → 1 outcomes
 

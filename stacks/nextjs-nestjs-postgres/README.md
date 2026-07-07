@@ -6,7 +6,7 @@ Frontend **Next.js** (App Router, server-first) · Backend **NestJS** · DB **Po
 
 | Appendix | Binds onto | Scope |
 |---|---|---|
-| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router, server-first rendering, four-states mapping, form-factor rule, SEO bindings |
+| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router, server-first rendering, four-states mapping, form-factor rule |
 | `backend.md` | `apps/backend/CLAUDE.md` | NestJS module/provider → onion mapping, Zod validation, JS Babel decorator setup |
 | `db.md` | `db/CLAUDE.md` + repo ring | Prisma schema, migrations (`migrations.path → ../db/migrations`), client wiring |
 

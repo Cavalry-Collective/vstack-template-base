@@ -31,24 +31,26 @@ grep -inE 'next\.?js|react|vue|radix|tailwind|vercel|tencent|taro|fastify|nest|p
 
 ### A3. Every shipped pack takes exactly one stance (contract: stack-seam)
 
+> Binding home relocated after 003 shipped: pack stances live in `add-ons/seo/bindings.md`, one section per pack, not in the packs' own files.
+
 ```bash
-for p in stacks/*/; do echo "== $p"; grep -rl 'add-ons/seo' "$p" || echo "SILENT — FR-012 violation"; done
-grep -o 'S[1-7]' stacks/vercel/frontend.md | sort -u                 # bound: S1..S7 (or S7 n/a stated)
-grep -o 'S[1-7]' stacks/nextjs-nestjs-postgres/frontend.md | sort -u # bound: S1..S7
-grep -i 'unbound' stacks/taro-fastify-mysql-tencent/README.md        # unbound-declared, with reason
+for p in stacks/*/; do n=$(basename "$p"); grep -q "^## ${n}" add-ons/seo/bindings.md && echo "ok ${n}" || echo "SILENT — FR-012 violation: ${n}"; done
+grep -o 'S[1-7]' add-ons/seo/bindings.md | sort -u   # bound sections: S1..S7 (or S7 n/a stated)
+grep -i 'unbound' add-ons/seo/bindings.md            # Taro section declares unbound, with reason
 ```
 
-**Expected**: no pack silent; both Next packs answer every seam id; Taro manifest declares unbound with reason + alternative + residual refuse-indexing posture.
+**Expected**: no pack silent; the Next pack sections answer every seam id; the Taro section declares unbound with reason + alternative + residual refuse-indexing posture.
 
 ### A4. All four adoption choice points enumerate the add-on
 
+> **Superseded by the folder-isolation relocation:** the add-on's whole footprint now lives in `add-ons/seo/` — the registry row and root-file mentions were removed on purpose, and adoption is keeping the directory (the root `CLAUDE.md` add-on mechanism picks up every kept directory). 003's original expectation below no longer holds.
+
 ```bash
-grep -n 'seo' add-ons/README.md | head -5        # registry table row
-grep -n 'SEO\|`seo`' README.md                    # folder table + Day-1 step 6
-grep -n 'SEO' CLAUDE.md                           # root repo map
+test -d add-ons/seo && echo OK                    # adoption is keeping this directory
+grep -n 'SEO\|`seo`' CLAUDE.md README.md add-ons/README.md
 ```
 
-**Expected**: a hit at each of the four locations (two are in root `README.md`).
+**Expected (post-relocation)**: `OK`; the grep finds no seo-specific mentions outside the folder.
 
 ### A5. Document-contract review (human, ~5 minutes)
 

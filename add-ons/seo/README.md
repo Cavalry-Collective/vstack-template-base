@@ -1,6 +1,6 @@
 # Add-on: seo
 
-> Optional add-on. Opt in at Day-1 by keeping this directory (see `add-ons/README.md`). Agnostic approach; the active stack pack binds seam items S1–S10 below — or declares itself unbound in its manifest.
+> Optional add-on. Opt in at Day-1 by keeping this directory (see `add-ons/README.md`). Agnostic approach; the adopted stack pack's answers to seam items S1–S10 below — or its unbound declaration — live in `bindings.md` beside this file, so the add-on's whole footprint stays in this directory. The Spec Kit records it was built from live under `specs/` here.
 
 Search discoverability for the app's public pages — being crawled, indexed, and previewed correctly when shared — plus the structural work of keyword strategy, paid search, rank tracking, and page-speed ranking factors. The ongoing practice of each stays out of scope: keyword research and selection, campaign purchase and management, running or reading rank reports, hands-on performance tuning, and analytics/conversion measurement.
 
@@ -74,7 +74,7 @@ Once live, register the production origin with the search engines' index-coverag
 
 ## Binds to a stack
 
-The active pack answers each seam item, keyed by id, one line each. A pack that cannot meet S1 declares itself **unbound** in its manifest instead — stating why, the workable alternative, and that R10's refuse-indexing posture still applies to any publicly reachable origin.
+The adopted pack answers each seam item, keyed by id, one line each — in this directory's `bindings.md`, which carries the shipped packs' answers. A pack that cannot meet S1 is recorded there as **unbound** instead — stating why, the workable alternative, and that R10's refuse-indexing posture still applies to any publicly reachable origin.
 
 - **S1** — the rendering mechanism that makes indexable routes complete without client-side scripts (R3).
 - **S2** — the metadata helper and its home: title/description/canonical/share tags + share image (R7).

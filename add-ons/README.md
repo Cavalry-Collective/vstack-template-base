@@ -1,6 +1,6 @@
 # `add-ons/` — optional capability add-ons
 
-An **add-on** is an optional, cross-cutting capability the base leaves out because not every project needs it — an agnostic pattern for a recurring feature (a **test mode**, **OTP login**, **LLM calls**, **SEO**). Opt into the ones you want at Day-1; delete the rest.
+An **add-on** is an optional, cross-cutting capability the base leaves out because not every project needs it — an agnostic pattern for a recurring feature (a **test mode**, **OTP login**, **LLM calls**). Opt into the ones you want at Day-1; delete the rest.
 
 Sibling to `stacks/`, on a different axis:
 
@@ -34,7 +34,6 @@ Activation is by instruction: the root `CLAUDE.md` tells agents to read every ke
 | [`test-mode/`](test-mode/README.md) | Stub external side effects so the app runs end-to-end without real providers, plus a test-user picker | the mode signal, the sinks, the picker's gated read |
 | [`otp-auth/`](otp-auth/README.md) | One-time-code login / contact verification over phone or email | the challenge store or provider, the SMS/email SDK, canonicalisation |
 | [`llm-calls/`](llm-calls/README.md) | Guardrails for product features that call an LLM/AI API | the provider SDK and adapter home, the canned-response sink, the cost/usage monitoring home |
-| [`seo/`](seo/README.md) | Search discoverability of public pages — indexable rendering, metadata, canonicals, sitemap, plus the structural side of keywords, ads, rank tracking, and page speed | the seam items S1–S10: rendering, metadata, canonical origin + redirects, sitemap/robots, not-found, structured data, locale alternates, intent records + inventory, ownership verification, budget + speed measurement |
 | [`premium-design/`](premium-design/README.md) | Art direction, a motion system, and a craft review gate that raise chosen screens from consistent to premium | the motion mechanism and primitives home, the font pipeline, the image/asset path |
 | [`enterprise-compliance/`](enterprise-compliance/README.md) | Enterprise controls for SOC 2 / ISO 27001 / GDPR / PDPA readiness: access control, audit, retention/deletion, recovery, governance (spec-grade program docs ship inside the add-on) | the IdP/SSO + MFA libraries, session store, KMS, append-only audit store, job runner, object storage, backup tooling, rate-limit store |
 

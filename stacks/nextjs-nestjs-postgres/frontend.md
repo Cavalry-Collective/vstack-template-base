@@ -76,17 +76,6 @@ The base already requires asserting behaviour over implementation — not repeat
 
 ## Add-on bindings (if adopted)
 
-- **seo** (`add-ons/seo/`) — bound, per seam item:
-  - **S1** rendering: indexable routes are Server Components rendering complete HTML (this pack's default), fetching through `services/server/`; static-generate where the data allows.
-  - **S2** metadata: the App Router Metadata API — `metadataBase` once in the root layout, `generateMetadata()` per indexable segment (title/description/canonical/Open Graph incl. the share image); copy from the locale dictionaries; no hand-written `<head>` tags.
-  - **S3** canonical origin + redirects: a validated env key (e.g. `NEXT_PUBLIC_CANONICAL_ORIGIN`, documented in `.env.example`) feeds `metadataBase`; permanent moves via `next.config` `redirects()` with `permanent: true`.
-  - **S4** sitemap/robots: `app/sitemap.*` + `app/robots.*` off the `routes` link-helper; non-production answers noindex keyed on validated config (`robots.*` disallow-all unless production) — fail closed, asserted by a test (gate G3).
-  - **S5** missing entity: `notFound()` → a real 404 response.
-  - **S6** structured data: one shared JSON-LD component fed by the page's own data.
-  - **S7** locale alternates: `app/[locale]/` segments declare hreflang `alternates` from the same locale set the i18n parity check asserts.
-  - **S8** intent record + inventory: each indexable `routes` link-helper entry carries its target-intent phrase (per locale); a route handler (e.g. `app/page-intents.json/route.ts`) serves the derived page↔intent pairs off the same registry as `app/sitemap.*` — generated, never hand-kept.
-  - **S9** ownership verification: a validated env key (e.g. `SEARCH_CONSOLE_VERIFICATION_TOKEN`, documented in `.env.example`) feeds the Metadata API `verification` field — absent key, absent tag.
-  - **S10** budget + measurement: a checked-in per-route payload budget asserted in CI against `next build` output (gate G6); the three loading-experience axes are the Core Web Vitals (LCP, INP, CLS), measured with Lighthouse against the running app (R19's observation check).
 - **premium-design** (`add-ons/premium-design/`): motion primitives are atoms/molecules driven by duration/easing tokens — CSS transitions/keyframes by default, so purely-presentational motion keeps Server Components server; an animation library (e.g. `motion`) enters only at a `'use client'` interaction leaf when a sequence outgrows CSS, recorded per the base dependency rule. Scroll reveals go through one shared IntersectionObserver hook (client leaf). Fonts via `next/font`; imagery via `next/image`. Honour `prefers-reduced-motion` by collapsing the duration tokens under the media query.
 
 ## Conflict register
