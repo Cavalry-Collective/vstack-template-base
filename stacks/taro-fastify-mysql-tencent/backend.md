@@ -26,7 +26,7 @@ Binds `apps/backend/CLAUDE.md` and the root `CLAUDE.md` to **Fastify 4, plain Ja
 | DB access | `plugins/db.js` sets the single Knex instance (`getKnex()`); repos receive it (or a `trx`) as their first arg — never construct their own |
 | Request context | `plugins/ctx.js` packs `{ requestId, sourceIp, userAgent, logger }` into `request.ctx`, passed inward as a value (the base correlation-id rule: honour an inbound `x-request-id`/`x-correlation-id`, and return the id as the base's `x-correlation-id` response header on every response) |
 | Errors | one global handler in `app.js` maps `HttpError` (from `utils/httpError`) → the base *Error responses* envelope; rings never shape an HTTP response. A rate-limit sets `retryAfterSeconds` for the handler to surface |
-| Auth | `plugins/auth.js` — `fastify.requireAuth` / `fastify.requireCommunityRole` guards as `preHandler`s on the scopes that need them |
+| Auth | `plugins/auth.js` — `fastify.requireAuth` plus one `fastify.require<Role>` decorator per role the app defines, as `preHandler`s on the scopes that need them |
 | Mode signal | `plugins/tenant.js` — resolves the `x-tenant` header to `request.tenant`, selecting test vs `production` (missing/unknown ⇒ `production`, fail-closed), cached in memory; backs the optional **test-mode** add-on |
 
 **Scope-to-subtree = Fastify plugin encapsulation** — register a guard on the route scope that needs it; only db, cookie, ctx, tenant, and the error handler register app-wide.
@@ -45,7 +45,7 @@ The two entries share one `buildApp()`:
 - **SCF path:** `handler.js` builds the app and **`listen()`s on the SCF-provided port** (default `9000`). SCF Web Functions run a normal HTTP server that the platform proxies to — so, unlike a request-adapter FaaS, there is **no per-request wrapper** (no `tencent-serverless-http`). `scf_bootstrap` (`exec node /var/user/handler.js`) is the container entry.
 - **Local path:** `server.js` does the same `buildApp()` and `listen()`s on `PORT` for `node --watch`, adds swagger-ui + multipart in non-production. So the base "exercise the actual endpoint over HTTP" gate works unchanged.
 - **One function serves API + UI:** the built Taro H5 bundle is shipped inside the zip and served by `@fastify/static` at `/`, so the same process answers `/api/*` and the SPA. (`./infra.md` owns the zip + EdgeOne edge.)
-- **Deploy bundle:** `esbuild src/handler.js --bundle --platform=node --target=node18 --external:mysql2` (all other SQL drivers externalized too, then only `mysql2` is `npm install`ed into the zip's `node_modules`). `migrate.js` bundles the same way as a separate function — `./db.md`.
+- **Deploy bundle:** `esbuild src/handler.js --bundle --platform=node --target=node20 --external:mysql2` (all other SQL drivers externalized too, then only `mysql2` is `npm install`ed into the zip's `node_modules`). `migrate.js` bundles the same way as a separate function — `./db.md`.
 - **Serverless rules:** instances scale to zero and multiply — never rely on instance memory for correctness (durable state is in MySQL or the signed session cookie; a module-level value is a cache only), and finish all work inside the request. CynosDB **auto-pauses** when idle, so a cold path may hit a resuming DB — `./infra.md` covers the deploy-time resume.
 
 ## Testing

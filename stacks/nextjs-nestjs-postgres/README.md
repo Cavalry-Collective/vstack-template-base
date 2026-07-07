@@ -8,7 +8,7 @@ Frontend **Next.js** (App Router, server-first) · Backend **NestJS** · DB **Po
 |---|---|---|
 | `frontend.md` | `apps/frontend/CLAUDE.md` | App Router, server-first rendering, four-states mapping, form-factor rule |
 | `backend.md` | `apps/backend/CLAUDE.md` | NestJS module/provider → onion mapping, Zod validation, JS Babel decorator setup |
-| `db.md` | `db/CLAUDE.md` + repo ring | Prisma schema, migrations (`migrations.path → ../db/migrations`), client wiring |
+| `db.md` | `db/CLAUDE.md` + repo ring | Prisma schema, migrations (`migrations.path → db/migrations`, root-config-relative), client wiring |
 
 Each appendix opens with the verbatim precedence line and ends with its conflict register (see `../README.md`). Conflicts live in the appendices, not here.
 
@@ -34,11 +34,15 @@ pnpm build       # prisma generate, then next build + nest build
 pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
 ```
 
-**CI block → `.github/workflows/ci.yml` (non-interactive):** spin up a Postgres service container; `pnpm install --frozen-lockfile`; `prisma generate`; `prisma migrate deploy` (**never `prisma migrate dev` in CI — it can reset the DB or prompt**); `pnpm typecheck`; `next build` + `nest build`; non-watch `pnpm test`. Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
+**CI block → `.github/workflows/ci.yml` (non-interactive):** spin up a Postgres service container; `pnpm install --frozen-lockfile`; `prisma generate`; `prisma migrate deploy` (**never `prisma migrate dev` in CI — it can reset the DB or prompt**); `pnpm lint`; `pnpm typecheck`; `next build` + `nest build`; non-watch `pnpm test`; the frontend **i18n key-parity** check (the base gate stands — `frontend.md` keeps it unchanged). Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
 
 **Validation:** **Zod** is the schema library at the NestJS controller edge and for Next form/response schemas; a shape shared across the two is defined once and reused (no class-validator). Details in `backend.md` / `frontend.md`.
 
 **Pack decisions recorded here** (referenced by `backend.md`): NestJS on the **Fastify adapter** (rejected: the default Express adapter); **Zod** for validation (rejected: class-validator); **`AsyncLocalStorage`** via `nestjs-cls` for request context (rejected: request-scoped providers). Build orchestrator: the Nest CLI and `next build` per app under pnpm workspaces — no Nx/Turbo by default.
+
+## Add-ons
+
+Bindings for the shipped add-ons: **test-mode** and **otp-auth** in `backend.md`. **saas-billing** and **seo** carry their own bindings file inside the add-on (`add-ons/<name>/bindings.md`), each with a section for this pack. **llm-calls**, **premium-design**, **enterprise-compliance**, and **multi-tenancy** are left unbound by this pack — adopting one means supplying its *Binds to a stack* answers in the matching appendix as part of adoption.
 
 ## Deploy seam
 
