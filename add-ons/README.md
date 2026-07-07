@@ -36,7 +36,6 @@ Activation is by instruction: the root `CLAUDE.md` tells agents to read every ke
 | [`llm-calls/`](llm-calls/README.md) | Guardrails for product features that call an LLM/AI API | the provider SDK and adapter home, the canned-response sink, the cost/usage monitoring home |
 | [`premium-design/`](premium-design/README.md) | Art direction, a motion system, and a craft review gate that raise chosen screens from consistent to premium | the motion mechanism and primitives home, the font pipeline, the image/asset path |
 | [`enterprise-compliance/`](enterprise-compliance/README.md) | Enterprise controls for SOC 2 / ISO 27001 / GDPR / PDPA readiness: access control, audit, retention/deletion, recovery, governance (buildable program under `specs/`) | the IdP/SSO + MFA libraries, session store, KMS, append-only audit store, job runner, object storage, backup tooling, rate-limit store |
-| [`multi-tenancy/`](multi-tenancy/README.md) | First-class tenancy: multiple organisations share one deployment with data, members, settings, files, and jobs isolated per tenant at every layer (buildable program under `specs/`) | the tenant guard + request context, the scoped query helper and any DB-level enforcement, composite-unique mechanics, tenant-scoped storage, job context, the frontend active-tenant carrier |
 
 ## Add one
 

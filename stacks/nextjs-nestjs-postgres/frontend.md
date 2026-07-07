@@ -77,7 +77,6 @@ The base already requires asserting behaviour over implementation — not repeat
 ## Add-on bindings (if adopted)
 
 - **premium-design** (`add-ons/premium-design/`): motion primitives are atoms/molecules driven by duration/easing tokens — CSS transitions/keyframes by default, so purely-presentational motion keeps Server Components server; an animation library (e.g. `motion`) enters only at a `'use client'` interaction leaf when a sequence outgrows CSS, recorded per the base dependency rule. Scroll reveals go through one shared IntersectionObserver hook (client leaf). Fonts via `next/font`; imagery via `next/image`. Honour `prefers-reduced-motion` by collapsing the duration tokens under the media query.
-- **multi-tenancy** (`add-ons/multi-tenancy/`): the active organisation is a route segment — an `app/(org)/[organisationId]/` layout owns every organisation-scoped page; Server Components read the id from `params` and fetch through organisation-scoped service calls (the backend re-validates membership on every request). The switcher is a nav control in that layout fed by the memberships endpoint; switching navigates to the other organisation's URL, and the segment remount is the state reset — never keep organisation-scoped data in a client store that survives the segment, and never key client caches without the organisation id.
 
 ## Conflict register
 

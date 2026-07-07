@@ -4,7 +4,7 @@
 
 First-class tenancy: several organisations (workspaces, teams, clients — pick **one** noun and keep it) share one deployment while their data, members, settings, files, jobs, and billing stay strictly isolated. Adopt it **before the first tenant-owned table exists** — retrofitting scoping across a live schema is the expensive path this add-on exists to avoid.
 
-This README is the durable SOP — the isolation rules every change must honour once the add-on is adopted. The **buildable program** — tenant model, membership, invitations, resolution, switching, APIs, data model, and acceptance criteria — lives as a spec under `specs/` (see the map at the bottom), per the repo's spec-first workflow.
+This README is the durable SOP — the isolation rules every change must honour once the add-on is adopted. The **buildable program** — tenant model, membership, invitations, resolution, switching, APIs, data model, and acceptance criteria — is [`SPEC.md`](SPEC.md) beside this file; on adoption, move it under `specs/` per the repo's spec-first workflow.
 
 ## Approach
 
@@ -41,4 +41,4 @@ The active pack names: where the tenant guard lives and the request-context mech
 
 | Area | Spec |
 |---|---|
-| Tenant model, membership, invitations, resolution & switching | `specs/2026-07-07-multi-tenancy.md` |
+| Tenant model, membership, invitations, resolution & switching | [`SPEC.md`](SPEC.md) (→ `specs/` on adoption) |

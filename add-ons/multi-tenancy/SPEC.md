@@ -1,6 +1,6 @@
 # Multi-tenancy — tenant model, membership, resolution & switching
 
-> Buildable program for the `multi-tenancy` add-on (`add-ons/multi-tenancy/README.md`). Status: proposed. The tenant noun for this product is **organisation**, matching the enterprise-compliance program (`2026-07-07-enterprise-compliance-controls.md`), which assumes this model where both add-ons are adopted.
+> Buildable program for the `multi-tenancy` add-on (`add-ons/multi-tenancy/README.md`); ships beside it and moves under `specs/` on adoption, per the repo's spec-first workflow. Status: proposed. The tenant noun for this product is **organisation**, matching the enterprise-compliance program (`specs/2026-07-07-enterprise-compliance-controls.md`), which assumes this model where both add-ons are adopted.
 
 ## Goal
 
@@ -11,7 +11,7 @@ Give the product a first-class organisation (tenant) model — lifecycle, member
 1. **Organisation**: opaque unique id; `name`; `slug` (globally unique, URL-safe, changeable only by an admin+ and audited); `status` ∈ `active | suspended | archived`; `created_at`/`updated_at`. A `plan` key exists on the organisation for feature/quota checks; billing integration itself is out of scope.
 2. **Every tenant-owned table carries `organisation_id`** (FK, indexed). A new table without it must state an instance-global justification in its spec or migration (program cross-cutting rule; shared with the enterprise-compliance program where adopted).
 3. **Users are global; membership is per organisation.** Email is globally unique on the user; a user may belong to many organisations; a **member** row binds user ↔ organisation. Uniqueness of tenant-owned values is composite with `organisation_id` (e.g. a project slug repeats across organisations), never global.
-4. **Minimal role model**: each member holds one role ∈ `owner | admin | member`. Owner ⊃ admin ⊃ member. At least one active owner must remain at all times — removing, downgrading, or deactivating the last owner is rejected race-safely. *When enterprise-compliance is adopted, its RBAC spec (`2026-07-07-compliance-rbac.md`) supersedes this single-role column with its five system roles and permission catalog; the last-owner rule is the same rule there.*
+4. **Minimal role model**: each member holds one role ∈ `owner | admin | member`. Owner ⊃ admin ⊃ member. At least one active owner must remain at all times — removing, downgrading, or deactivating the last owner is rejected race-safely. *When enterprise-compliance is adopted, its RBAC spec (`specs/2026-07-07-compliance-rbac.md`) supersedes this single-role column with its five system roles and permission catalog; the last-owner rule is the same rule there.*
 5. **Tenant resolution is path-based**: every organisation-scoped endpoint lives under `/internal/v1/organisations/{organisationId}/…` (the shape the enterprise-compliance APIs already use). A shared guard resolves the path id and validates, in order: authenticated → the caller has a member row in that organisation → the organisation is `active` → the member's role permits the endpoint. The validated `organisationId` enters the request context and is passed inward as a value; handlers and repos never trust a body- or query-supplied tenant id.
 6. **Fail closed, leak nothing.** No or unknown organisation id, or a caller who is not a member → `404 ORGANISATION_NOT_FOUND` (indistinguishable from nonexistence). A member lacking the role → `403 PERMISSION_DENIED`. A resource id belonging to another organisation → `404` for that resource. `status = suspended` → `403 ORGANISATION_SUSPENDED` on every scoped endpoint; `archived` → `404` everywhere except the caller's own membership list and the owner-only unarchive endpoint.
 7. **Active organisation & switching**: the client lists the caller's memberships (`GET /internal/v1/users/me/organisations`), renders a switcher, and treats the organisation segment of the URL as the active organisation. Switching is navigation — every request revalidates membership server-side, so a stale or forged selection fails per requirement 6. On switch, the frontend drops all organisation-scoped client state (stores, caches, drafts) before rendering the new organisation.
@@ -157,7 +157,7 @@ Existing/future tenant-owned tables gain `organisation_id` (FK, indexed) and org
 - Subdomain or custom-domain tenant resolution (path-based chosen; revisit only with a product requirement).
 - Cross-organisation sharing or guest access.
 - Operator (super-admin) tooling and organisation suspension UX — enterprise-compliance admin-security spec where adopted; otherwise a future spec.
-- SCIM/IdP-driven membership provisioning (`2026-07-07-compliance-sso-identity.md`).
+- SCIM/IdP-driven membership provisioning (`specs/2026-07-07-compliance-sso-identity.md`).
 
 ## Open questions
 
