@@ -1,3 +1,8 @@
+<!--
+UNFILLED TEMPLATE — until /speckit-constitution fills this in, the constitution
+of record is root CLAUDE.md (Principles, Definition of Done, Testing). Speckit
+plans and analyses gate on root CLAUDE.md and skip the placeholder checks below.
+-->
 # [PROJECT_NAME] Constitution
 <!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
 

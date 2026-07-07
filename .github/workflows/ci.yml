@@ -17,29 +17,29 @@ jobs:
       - uses: actions/checkout@v4
 
       # - name: Install dependencies
-      #   run: # TODO: install command (e.g. pnpm install --frozen-lockfile)
+      #   run: # TODO: replace — install command (e.g. pnpm install --frozen-lockfile)
 
       # - name: Lint
-      #   run: # TODO: lint all apps — root CLAUDE.md "Coding standards"
+      #   run: # TODO: replace — lint all apps — root CLAUDE.md "Coding standards"
 
       # - name: Typecheck
-      #   run: # TODO: typecheck all apps (skip if the project is plain JS)
+      #   run: # TODO: replace — typecheck all apps (skip if the project is plain JS)
 
       # - name: Test
-      #   run: # TODO: run all test suites — root CLAUDE.md "Testing".
+      #   run: # TODO: replace — run all test suites — root CLAUDE.md "Testing".
       #   # Most coverage lives in the fast inner rings; this gate must be red on any failure.
 
       # - name: Build
-      #   run: # TODO: production build of every app — root CLAUDE.md "Definition of Done"
+      #   run: # TODO: replace — production build of every app — root CLAUDE.md "Definition of Done"
 
       # - name: i18n key parity
-      #   run: # TODO: fail on any key missing from a locale — apps/frontend/CLAUDE.md "Internationalisation"
+      #   run: # TODO: replace — fail on any key missing from a locale — apps/frontend/CLAUDE.md "Internationalisation"
 
       # - name: Migration round-trip
-      #   run: # TODO: apply up → down → up on a scratch DB, fail on drift — db/CLAUDE.md
+      #   run: # TODO: replace — apply up → down → up on a scratch DB, fail on drift — db/CLAUDE.md
 
       # - name: Accessibility scan
-      #   run: # TODO: run the a11y scanner against built pages — apps/frontend/CLAUDE.md "Accessibility baseline"
+      #   run: # TODO: replace — run the a11y scanner against built pages — apps/frontend/CLAUDE.md "Accessibility baseline"
 
       # Optional structural checks — wire only if cheaply scriptable in your stack
       # (closer to custom lint rules than CI one-liners; candidates, not mandates):
