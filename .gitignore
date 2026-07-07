@@ -28,8 +28,5 @@ yarn-error.log*
 .idea/
 *.iml
 
-# Claude Code worktrees (root CLAUDE.md "Working in a git worktree")
-.claude/worktrees/
-
-# Claude Code — agent worktrees live here (root CLAUDE.md); never commit them
+# Claude Code — agent worktrees live here (root CLAUDE.md "Working in a git worktree"); never commit them
 .claude/worktrees/

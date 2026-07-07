@@ -30,3 +30,7 @@ Spec: specs/<file>
 ## Notes
 
 <!-- Anything reviewers should know: deployment steps, feature flags, follow-ups. Incomplete work must be behind a flag. -->
+
+<!-- Root CLAUDE.md "Self-review before merge" — fill in or delete each line: -->
+- New abstraction / dependency / config key: <!-- the simpler option and why it was rejected — or "none added" -->
+- Pattern followed: <!-- the existing pattern this change follows — or why none fits -->
