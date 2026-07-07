@@ -30,4 +30,4 @@ These hold whatever the engine; the active stack pack binds the mechanics.
 
 ## Shared DB across worktrees
 
-The local DB is **global state** shared across worktrees by a fixed name (see *Working in a git worktree* in root `CLAUDE.md`). A migration, reset, or seed run in one worktree changes the schema every other worktree's app depends on. Run round-trip and destructive checks against a throwaway DB, never the shared one, while a parallel worktree depends on the current schema.
+The worktree rules in root `CLAUDE.md` (*Working in a git worktree*) make the local DB shared global state. The db-specific consequence: run round-trip and destructive checks against a throwaway DB, never the shared one, while a parallel worktree depends on the current schema.

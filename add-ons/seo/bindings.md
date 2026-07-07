@@ -9,7 +9,7 @@ Per seam item:
 - **S1** rendering: indexable routes stay Server Components rendered complete on the server (this pack's default); static-generate where the data allows.
 - **S2** metadata: the App Router Metadata API — `metadataBase` once in the root layout, `generateMetadata()` per indexable segment (title/description/canonical/Open Graph incl. the share image); no hand-written `<head>` tags.
 - **S3** canonical origin + redirects: a validated env key (e.g. `NEXT_PUBLIC_CANONICAL_ORIGIN`, documented in `.env.example`) feeds `metadataBase`; permanent moves via `next.config` `redirects()` with `permanent: true`.
-- **S4** sitemap/robots: `app/sitemap.*` + `app/robots.*`, enumerating indexable routes through the `routes` link-helper (this pack's registry binding); Vercel preview deployments already answer `X-Robots-Tag: noindex` — keep it, production is the only indexable origin.
+- **S4** sitemap/robots: `app/sitemap.*` + `app/robots.*`, enumerating indexable routes through the `routes` link-helper (this pack's registry binding); Vercel preview deployments already answer `X-Robots-Tag: noindex` — keep it, production is the only indexable origin, and a test still asserts the non-production noindex response (gate G3 — platform behaviour is not the gate).
 - **S5** missing entity: `notFound()` + `not-found.tsx` → a real 404 response.
 - **S6** structured data: one shared JSON-LD component fed by the page's own data.
 - **S7** locale alternates: n/a until the project pins a locale mechanism; if it goes multilingual, derive alternates from the base i18n locale set.

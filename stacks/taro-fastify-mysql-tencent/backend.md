@@ -9,7 +9,7 @@ Binds `apps/backend/CLAUDE.md` and the root `CLAUDE.md` to **Fastify 4, plain Ja
 - **HTTP layer: Fastify 4, used directly** — plugins, lifecycle hooks, and decorators are the base's aspect mechanism.
 - **Language: plain JavaScript, CommonJS** (`require`, no `"type": "module"`), **no typecheck step** (explicit no-op). There *is* an esbuild **bundle** for deploy (below) — bundling is packaging, not typechecking.
 - **Layout: layer-first, not the base's feature-first onion** — `routes/ services/ repos/ schemas/ lib/ utils/ plugins/ db/` under `src/`. See the conflict register.
-- **Validation: Fastify JSON Schema** — every route declares request *and* response schemas from `schemas/<domain>.js`; **OpenAPI is the source of truth** (`lint:openapi` + `lint:schemas` guard drift).
+- **Validation: Fastify JSON Schema** — every route declares request *and* response schemas from `schemas/<domain>.js`; **OpenAPI is the source of truth** — the document lives at `apps/backend/openapi.yaml`; `lint:openapi` validates the document itself, `lint:schemas` asserts every route's attached schema matches its OpenAPI operation.
 
 ## Layers (the flat shape)
 
@@ -36,7 +36,7 @@ Binds `apps/backend/CLAUDE.md` and the root `CLAUDE.md` to **Fastify 4, plain Ja
 - **Audit trail** (base *Cross-cutting → Audit trail*): services call `services/audit.record(ctx, { eventType, ... })` — one durable append per state change, never `lib/audit` directly.
 - **Integration gating** (base *Integrations*): `DEV_OTP_SINK` and `EMAIL_SENDING_ENABLED` are the default-off booleans that route SMS/email to a stdout sink until flipped per-environment.
 - **If you adopt the `test-mode` add-on** (`add-ons/test-mode/`): `x-tenant: test` is the mode signal (resolved by `plugins/tenant.js`, fail-closed to `production`); `skipOtpChecks()` swaps OTP *delivery* for a sink on a test-mode request (the challenge is still issued/verified); every test-only read (e.g. the picker) returns empty for `production`.
-- **If you adopt the `otp-auth` add-on** (`add-ons/otp-auth/`): this stack is **model A** (self-managed store) — `utils/otp.js` does code gen + **HMAC-SHA256** hash + short TTL + timing-safe verify; one `otp_challenge` table with a **`purpose`** column (signup / login / contact-change) drives the recent-challenge rate limit; delivery via `lib/sms.js` (Tencent SMS) / `lib/email.js` (Tencent SES); phone numbers canonicalised to E.164 with `libphonenumber-js`; phone and email are two identity records (`repos/phoneIdentity`, `repos/emailIdentity`) against one account.
+- **If you adopt the `otp-auth` add-on** (`add-ons/otp-auth/`): this stack is **model A** (self-managed store) — `utils/otp.js` does code gen + **HMAC-SHA256** hash + short TTL + timing-safe verify; one `otp_challenge` table with a **`purpose`** column (signup / login / contact-change) drives the recent-challenge rate limit; delivery via `lib/sms.js` (Tencent SMS) / `lib/email.js` (Tencent SES); phone numbers canonicalised to E.164 with `libphonenumber-js`; phone and email are two identity records (`repos/phoneIdentity`, `repos/emailIdentity`) against one account. On a test-mode request (`skipOtpChecks()`) delivery is sinked — the tester reads the real code from the stdout sink line; verify is never stubbed.
 
 ## SCF entrypoint — `handler.js` (SCF) vs `server.js` (local), load-bearing
 
@@ -50,7 +50,7 @@ The two entries share one `buildApp()`:
 
 ## Testing
 
-- **Runner: Vitest** (`pnpm test`). Base per-ring kinds, bound: **service** — drive the use case with the real Knex against the `*_test` schema (this stack keeps rules in services, not a pure domain ring, so most coverage sits here); **route** — Fastify `app.inject()`; **repo** — integration against the `*_test` MySQL schema. The suite is **destructive** and guarded — `./db.md` owns the `*_test` ritual. If `otp-auth` is adopted, unset `DEV_OTP_SINK` so OTP paths exercise the real verify.
+- **Runner: Vitest** (`pnpm test`). Base per-ring kinds, bound: **service** — drive the use case with the real Knex against the `*_test` schema (this stack keeps rules in services, not a pure domain ring, so most coverage sits here); **route** — Fastify `app.inject()`; **repo** — integration against the `*_test` MySQL schema. The suite is **destructive** and guarded — `./db.md` owns the `*_test` ritual. If `otp-auth` is adopted, unset `DEV_OTP_SINK` in the test env so tests read codes from the challenge store instead of stdout — the sink gates delivery only; verify runs real either way.
 
 ## Conflict register
 

@@ -6,7 +6,7 @@ Non-trivial features start from a short written spec here before implementation.
 
 - One file per feature: `YYYY-MM-DD-<feature-name>.md`
 - If a spec tool is adopted (e.g. Spec Kit's numbered feature directories), its layout wins over the one-file convention — record the tool in root `CLAUDE.md` **Learnings** and keep `specs/` the single home for *project* feature specs
-- **Add-on exception:** an add-on may ship its spec program inside its own directory (`add-ons/<name>/specs/` or a single `SPEC.md` — see `add-ons/README.md`), so deleting the add-on carries its specs with it. On adoption, moving those specs here is optional (rename to the dated convention if you do); the add-on's README states its own preference. Spec Kit note: its numbering scans only this directory, so feature numbers already consumed elsewhere (001 retired; 003/004 under `add-ons/seo/specs/`) are recorded in root `CLAUDE.md` **Learnings** — don't reuse them
+- **Add-on exception:** an add-on may ship its spec program inside its own directory (`add-ons/<name>/specs/` or a single `SPEC.md` — see `add-ons/README.md`), so deleting the add-on carries its specs with it. On adoption, moving those specs here is optional (rename to the dated convention if you do); the add-on's README states its own preference. Spec Kit note: its numbering scans only this directory, so feature numbers consumed elsewhere are recorded in root `CLAUDE.md` **Learnings** (the single registry) — don't reuse them
 - Tag user stories with priority: `P1` = MVP (must ship), `P2` = next, `P3` = nice-to-have
 - Each story is independently shippable — avoid cross-story coupling that breaks that independence
 - P1 stories alone form a viable MVP

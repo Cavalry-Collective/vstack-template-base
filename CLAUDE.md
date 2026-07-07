@@ -18,7 +18,7 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 
 ## Instruction precedence
 
-When instruction files disagree: the area file (`apps/*/CLAUDE.md`, `db/CLAUDE.md`, `infra/CLAUDE.md`) wins for its own area; the adopted stack pack's conflict register wins over both, for that stack only; an add-on's README binds only the capability it covers; this file wins for everything cross-cutting. A real contradiction with no register entry is a defect — flag it, don't silently pick a side.
+When instruction files disagree: the area file (`apps/*/CLAUDE.md`, `db/CLAUDE.md`, `infra/CLAUDE.md`) wins for its own area; the adopted stack pack's conflict register wins over both, for that stack only; an add-on's README binds only the capability it covers (within that capability it wins over the base and area files; the adopted pack's conflict register still wins over it); this file wins for everything cross-cutting. A real contradiction with no register entry is a defect — flag it, don't silently pick a side.
 
 ## Common commands
 
@@ -138,8 +138,10 @@ Worktrees are the **default** here — most work runs in parallel with Claude ac
 5. **Delete** the worktree (`git worktree remove`) and its merged branch.
 6. **Push** the default branch only after confirming. By default this template's `.github/workflows/deploy.yml` runs after a green CI run on `main` (a `workflow_run` trigger), so once its deploy step is filled in a push to the default branch ships to the configured target — confirm with the user before pushing, and check `deploy.yml` if the trigger has been changed.
 
+Where `main` is protected (Day-1 step 11) or the work is spec-backed (`specs/README.md`: open a PR that links the spec), steps 3 and 6 run through the platform instead: push the rebased branch, open or update the PR, let CI go green, and merge with a fast-forward/rebase merge — never a merge commit. The local ff-merge + push path applies only to an unprotected repo.
+
 ## Learnings
 
 Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it. At instantiation the usual first entry is the stack-pack choice (see the Day-1 checklist in `README.md`).
 
-- Spec tool: **Spec Kit** adopted (`.specify/` + `.claude/skills/speckit-*`; numbered feature dirs, per `specs/README.md`). Numbers 001–004 are consumed: 001 (design guide) retired after completion; 003/004 live under `add-ons/seo/specs/` — an add-on's spec program may ship inside the add-on.
+- Spec tool: **Spec Kit** adopted (`.specify/` + `.claude/skills/speckit-*`; numbered feature dirs, per `specs/README.md`). Numbers 001–004 are consumed: 001 (design guide) retired after completion; 002 (repo-guidance audit) retired without its directory ever landing; 003/004 live under `add-ons/seo/specs/` — an add-on's spec program may ship inside the add-on.

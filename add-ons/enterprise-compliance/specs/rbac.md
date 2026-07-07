@@ -8,7 +8,7 @@ Give every organisation a permission catalog, fixed least-privilege system roles
 
 ## Product requirements
 
-1. The backend defines one canonical permission catalog (below); every permission is `resource:action`, lowercase. Any permission string outside the catalog is rejected on write.
+1. The backend defines one canonical permission catalog (below); every permission is `resource:action`, lowercase. Any permission string outside the catalog is rejected on write. Another adopted add-on may extend the catalog at build time with its declared permissions (e.g. saas-billing's `billing:read`/`billing:manage`) — extension rows join the catalog and the system-role matrix in the same change that adopts the add-on; runtime writes are still rejected outside the (extended) catalog.
 2. Destructive/exfiltrating verbs — `export`, `bulk_update`, `bulk_delete`, `purge` — are separate permissions from `read`/`update`/`delete`; holding `contacts:update` never implies `contacts:export`.
 3. Five fixed system roles exist in every organisation: **Owner, Admin, Manager, Member, Read-only**. System roles cannot be renamed, edited, or deleted.
 4. New members default to **Member** (least privilege that still allows day-to-day CRM work); invitations may specify any role the inviter is allowed to grant (req. 7).

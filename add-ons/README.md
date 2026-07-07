@@ -5,7 +5,7 @@ An **add-on** is an optional, cross-cutting capability the base leaves out becau
 Sibling to `stacks/`, on a different axis:
 
 - A **stack pack** binds the base to one technology stack. Exactly one is chosen.
-- An **add-on** adds an optional capability, stated agnostically. Zero or more are chosen; the active stack pack then supplies the concrete bindings for each one you adopt.
+- An **add-on** adds an optional capability, stated agnostically. Zero or more are chosen; the active stack pack's appendices — or a `bindings.md` the add-on carries — then supply the concrete bindings for each one you adopt.
 
 This file is the system doc; each add-on carries its own `README.md`.
 
