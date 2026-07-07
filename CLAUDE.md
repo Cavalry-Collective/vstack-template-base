@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Do not use the persistent file-based memory.** Never write to or read from the memory directory. If something is worth remembering across sessions, record it in this file under **Learnings** (at the bottom) instead.
+> **Do not use the persistent file-based memory.** Never write to or read from Claude's own memory directory. (`.specify/memory/` is Spec Kit's constitution home, not that memory — it's fine.) If something is worth remembering across sessions, record it in this file under **Learnings** (at the bottom) instead.
 
 ## Repo shape
 
@@ -14,7 +14,7 @@ A monorepo with two apps under `apps/*`, infrastructure, and shared DB scripts:
 - `infra/` — Terraform for the project's cloud resources. See `infra/CLAUDE.md`.
 - `design/` — design mockups / UI reference, **reference only** (not part of the buildable workspace). See *UI mockup / design reference* below.
 - `stacks/` — optional stack packs: appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. Each area's `CLAUDE.md` tells you to read the adopted pack's matching appendix before working there. See `stacks/README.md`.
-- `add-ons/` — optional capability add-ons: agnostic patterns for features the base leaves out (test mode, OTP login, LLM calls); zero or more chosen at instantiation, the rest deleted, the active stack pack supplying their concrete bindings. **Every directory kept under `add-ons/` is adopted — read its `README.md` and follow it whenever you touch the capability it covers.** See `add-ons/README.md`.
+- `add-ons/` — optional capability add-ons: agnostic patterns for features the base leaves out (test mode, OTP login, LLM calls); zero or more chosen at instantiation, the rest deleted; concrete bindings come from the active stack pack's appendices or from a `bindings.md` the add-on carries itself (see `add-ons/README.md`). **Every directory kept under `add-ons/` is adopted — read its `README.md` and follow it whenever you touch the capability it covers.** See `add-ons/README.md`.
 
 ## Instruction precedence
 
@@ -140,4 +140,6 @@ Worktrees are the **default** here — most work runs in parallel with Claude ac
 
 ## Learnings
 
-Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it. The template ships this section empty; the first entry is usually the stack-pack choice recorded at instantiation (see the Day-1 checklist in `README.md`).
+Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it. At instantiation the usual first entry is the stack-pack choice (see the Day-1 checklist in `README.md`).
+
+- Spec tool: **Spec Kit** adopted (`.specify/` + `.claude/skills/speckit-*`; numbered feature dirs, per `specs/README.md`). Numbers 001–004 are consumed: 001 (design guide) retired after completion; 003/004 live under `add-ons/seo/specs/` — an add-on's spec program may ship inside the add-on.
