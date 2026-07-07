@@ -1,6 +1,6 @@
 # Multi-tenancy — tenant model, membership, resolution & switching
 
-> Buildable program for the `multi-tenancy` add-on (`add-ons/multi-tenancy/README.md`); ships beside it and moves under `specs/` on adoption, per the repo's spec-first workflow. Status: proposed. The tenant noun for this product is **organisation**, matching the enterprise-compliance program (`specs/2026-07-07-enterprise-compliance-controls.md`), which assumes this model where both add-ons are adopted.
+> Buildable program for the `multi-tenancy` add-on (`add-ons/multi-tenancy/README.md`); ships beside it — on adoption you may move it under `specs/` (renamed to the dated convention) if the project keeps one spec home. Status: proposed. The tenant noun for this product is **organisation**, matching the enterprise-compliance program (`add-ons/enterprise-compliance/specs/program-index.md`), which assumes this model where both add-ons are adopted.
 
 ## Goal
 
@@ -8,16 +8,16 @@ Give the product a first-class organisation (tenant) model — lifecycle, member
 
 ## Product requirements
 
-1. **Organisation**: opaque unique id; `name`; `slug` (globally unique, URL-safe, changeable only by an admin+ and audited); `status` ∈ `active | suspended | archived`; `created_at`/`updated_at`. A `plan` key exists on the organisation for feature/quota checks; billing integration itself is out of scope.
+1. **Organisation**: opaque unique id; `name`; `slug` (globally unique, URL-safe, changeable only by an admin+ and audited); `status` ∈ `active | suspended | archived`; `created_at`/`updated_at`. A `plan` key exists on the organisation for feature/quota checks; billing integration itself is out of scope. *Where **saas-billing** is adopted, its entitlement resolver supersedes direct reads of this key — access derives from the subscription, never a stored plan column.*
 2. **Every tenant-owned table carries `organisation_id`** (FK, indexed). A new table without it must state an instance-global justification in its spec or migration (program cross-cutting rule; shared with the enterprise-compliance program where adopted).
 3. **Users are global; membership is per organisation.** Email is globally unique on the user; a user may belong to many organisations; a **member** row binds user ↔ organisation. Uniqueness of tenant-owned values is composite with `organisation_id` (e.g. a project slug repeats across organisations), never global.
-4. **Minimal role model**: each member holds one role ∈ `owner | admin | member`. Owner ⊃ admin ⊃ member. At least one active owner must remain at all times — removing, downgrading, or deactivating the last owner is rejected race-safely. *When enterprise-compliance is adopted, its RBAC spec (`specs/2026-07-07-compliance-rbac.md`) supersedes this single-role column with its five system roles and permission catalog; the last-owner rule is the same rule there.*
+4. **Minimal role model**: each member holds one role ∈ `owner | admin | member`. Owner ⊃ admin ⊃ member. At least one active owner must remain at all times — removing, downgrading, or deactivating the last owner is rejected race-safely. *When enterprise-compliance is adopted, its RBAC spec (`add-ons/enterprise-compliance/specs/rbac.md`) supersedes this single-role column with its five system roles and permission catalog; the last-owner rule is the same rule there.*
 5. **Tenant resolution is path-based**: every organisation-scoped endpoint lives under `/internal/v1/organisations/{organisationId}/…` (the shape the enterprise-compliance APIs already use). A shared guard resolves the path id and validates, in order: authenticated → the caller has a member row in that organisation → the organisation is `active` → the member's role permits the endpoint. The validated `organisationId` enters the request context and is passed inward as a value; handlers and repos never trust a body- or query-supplied tenant id.
 6. **Fail closed, leak nothing.** No or unknown organisation id, or a caller who is not a member → `404 ORGANISATION_NOT_FOUND` (indistinguishable from nonexistence). A member lacking the role → `403 PERMISSION_DENIED`. A resource id belonging to another organisation → `404` for that resource. `status = suspended` → `403 ORGANISATION_SUSPENDED` on every scoped endpoint; `archived` → `404` everywhere except the caller's own membership list and the owner-only unarchive endpoint.
 7. **Active organisation & switching**: the client lists the caller's memberships (`GET /internal/v1/users/me/organisations`), renders a switcher, and treats the organisation segment of the URL as the active organisation. Switching is navigation — every request revalidates membership server-side, so a stale or forged selection fails per requirement 6. On switch, the frontend drops all organisation-scoped client state (stores, caches, drafts) before rendering the new organisation.
 8. **Invitations**: an admin+ invites by email with a role no higher than their own; a single-use, expiring, hashed token is delivered out-of-band; accepting while authenticated (signing up first if needed) creates the member row. One pending invitation per (organisation, email); inviting an existing member is a `409`. Invitations are listable and revocable by admin+.
 9. **Membership lifecycle**: admin+ can change roles (owner grants/revokes owner only — same rule 6 as the RBAC spec) and remove members; any member can leave. All paths enforce the last-owner rule. A removed or departed user loses access on their next request.
-10. **Organisation lifecycle**: any authenticated user may create an organisation and becomes its owner; creation seeds the settings row (and, where enterprise-compliance is adopted, the five system roles per its RBAC spec). Owners can archive (soft, reversible) and unarchive. Suspension is an operator action, out of scope here (admin-security spec where adopted).
+10. **Organisation lifecycle**: any authenticated user may create an organisation and becomes its owner; creation seeds the settings row (and, where enterprise-compliance is adopted, the five system roles per its RBAC spec). Owners can archive (soft, reversible) and unarchive. Suspension is an operator action, out of scope here (the enterprise-compliance program's operator surface where adopted; otherwise a future spec).
 11. **Settings are one-to-one with the organisation**, stored as validated data (name/branding/preferences as the product grows), never in env config. Settings reads/writes are member/admin+ respectively and scoped like everything else.
 12. **Files are tenant-scoped**: every stored object lives under `organisations/{organisationId}/…` and is served only via an authorised read (signed URL or backend proxy) that re-checks membership — never a guessable public URL.
 13. **Background jobs carry `organisation_id` in the payload** and revalidate the organisation exists and is `active` before executing; a job for a suspended/archived organisation exits without side effects. Job queries are scoped like request queries.
@@ -153,11 +153,11 @@ Existing/future tenant-owned tables gain `organisation_id` (FK, indexed) and org
 
 ## Out of scope
 
-- Billing/subscription/seat integration — the `plan` key exists; charging against it is a future spec.
+- Billing/subscription/seat integration — the `plan` key exists; charging is the **saas-billing** add-on's program where adopted (its derived entitlements then supersede this key), otherwise a future spec.
 - Subdomain or custom-domain tenant resolution (path-based chosen; revisit only with a product requirement).
 - Cross-organisation sharing or guest access.
-- Operator (super-admin) tooling and organisation suspension UX — enterprise-compliance admin-security spec where adopted; otherwise a future spec.
-- SCIM/IdP-driven membership provisioning (`specs/2026-07-07-compliance-sso-identity.md`).
+- Operator (super-admin) tooling and organisation suspension UX — the enterprise-compliance program's operator surface where adopted (operator-scoped credential; see its `rbac.md` and `trust-transparency.md`); otherwise a future spec.
+- SCIM/IdP-driven membership provisioning (`add-ons/enterprise-compliance/specs/sso-identity.md`).
 
 ## Open questions
 

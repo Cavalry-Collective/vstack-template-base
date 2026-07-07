@@ -1,6 +1,6 @@
 # Enterprise compliance controls — program index
 
-**Status:** proposed · **Owner:** adam@hydrax.io · **Add-on:** `add-ons/enterprise-compliance/README.md` (the durable SOP; this spec family is the buildable program)
+**Status:** proposed · **Owner:** `<owner>` (set at adoption) · **Add-on:** `add-ons/enterprise-compliance/README.md` (the durable SOP; this spec family is the buildable program)
 
 ## Goal
 

@@ -1,6 +1,6 @@
 # saas-billing — suggested stack-pack bindings
 
-Pre-written entries for the stack packs this template ships, kept **inside the add-on** so adopting it touches nothing else. At adoption, copy the active pack's entry below into that pack's `backend.md` (its add-on-bindings section) and delete the others with the unused packs. Each entry supplies what the README's *Binds to a stack* asks for: the provider + SDK/adapter home, the webhook raw-body/signature seam, the stub sink, the job runner, and the config home.
+Pre-written entries for the stack packs this template ships, kept **inside the add-on** so adopting it touches nothing else. At adoption, copy the active pack's entry below into that pack's `backend.md` (its add-on-bindings section) and delete the others with the unused packs. Each entry supplies what the README's *Binds to a stack* asks for: the provider + SDK/adapter home, the webhook raw-body/signature seam, the stub sink, the job runner, and the config home. A shipped pack with no section here is silent — a defect; every pack is covered below.
 
 ## `nextjs-nestjs-postgres`
 
@@ -9,6 +9,10 @@ Pre-written entries for the stack packs this template ships, kept **inside the a
 ## `vercel`
 
 - **saas-billing** (`add-ons/saas-billing/`): provider = **Stripe** (`stripe` SDK). The gateway adapter registers in `container.js`; the flag routes to the stub via a container registration (tests swap it with `overrides`). Webhook seam: Fastify parses JSON by default — preserve the raw payload for the webhook route only (scoped raw-body plugin / content-type parser) and verify the Stripe signature before parsing. Jobs on serverless: no resident runner — bind the reconciliation sweep to **Vercel Cron** hitting a dedicated authenticated route, and finish each batch inside the request. `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` join the boot-time Zod env schema.
+
+## `vercel-ssr`
+
+- **saas-billing** (`add-ons/saas-billing/`): provider = **Stripe** (`stripe` SDK). The gateway is a repo-ring adapter behind the domain's billing gateway port, registered in `src/server/container.ts`; `BILLING_ENABLED=false` binds the stub gateway instead. Webhook seam: an external route handler (that pack's *External HTTP* edge — a thin delegate under `app/`) reads the raw payload with `request.text()` and verifies the Stripe signature before anything parses; route handlers don't pre-parse, so the raw body is available by construction. Jobs on serverless: no resident runner — bind the reconciliation sweep, usage rollover, and trial expiry to **Vercel Cron** hitting a dedicated authenticated route, finishing each batch inside the request. `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` join the boot-time Zod env schema.
 
 ## `taro-fastify-mysql-tencent`
 
