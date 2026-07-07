@@ -2,7 +2,7 @@
 
 One **full-stack Next.js** app (App Router, TypeScript) owning both the UI and the server side — Server Components and Server Actions instead of a separate API app · DB **Postgres** — **Neon** (serverless) in production, Docker locally — via **node-pg-migrate** + **`pg`**. Deploys to **Vercel** as a **single project**; Terraform (Vercel provider) as IaC. This is the **manifest** — it wires the pack onto a project; bindings and conflict registers live in the appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
 
-> **Naming.** Named for the platform plus its distinguishing shape — full-stack SSR on Vercel — under the platform exception in `../README.md`; the would-be convention triple collapses to the pair `nextjs-postgres` (Next.js fills both the frontend and backend slots). Sibling contrast: `nextjs-fastify-postgres` keeps a separate Fastify API on the same platform — this pack is the one-app alternative.
+> **Naming.** Named for the platform plus its distinguishing shape — full-stack SSR on Vercel — under the platform exception in `../README.md`; the would-be convention triple collapses to the pair `nextjs-postgres` (Next.js fills both the frontend and backend slots). Sibling contrast: the `vercel` pack (would-be triple `nextjs-fastify-postgres`) keeps a separate Fastify API on the same platform — this pack is the one-app alternative.
 
 ## Appendix → base mapping
 
@@ -46,13 +46,13 @@ pnpm build       # next build
 pnpm migrate     # node-pg-migrate up (rollback: pnpm migrate:down)
 ```
 
-**CI block → `.github/workflows/ci.yml` (non-interactive):** a `postgres:16` service container; `pnpm install --frozen-lockfile`; lint; `tsc --noEmit`; `vitest run`; `next build`; **migration round-trip up → down → up on the scratch DB** — node-pg-migrate has real downs, so keep the base `ci.yml` round-trip TODO's wording as written (a deliberate contrast with ORM packs that must replace it); run the seed twice (idempotency). Playwright e2e is not part of this job — it runs against a Vercel preview deployment via `E2E_BASE_URL` (see *Deploy seam*).
+**CI block → `.github/workflows/ci.yml` (non-interactive):** a `postgres:16` service container; `pnpm install --frozen-lockfile`; lint; `tsc --noEmit`; `vitest run`; `next build`; the **i18n key-parity** check (the base gate stands — this pack changes nothing about it); **migration round-trip up → down → up on the scratch DB** — node-pg-migrate has real downs, so keep the base `ci.yml` round-trip TODO's wording as written (a deliberate contrast with ORM packs that must replace it); run the seed twice (idempotency). Playwright e2e is not part of this job — it runs against a Vercel preview deployment via `E2E_BASE_URL` (see *Deploy seam*).
 
 **Validation:** **Zod** everywhere there is an edge — action/route DTOs, the boot-time env schema, form schemas. A shape shared between server and client is defined once and imported from both sides: one app, one module graph, no duplication seam.
 
 ## Add-ons
 
-Bindings for the shipped add-ons live in the appendices: **test-mode**, **otp-auth**, and **llm-calls** in `backend.md`. An add-on that carries its own bindings file names this pack there instead.
+Bindings for the shipped add-ons live in the appendices: **test-mode**, **otp-auth**, and **llm-calls** in `backend.md`. An add-on that carries its own bindings file names this pack there instead — **saas-billing** and **seo** both do (`add-ons/<name>/bindings.md`, each with a `vercel-ssr` section). **premium-design**, **enterprise-compliance**, and **multi-tenancy** are left unbound by this pack — adopting one means supplying its *Binds to a stack* answers in the matching appendix as part of adoption.
 
 ## Deploy seam
 

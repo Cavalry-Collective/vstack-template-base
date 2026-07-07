@@ -6,7 +6,7 @@ Binds `apps/backend/CLAUDE.md` — relocated at Day-1 to `apps/frontend/src/serv
 
 ## Stack binding at a glance
 
-- **Delivery mechanism: Next.js itself — no separate HTTP framework.** The onion lives under `src/server/`; the App Router invokes its controller edge directly. Pack decision — rejected alternative: a second in-repo API server (it forks the deploy unit and re-introduces the network hop, proxy, and CORS surface this shape exists to avoid; the sibling `nextjs-fastify-postgres` pack *is* that architecture, kept separate).
+- **Delivery mechanism: Next.js itself — no separate HTTP framework.** The onion lives under `src/server/`; the App Router invokes its controller edge directly. Pack decision — rejected alternative: a second in-repo API server (it forks the deploy unit and re-introduces the network hop, proxy, and CORS surface this shape exists to avoid; the sibling `vercel` pack (would-be triple `nextjs-fastify-postgres`) *is* that architecture, kept separate).
 - **Language: TypeScript.** Ports are interfaces; DTOs are Zod schemas with inferred types.
 - **Folder layout: the base shape under `src/server/`** — `src/server/modules/<feature>/{domain,service,repo,controller,dtos}`, `src/server/shared/{aspects,utils}`, `src/server/container.ts`. Path references in the relocated contract map `apps/backend/src/` → `apps/frontend/src/server/`.
 - **The server boundary is enforced, not hoped for:** `container.ts` and every aspect open with `import 'server-only'`, so a client-component import fails the build instead of leaking server code into the bundle.

@@ -39,6 +39,10 @@ pnpm migrate     # knex migrate:latest (rollback: pnpm --filter backend migrate:
 
 **Validation:** Fastify JSON Schema on every route (request and response), all schemas under `schemas/<domain>.js`, with OpenAPI as the source of truth (`lint:openapi` + `lint:schemas` guard drift). See `backend.md`.
 
+## Add-ons
+
+Bindings for the shipped add-ons: **test-mode** and **otp-auth** in `backend.md` (picker in `frontend.md`). **saas-billing** carries its own bindings file with a section for this pack (`add-ons/saas-billing/bindings.md` — provider is market-dependent there); **seo** records this pack **unbound** in `add-ons/seo/bindings.md` (client-only H5 rendering can't meet its rendering seam — the residual robots posture still applies). **llm-calls**, **premium-design**, **enterprise-compliance**, and **multi-tenancy** are left unbound by this pack — adopting one means supplying its *Binds to a stack* answers in the matching appendix as part of adoption.
+
 ## Deploy seam
 
 Deployment is a GitHub Actions pipeline (`.github/workflows/deploy.yml`) — this pack fills it in rather than deleting it (contrast `vercel`). On a push to the default branch (or `workflow_dispatch`): build frontend + backend, compose one SCF zip, resume CynosDB if paused, `terraform apply`, push function code out-of-band, invoke the migrate function, smoke-test the live URL. Terraform owns function config / env / role / triggers and every other resource — see `infra.md`. Protect the default branch so CI is green before merge; a push then both merges and deploys.

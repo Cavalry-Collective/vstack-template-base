@@ -27,7 +27,7 @@ Binds `infra/CLAUDE.md` to the **`tencentcloud` Terraform provider**: the produc
 
 ## Storage — COS + VOD
 
-- **Media COS bucket is private** (AES256 + versioning); the app never serves a public object URL — it mints **signed GET** URLs and **presigned PUT** URLs server-side (`lib/cos`). The SCF role is scoped to the `users/*` and `posts/*` prefixes only; a lifecycle rule expires orphaned uploads.
+- **Media COS bucket is private** (AES256 + versioning); the app never serves a public object URL — it mints **signed GET** URLs and **presigned PUT** URLs server-side (`lib/cos`). The SCF role is scoped to the app's media prefixes only, never the whole bucket; a lifecycle rule expires orphaned uploads.
 - **Cross-region DR replication is configured** — the media bucket replicates to a bucket in a second region (objects written after enablement; no automatic backfill).
 - **VOD (video):** upload signatures are HMAC-signed with a **permanent CAM key** (`TENCENT_SECRET_ID`/`KEY` of a dedicated VOD-scoped sub-user) — **VOD upload signing does not accept STS temporary creds**, so this key is long-lived by necessity, injected via Terraform. A VOD **procedure** transcodes to adaptive-HLS + a cover on upload; the completion **callback is unsigned** and validated by FileId ownership + an authoritative VOD read.
 
