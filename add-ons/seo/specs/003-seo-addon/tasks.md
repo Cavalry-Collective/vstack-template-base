@@ -4,6 +4,8 @@
 
 **Prerequisites**: plan.md, spec.md, research.md (critique C1–C10, decisions D1–D8), data-model.md (R1–R11 / S1–S7 / G1–G3), contracts/ (3), quickstart.md
 
+> **Historical record:** completed tasks below describe deliverables as shipped at 003-time; some were later moved or changed — bindings written into `stacks/*` files were relocated to `add-ons/seo/bindings.md`, and the enumeration edits were removed by the folder-isolation relocation (registry row later restored). See the annotation atop [spec.md](spec.md).
+
 **Tests**: No test-code tasks — docs-only feature. Each story instead ends with its quickstart Part A validation task (the spec's review-based acceptance bar; see spec *Assumptions*). Part B checks bind instantiated projects, not this repo.
 
 **Organization**: Tasks grouped by user story; stories are independently completable and testable. The redo edits the *uncommitted* first-attempt content in place — same file set, no migration state.

@@ -4,6 +4,8 @@
 
 **Input**: Feature specification from `/add-ons/seo/specs/003-seo-addon/spec.md`, plus the user's planning directive: the first implementation (currently uncommitted in the working tree) "is poorly implemented" — this plan defines the redo. Amended 2026-07-07 for the spec refinement that ratified the scope boundary (spec *Scope* section, FR-014, SC-006): structural work only; keyword strategy, paid search, rank tracking, and page-speed ranking factors are out of scope.
 
+> **Historical record:** parts of this document are superseded — see the annotation atop [spec.md](spec.md) (scope boundary reversed by 004; bindings relocated to `add-ons/seo/bindings.md`; enumeration expectations changed, with the registry row later restored; a fourth pack shipped). Path, count, and budget statements below are the 003-era record.
+
 ## Summary
 
 Rework the SEO add-on so its quality is *mechanically auditable* instead of reviewer-dependent. The first implementation stated the right rules but in unenumerable prose: the stack seam couldn't be audited item-by-item, pack bindings were mega-bullets that hid omissions, verification wasn't per-rule, and two load-bearing failure modes (URL stability, crawl traps) were missing. The redo (research.md C1–C10 → D1–D8) introduces shared IDs — approach rules **R1–R11**, seam items **S1–S7**, CI gates **G1–G3** — used identically in the add-on README, the pack bindings, the contracts, and the quickstart checks, so every success criterion becomes a grep or a fetch. Same files as the first attempt; no new mechanism, no scaffolding, docs-only.

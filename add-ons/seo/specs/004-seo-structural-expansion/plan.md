@@ -4,6 +4,8 @@
 
 **Input**: Feature specification from `/add-ons/seo/specs/004-seo-structural-expansion/spec.md`, with three clarifications ratified 2026-07-07 (spec *Clarifications*): the `003-seo-addon` exclusion is reversed (structural work of keyword strategy, paid search, rank tracking, and page-speed ranking factors in scope; the ongoing practice of each out); day-1 gates are exactly the registry-derivable checks plus the payload budget; the expansion stays in the single existing document, trimmed to fit.
 
+> **Historical record:** after 004 shipped, the folder-isolation relocation moved pack bindings to `add-ons/seo/bindings.md` and dropped the registry-row edits described below (row later restored by a consistency review). See the annotation atop [spec.md](spec.md) and the notes in [quickstart.md](quickstart.md); pack-file append targets below are the as-shipped record.
+
 ## Summary
 
 Extend the shipped SEO add-on's shared ID vocabulary with the structural half of the four previously excluded areas: approach rules **R12–R20** (intent records, on-page coherence, linked reachability, ad-parameter invariance, direct-answering landing URLs, config-served ownership verification, derived page↔intent inventory, published loading-experience thresholds, structural speed causes), seam items **S8–S10**, CI gates **G4–G6**, and observable clauses **O11–O18** — used identically in the add-on README, the pack bindings, the contracts, and the quickstart checks, exactly as 003 established. The capability statement's exclusion sentence is rewritten as the structural-in / ongoing-out boundary. Docs-only; same mechanism, no scaffolding.

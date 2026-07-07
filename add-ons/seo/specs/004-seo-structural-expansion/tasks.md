@@ -4,6 +4,8 @@
 
 **Prerequisites**: plan.md, spec.md (3 ratified clarifications), research.md (D1–D9), data-model.md (R12–R20 / S8–S10 / G4–G6), contracts/ (3 deltas), quickstart.md
 
+> **Historical record:** completed tasks below describe deliverables as shipped; the folder-isolation relocation later moved pack-file binding lines into `add-ons/seo/bindings.md` and removed the registry-row edit (row later restored by a consistency review). See [quickstart.md](quickstart.md)'s notes.
+
 **Tests**: No test-code tasks — docs-only feature. Each story ends with its quickstart Part A validation task (the spec's review-based acceptance bar; see spec *Assumptions*). Part B checks (O11–O18, G4–G6) bind instantiated projects, not this repo.
 
 **Organization**: Tasks grouped by user story, phases in spec priority order (P1 → P2 → P3). US1–US4 all extend `add-ons/seo/README.md` — single writer per phase, so those stories are sequential; US5 and US6 touch disjoint files.

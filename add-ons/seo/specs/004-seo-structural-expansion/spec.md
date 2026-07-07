@@ -1,5 +1,7 @@
 # Feature Specification: SEO Add-on — Structural Expansion
 
+> **Historical record (annotated 2026-07-07).** After 004 shipped, the folder-isolation relocation moved the pack bindings into `add-ons/seo/bindings.md` (not the packs' own files) and removed the registry row and root-file mentions FR-015/US6 required; a later consistency review restored the add-on's row in the `add-ons/README.md` registry table while keeping bindings and specs inside the add-on. `quickstart.md` carries the post-relocation notes — read US6, FR-015, SC-001, and SC-002 with them.
+
 **Feature Branch**: `004-seo-structural-expansion`
 
 **Created**: 2026-07-07

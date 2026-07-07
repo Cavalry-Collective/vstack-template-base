@@ -1,5 +1,7 @@
 # Feature Specification: SEO Add-on
 
+> **Historical record (annotated 2026-07-07).** Two later changes supersede parts of this spec. **(1)** `004-seo-structural-expansion` reversed the scope boundary — the structural work of keyword targeting, ads-landing readiness, rank tracking, and page-speed is now in scope (R12–R20, S8–S10, G4–G6; the README budget rose to ~110 lines). **(2)** The folder-isolation relocation moved pack bindings to `add-ons/seo/bindings.md` (a fourth pack, `vercel-ssr`, shipped after this spec) and removed the root-file enumerations FR-013/US3 required; a later consistency review restored the add-on's row in the `add-ons/README.md` registry table (the Day-1 registry lists every shipped add-on) while bindings and specs stay in this directory. Read the *Scope* section, US3, FR-013, SC-003, and SC-006 as the 003-era record.
+
 **Feature Branch**: `003-seo-addon`
 
 **Created**: 2026-07-07

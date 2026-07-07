@@ -11,6 +11,8 @@
 
 ### A1. The add-on exists, is sized, and carries the enumerated structures
 
+> **Superseded by `004-seo-structural-expansion`:** the document grew with the expansion — expect ~97 lines (budget ≤ ~110) and IDs R1–R20, S1–S10, G1–G6. The numbers below are the 003-era record.
+
 ```bash
 test -f add-ons/seo/README.md && echo OK
 wc -l add-ons/seo/README.md                      # expect ≤ ~70 (hard ceiling ~150)
@@ -24,7 +26,8 @@ grep -c 'G[1-3]' add-ons/seo/README.md           # G1–G3 gates present
 ### A2. Agnosticism (no stack names in the add-on)
 
 ```bash
-grep -inE 'next\.?js|react|vue|radix|tailwind|vercel|tencent|taro|fastify|nest|prisma|zod|node' add-ons/seo/README.md
+grep -inE 'next\.?js|react|vue|radix|tailwind|vercel|tencent|taro|fastify|\bnest\b|prisma|zod|node' add-ons/seo/README.md
+# \bnest\b: a bare "nest" substring false-positives on words like "honest"
 ```
 
 **Expected**: no matches.
@@ -43,20 +46,22 @@ grep -i 'unbound' add-ons/seo/bindings.md            # Taro section declares unb
 
 ### A4. All four adoption choice points enumerate the add-on
 
-> **Superseded by the folder-isolation relocation:** the add-on's whole footprint now lives in `add-ons/seo/` — the registry row and root-file mentions were removed on purpose, and adoption is keeping the directory (the root `CLAUDE.md` add-on mechanism picks up every kept directory). 003's original expectation below no longer holds.
+> **Superseded by the folder-isolation relocation:** the add-on's whole footprint now lives in `add-ons/seo/` — the registry row and root-file mentions were removed on purpose, and adoption is keeping the directory (the root `CLAUDE.md` add-on mechanism picks up every kept directory). 003's original expectation below no longer holds. *(A later consistency review restored the registry-table row in `add-ons/README.md` — the Day-1 registry lists every shipped add-on — while bindings and specs stay in this directory.)*
 
 ```bash
 test -d add-ons/seo && echo OK                    # adoption is keeping this directory
-grep -n 'SEO\|`seo`' CLAUDE.md README.md add-ons/README.md
+grep -n 'SEO\|`seo' CLAUDE.md README.md add-ons/README.md
 ```
 
-**Expected (post-relocation)**: `OK`; the grep finds no seo-specific mentions outside the folder.
+**Expected**: `OK`; root `CLAUDE.md` and `README.md` carry no seo-specific mentions; in `add-ons/README.md` the only hits are the restored registry-table row.
 
 ### A5. Document-contract review (human, ~5 minutes)
 
 Read `add-ons/seo/README.md` top to bottom against [contracts/add-on-document.md](contracts/add-on-document.md): section order, triage table present, every rule stated as an observable behaviour, interactions reference only base sections that exist (spot-check each named base heading against `apps/frontend/CLAUDE.md` / root `CLAUDE.md`).
 
 ### A6. Scope boundary stated and respected (FR-014 / SC-006)
+
+> **Superseded by `004-seo-structural-expansion`:** the boundary reversed — keyword targeting, ads-landing, rank-tracking, and page-speed *structure* are now in scope, so the third grep legitimately hits R12–R20 / S8–S10 / G4–G6. This check validates the 003-era boundary only.
 
 ```bash
 head -6 add-ons/seo/README.md | grep -iE 'keyword strategy'   # boundary in the opening capability statement
@@ -100,7 +105,7 @@ diff <(curl -s "$APP/page") <(curl -s -A Googlebot "$APP/page")          # expec
 |---|---|
 | SC-001 (Day-1 decision from checklist) | A4 + A5 (triage table readable < 5 min) |
 | SC-002 (100% invariants) | A1 + A2 + A5 |
-| SC-003 (3/3 packs determinable) | A3 |
+| SC-003 (3/3 packs at 003-time; A3's loop covers all shipped packs — four since `vercel-ssr`) | A3 |
 | SC-004 (all rules outside-observable) | A5 + Part B mapping (every R has an O/G) |
 | SC-005 (app-level observables) | Part B |
 | SC-006 (exclusions named up front; zero rules address them) | A6 |

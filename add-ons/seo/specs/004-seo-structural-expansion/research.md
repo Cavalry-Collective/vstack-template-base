@@ -4,6 +4,8 @@
 
 The open judgments behind the spec, resolved as decisions. D1, D4, D8 restate what `/speckit-clarify` ratified (they anchor the rest); D2 resolves the item clarify deferred to planning.
 
+> **Historical record:** where a decision below names `frontend.md` append targets or the registry row's seam range, the folder-isolation relocation later moved those homes — bindings live in `add-ons/seo/bindings.md`, and the restored registry row states the capability only. See [quickstart.md](quickstart.md)'s notes.
+
 ## D1 — Reversal semantics: what "structural" admits
 
 - **Decision**: In scope = what is built once into the project and observable from outside the running app (records, rules, gates, served artifacts). Out = any recurring human practice: researching/choosing keywords, buying or managing campaigns, running or reading rank reports, hands-on performance-tuning operations. Every candidate rule was screened against this line.

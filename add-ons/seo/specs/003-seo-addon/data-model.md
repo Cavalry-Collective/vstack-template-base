@@ -4,6 +4,8 @@
 
 The "data" of a docs-only capability is the structured content of its documents. The redo's core move (research D1–D6) is making that structure *enumerable*, so every downstream check is a lookup, not a judgment call. IDs below (R/S/G) are the shared vocabulary across the add-on README, pack bindings, contracts, and quickstart checks.
 
+> **Historical record:** parts of this document are superseded — see the annotation atop [spec.md](spec.md) (scope boundary reversed by 004; the Pack Binding Entry's home is now `add-ons/seo/bindings.md`, not pack files; the Adoption Choice Point enumerations changed, with the registry row later restored). IDs R1–R11 / S1–S7 / G1–G3 remain the live shared vocabulary.
+
 ## Entity: Add-on Guidance Document
 
 The agnostic playbook at `add-ons/seo/README.md`.
