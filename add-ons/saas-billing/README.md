@@ -24,7 +24,7 @@ The active pack names: the payment provider for its market and the SDK/adapter h
 
 ## Adopting this add-on
 
-Self-contained by design — nothing outside `add-ons/saas-billing/` references it until you adopt it. At Day-1 (or later adoption): keep this directory; copy the active stack pack's entry from [`bindings.md`](bindings.md) into that pack's `backend.md`; and treat the specs under this add-on's `specs/` as the program's feature specs (move them into the repo's top-level `specs/` then if you prefer one spec home — the cross-references use bare sibling filenames and survive the move).
+Self-contained by design — nothing outside `add-ons/saas-billing/` references it until you adopt it. At Day-1 (or later adoption): keep this directory; copy the active stack pack's entry from [`bindings.md`](bindings.md) into that pack's `backend.md` and then delete `bindings.md` (the pack appendix is the binding's only home from then on); and treat the specs under this add-on's `specs/` as the program's feature specs (move them into the repo's top-level `specs/` then if you prefer one spec home — the cross-references use bare sibling filenames and survive the move).
 
 ## Interactions
 

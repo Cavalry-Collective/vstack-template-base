@@ -57,7 +57,7 @@ A route is part of the app's public contract; a file path is an implementation d
 
 The project's visual system lives in the design guide (`design/design-guide.html`): the design principles, every foundation (colour, type, spacing, layout, shape, surfaces, motion, iconography, states/focus, accessibility, content, data formatting), and the composition chapters (screen archetypes, tables & grids, forms, view states & feedback) — rendered live from the single token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`). Foundations only, by design: components stay flexible per app and are built from these foundations.
 
-- **The guide is a gate.** For a new project or a rebrand, no screen or component work starts until the guide reflects the brand, has been reviewed in a browser, and is signed off. Once the system is established, small additions don't re-gate — but a new foundational token lands in the guide first.
+- **The guide is a gate.** For a new project or a rebrand, no screen or component work starts until the guide reflects the brand, has been reviewed in a browser, and is signed off — record the sign-off as a line in root `CLAUDE.md` **Learnings** (who confirmed, guide version/date). Once the system is established, small additions don't re-gate — but a new foundational token lands in the guide first.
 - **Customise by editing tokens, not screens.** A rebrand edits the primitive token tier; the semantic tier and the whole guide re-derive from it.
 - **The guide binds components without prescribing them.** Every component consumes semantic tokens, follows the guide's state ladder and focus spec, and meets its accessibility floor. A pattern that recurs across projects earns a specimen in the guide; a stack pack may add a Storybook against the same tokens.
 
@@ -204,7 +204,7 @@ Security baseline:
 - **No secrets in the bundle.** The SPA bundle ships to the client fully readable; anything secret stays server-side, behind a backend endpoint that holds the credential.
 - **Treat rendered data as untrusted.** Rely on the framework's default escaping and never bypass it (no raw-HTML injection with unsanitised input).
 - **Auth tokens live in one place** — the one agreed store/service (see *Layering*), never scattered across components or hand-read from storage in views. The default transport is an HTTP-only cookie set by the backend (see its *Security baseline*); never keep session tokens in `localStorage` unless the active stack pack registers otherwise.
-- **Security response headers are part of the app.** Send the standard hardening headers and a **Content-Security-Policy** at the framework's header layer; ship a new or tightened CSP report-only first, then promote to enforcing. Allow-list only the origins the app actually loads; never fall back to `unsafe-inline`/`*` to silence a report. (Exact headers + config: the active stack pack.)
+- **Security response headers are part of the app.** The backend *Security baseline*'s header rule (hardening headers + CSP, shipped report-only first, then promoted to enforcing) applies at this app's framework header layer. Frontend-specific bar: allow-list only the origins the app actually loads; never fall back to `unsafe-inline`/`*` to silence a report.
 
 ## Versioning / build identity
 

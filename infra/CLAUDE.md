@@ -23,7 +23,7 @@ Agents working in this folder will typically do one of two things:
 
 ## Default execution mode
 - At the start of each new chat, verify the active cloud auth/credential and project context before making any changes.
-- Run the provider's context command outside the sandbox and show the available contexts to the user **(GCP:** `gcloud config configurations list`**)**.
+- Run the provider's context command and show the available contexts to the user **(GCP:** `gcloud config configurations list`**)** — it needs real cloud credentials, so run it where they are available, not in a restricted shell.
 - Ask the user which account/project/configuration to use before running commands that depend on cloud credentials or project context.
 - Do not assume the previously used context is correct.
 

@@ -34,7 +34,7 @@ pnpm build       # prisma generate, then next build + nest build
 pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
 ```
 
-**CI block → `.github/workflows/ci.yml` (non-interactive):** spin up a Postgres service container; `pnpm install --frozen-lockfile`; `prisma generate`; `prisma migrate deploy` (**never `prisma migrate dev` in CI — it can reset the DB or prompt**); `pnpm lint`; `pnpm typecheck`; `next build` + `nest build`; non-watch `pnpm test`; the frontend **i18n key-parity** check (the base gate stands — `frontend.md` keeps it unchanged). Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
+**CI block → `.github/workflows/ci.yml` (non-interactive):** spin up a Postgres service container; `pnpm install --frozen-lockfile`; `prisma generate`; `prisma migrate deploy` (**never `prisma migrate dev` in CI — it can reset the DB or prompt**); `pnpm lint`; `pnpm typecheck`; `next build` + `nest build`; non-watch `pnpm test`; the frontend **i18n key-parity** check (the base gate stands — `frontend.md` keeps it unchanged); plus the db appendix's **§CI checks** — apply-from-zero on a scratch DB, the `migrate diff` drift gate (replacing the base round-trip TODO, per `db.md`'s register), and the seed run twice. Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
 
 **Validation:** **Zod** is the schema library at the NestJS controller edge and for Next form/response schemas; a shape shared across the two is defined once and reused (no class-validator). Details in `backend.md` / `frontend.md`.
 

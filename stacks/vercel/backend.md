@@ -59,7 +59,7 @@ One file is both entrypoints:
 ## Add-on bindings (if adopted)
 
 - **test-mode** (`add-ons/test-mode/`): a `shared/aspects/` plugin resolves the mode signal from an inbound header onto the request context — fail closed: missing or unknown means production. In test mode the flag-gated integrations (the base default-off booleans) route to their stdout/no-op sinks. The test-user picker is a route gated on the same signal; it returns `[]` in production, and a test asserts that.
-- **otp-auth** (`add-ons/otp-auth/`): model A (self-managed) — an `otp_challenge` table (hashed code, short TTL, `purpose` column) via node-pg-migrate; hashing + timing-safe verify in `shared/utils/`; delivery through gateway adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`; a unique constraint on (target, purpose) resolves the double-submit race to `409` per the base status table.
+- **otp-auth** (`add-ons/otp-auth/`): model A (self-managed) — an `otp_challenge` table (hashed code, short TTL, `purpose` column) via node-pg-migrate; hashing + timing-safe verify in `shared/utils/`; delivery through gateway adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`; a unique constraint on (target, purpose) resolves the double-submit race to `409` per the base status table. Attempt rate limits keep their counters in Postgres (no separate store on this pack); in test mode delivery is sinked to the structured log — the tester reads the real code there, and verify is never stubbed.
 
 ## Conflict register
 
