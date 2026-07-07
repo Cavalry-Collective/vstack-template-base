@@ -67,6 +67,7 @@ This stack **keeps** the base's version.json approach (contrast the `vercel` pac
 ## Add-on bindings (if adopted)
 
 - **premium-design** (`add-ons/premium-design/`): motion is CSS transitions/keyframes driven by duration/easing tokens in `src/styles/tokens.css` — no animation library by default (H5 bundle weight; the base dependency rule). Scroll reveals go through one shared IntersectionObserver hook in `lib/`. Fonts are self-hosted static assets loaded with `font-display: swap`; images ship pre-sized and compressed — this stack has no runtime image optimiser. Honour `prefers-reduced-motion` by collapsing the duration tokens under the media query; keep animated values that must match Taro built-ins in capital `Px` (see *Responsive layout*).
+- **multi-tenancy** (`add-ons/multi-tenancy/`): Taro's page registry can't carry the organisation as a path segment, so the active organisation lives in one persisted store slice (id + name + role), set only from the memberships endpoint; every `services/` call builds the organisation-scoped API path from that slice, and the backend re-validates membership on each request. Switching goes through an organisation-picker page whose switch action **resets every organisation-scoped store slice before writing the new id** — no cached list, draft, or detail survives a switch. Show the current organisation name in the app shell so the tenant context is always visible. (The `x-tenant` header here is the test-mode signal, not this add-on's tenant — see `backend.md`.)
 
 ## Conflict register
 

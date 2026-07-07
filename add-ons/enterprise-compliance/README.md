@@ -26,6 +26,7 @@ The active pack names: the SAML/OIDC library and session store; the MFA/WebAuthn
 
 - **Base *Audit trail* + *Security baseline*** — this add-on instantiates and extends both; their rules apply in full.
 - **Base *Configuration*** — env config holds deployment values and default-off flags; tenant policy lives in org settings per the Approach.
+- **multi-tenancy** — supplies the organisation/tenant model this program scopes by ("Organisation — the tenant"); adopting both, its minimal owner/admin/member roles are superseded by this program's RBAC catalog, and this program's admin-security spec owns the operator surface.
 - **otp-auth** — supplies the OTP channel for MFA and step-up verification; adopt both if OTP is an MFA factor.
 - **test-mode** — keeps SSO/MFA/DSAR flows walkable without a live IdP, KMS, or mail provider; stub delivery, never the control logic.
 - **`db/CLAUDE.md`** — retention, erasure, and legal-hold schema changes follow its reversible-migration and expand→migrate→contract rules.

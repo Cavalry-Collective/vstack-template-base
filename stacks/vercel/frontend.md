@@ -87,6 +87,7 @@ The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`nex
 ## Add-on bindings (if adopted)
 
 - **premium-design** (`add-ons/premium-design/`): motion primitives are atoms/molecules driven by `@theme` duration/easing tokens — CSS transitions/keyframes by default; reach for the **`motion`** library only at a `'use client'` interaction leaf when a sequence outgrows CSS, recording the choice per the base dependency rule. Scroll reveals go through one shared IntersectionObserver hook in `lib/` (client leaf). Fonts stay on `next/font`, imagery on `next/image` (see *Responsive layout*). Honour `prefers-reduced-motion` by collapsing the duration tokens under the media query, and watch Speed Insights for motion-caused Web Vitals regressions.
+- **multi-tenancy** (`add-ons/multi-tenancy/`): the active organisation is a route segment — an `app/(org)/[organisationId]/` layout owns every organisation-scoped page; Server Components read the id from `params` and fetch through organisation-scoped `services/` calls (the backend re-validates membership on every request). The switcher lives in that layout, fed by the memberships endpoint; switching navigates to the other organisation's URL, and the segment remount is the state reset. This pack's seeded-provider pattern composes: any provider seeded with organisation data mounts *under* the organisation segment so a switch remounts it — never above it.
 
 ## Conflict register
 
