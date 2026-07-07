@@ -20,17 +20,18 @@ This README is the durable SOP — the rules every change must honour once the a
 
 ## Binds to a stack
 
-The active pack names: the payment provider for its market and the SDK/adapter home (a repo-ring adapter behind the domain's billing gateway port); the webhook verification seam (raw-body access + signature check at the controller edge); the stub gateway sink; the background-job runner (reconciliation sweep, usage-period rollover, trial-expiry handling); and the validated-config home for the provider secret key and webhook signing secret. Suggested bindings for each stack pack this template ships are pre-written in [`stack-bindings.md`](stack-bindings.md) — copy the active pack's entry into its `backend.md` add-on-bindings section at adoption.
+The active pack names: the payment provider for its market and the SDK/adapter home (a repo-ring adapter behind the domain's billing gateway port); the webhook verification seam (raw-body access + signature check at the controller edge); the stub gateway sink; the background-job runner (reconciliation sweep, usage-period rollover, trial-expiry handling); and the validated-config home for the provider secret key and webhook signing secret. Suggested bindings for each stack pack this template ships are pre-written in [`bindings.md`](bindings.md) — copy the active pack's entry into its `backend.md` add-on-bindings section at adoption.
 
 ## Adopting this add-on
 
-Self-contained by design — nothing outside `add-ons/saas-billing/` references it until you adopt it. At Day-1 (or later adoption): keep this directory; copy the active stack pack's entry from [`stack-bindings.md`](stack-bindings.md) into that pack's `backend.md`; and treat the specs under this add-on's `specs/` as the program's feature specs (move them into the repo's top-level `specs/` then if you prefer one spec home — the cross-references use bare sibling filenames and survive the move).
+Self-contained by design — nothing outside `add-ons/saas-billing/` references it until you adopt it. At Day-1 (or later adoption): keep this directory; copy the active stack pack's entry from [`bindings.md`](bindings.md) into that pack's `backend.md`; and treat the specs under this add-on's `specs/` as the program's feature specs (move them into the repo's top-level `specs/` then if you prefer one spec home — the cross-references use bare sibling filenames and survive the move).
 
 ## Interactions
 
 - **Base *Integrations* + *Security baseline*** — the provider is an untrusted, unreliable external integration; all rules (idempotency, classified failures, unclear-outcomes-never-success, ownership checks, default-off gating) apply in full.
 - **Base *Audit trail* + *Configuration*** — billing state changes go through the shared `record()`; provider keys and the billing flag are validated env config, passed inward as values.
 - **`db/CLAUDE.md`** — money in exact types; unique constraints encode the billing invariants (one customer per tenant per provider, one active subscription per tenant, unique provider event id); reversible migrations.
+- **multi-tenancy** — supplies the organisation every billing row hangs off; adopt it (or another organisation model, e.g. enterprise-compliance's) before this add-on — without one there is no tenant to bill. Its stored organisation `plan` key is superseded by this add-on's derived entitlements.
 - **enterprise-compliance** — `billing:read`/`billing:manage` join its RBAC catalog (Owner and Admin hold both); a "billing manager" is a custom role holding them; billing audit events use its envelope. Adopt both for compliance-grade billing evidence.
 - **test-mode** — the stub gateway doubles as the test-mode sink, so checkout, portal, and webhook flows stay walkable without a live provider.
 - **llm-calls** — its per-tenant cost/usage monitoring can feed the usage-metering counters, making AI usage a billable, quota-enforced metric.

@@ -4,7 +4,7 @@
 
 First-class tenancy: several organisations (workspaces, teams, clients — pick **one** noun and keep it) share one deployment while their data, members, settings, files, jobs, and billing stay strictly isolated. Adopt it **before the first tenant-owned table exists** — retrofitting scoping across a live schema is the expensive path this add-on exists to avoid.
 
-This README is the durable SOP — the isolation rules every change must honour once the add-on is adopted. The **buildable program** — tenant model, membership, invitations, resolution, switching, APIs, data model, and acceptance criteria — is [`SPEC.md`](SPEC.md) beside this file; on adoption, move it under `specs/` per the repo's spec-first workflow.
+This README is the durable SOP — the isolation rules every change must honour once the add-on is adopted. The **buildable program** — tenant model, membership, invitations, resolution, switching, APIs, data model, and acceptance criteria — is [`SPEC.md`](SPEC.md) beside this file; on adoption you may move it under `specs/` (renamed to the dated convention) if the project keeps one spec home.
 
 ## Approach
 
@@ -16,9 +16,9 @@ This README is the durable SOP — the isolation rules every change must honour 
 - **Scoping is structural, not per-call discipline.** Route every tenant-owned query through a repository/helper that *requires* the tenant id, so an unscoped query is hard to write, not merely forbidden. Where the database offers it (e.g. row-level security), add it as defence-in-depth — the pack binds the mechanism.
 - **Identity is global; membership and roles are per-tenant.** One user account (globally unique email) may hold memberships in many tenants; a role in one tenant grants nothing in another. Tenant-scoped uniqueness is a composite constraint with the tenant id (a slug or reference may repeat across tenants), never a global one.
 - **Everything derived is scoped too:** files under tenant-prefixed paths with authorised reads (signed URL or backend proxy — never a guessable public URL); background jobs carry the tenant id in the payload and revalidate the tenant's existence and status before executing; caches key by tenant; audit events, analytics, and search indexes carry and filter by the tenant id.
-- **Settings, branding, and plan hang off the tenant** — stored per-tenant as validated data, never in env config (base *Configuration* carries deployment values only). Feature and quota checks read the *active tenant's* plan, not the user's.
+- **Settings, branding, and plan hang off the tenant** — stored per-tenant as validated data, never in env config (base *Configuration* carries deployment values only). Feature and quota checks read the *active tenant's* plan, not the user's — through **saas-billing**'s entitlement resolver where that add-on is adopted.
 - **Switching tenants resets client state.** The UI always shows the current tenant; a switch drops every piece of tenant-scoped client state (stores, caches, drafts) before rendering the next tenant. A user can switch only to tenants they belong to — enforced server-side.
-- **Operator (super-admin) access is a separate, audited surface** — its own credential and routes, never a bypass of tenant scoping, and no silent impersonation. Where **enterprise-compliance** is adopted, its admin-security spec owns this surface.
+- **Operator (super-admin) access is a separate, audited surface** — its own credential and routes, never a bypass of tenant scoping, and no silent impersonation. Where **enterprise-compliance** is adopted, its program owns this surface (the operator-scoped credential and platform-scope audit defined in its `rbac.md` and `trust-transparency.md`).
 
 ## Verify isolation
 
@@ -30,7 +30,8 @@ The active pack names: where the tenant guard lives and the request-context mech
 
 ## Interactions
 
-- **enterprise-compliance** — that program *assumes* this tenant model (its "Organisation — the tenant"); this add-on supplies it. Adopting both: its RBAC catalog and system roles supersede this add-on's minimal owner/admin/member model, its audit-event envelope carries the tenant id, and its admin-security spec owns the operator surface.
+- **enterprise-compliance** — that program *assumes* this tenant model (its "Organisation — the tenant"); this add-on supplies it. Adopting both: its RBAC catalog and system roles supersede this add-on's minimal owner/admin/member model, its audit-event envelope carries the tenant id, and its program owns the operator surface (see its `rbac.md` / `trust-transparency.md`).
+- **saas-billing** — hangs subscriptions, seats, usage, and invoices off this add-on's organisation; adopt this (or another organisation model) before billing. Its derived entitlements supersede direct reads of the organisation's stored `plan` key.
 - **Base *Security baseline* + *Audit trail*** — this add-on instantiates both: tenant checks are authorization, and tenant lifecycle + membership changes are audited state changes.
 - **Base *Configuration*** — per-tenant settings are data on the tenant; env config never carries a tenant's policy or branding.
 - **test-mode** — seed at least two tenants with members so cross-tenant assertions and the test-user picker are walkable; if a pack's *mode signal* happens to be named "tenant", it is a different concept — never resolve the organisation from it.
@@ -41,4 +42,4 @@ The active pack names: where the tenant guard lives and the request-context mech
 
 | Area | Spec |
 |---|---|
-| Tenant model, membership, invitations, resolution & switching | [`SPEC.md`](SPEC.md) (→ `specs/` on adoption) |
+| Tenant model, membership, invitations, resolution & switching | [`SPEC.md`](SPEC.md) (optional move to `specs/` on adoption) |

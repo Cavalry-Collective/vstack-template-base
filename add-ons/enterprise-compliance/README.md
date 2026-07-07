@@ -4,7 +4,7 @@
 
 Enterprise controls that make the product **compliance-ready** for customers pursuing SOC 2, ISO 27001, GDPR, and PDPA: access control, auditability, data protection, retention and deletion, recovery, and governance. The software provides the *controls and evidence*; certification itself is organisational work this add-on deliberately does not claim.
 
-This README is the durable SOP — the rules every change must honour once the add-on is adopted. The **buildable program** — per-area product requirements, flows, APIs, data models, and acceptance criteria — ships with the add-on under `specs/` in this directory (see the map at the bottom), so keeping or deleting the add-on carries the whole program. When a project implements an area, that file is its feature spec: follow the repo's spec-first workflow against it (copy it into the top-level `specs/` first if the project prefers specs in one home).
+This README is the durable SOP — the rules every change must honour once the add-on is adopted. The **buildable program** — per-area product requirements, flows, APIs, data models, and acceptance criteria — ships with the add-on under `specs/` in this directory (see the map at the bottom), so keeping or deleting the add-on carries the whole program. When a project implements an area, that file is its feature spec: follow the repo's spec-first workflow against it (copy it into the top-level `specs/` first if the project prefers specs in one home). The specs use a CRM product (contacts, companies, deals) as the **worked example** for record classes, permission catalogs, and blast-radius tables — the controls are product-agnostic; substitute your product's own record classes on adoption.
 
 ## Approach
 
@@ -26,6 +26,8 @@ The active pack names: the SAML/OIDC library and session store; the MFA/WebAuthn
 
 - **Base *Audit trail* + *Security baseline*** — this add-on instantiates and extends both; their rules apply in full.
 - **Base *Configuration*** — env config holds deployment values and default-off flags; tenant policy lives in org settings per the Approach.
+- **multi-tenancy** — supplies the organisation ("the tenant") this program's org scoping, policies, and audit assume; adopt it (or an equivalent organisation model) alongside. Its minimal role model is superseded by this program's RBAC catalog.
+- **saas-billing** — its `billing:read`/`billing:manage` permissions join this program's RBAC catalog and its audit events use this program's envelope (details in that add-on's README).
 - **otp-auth** — supplies the OTP channel for MFA and step-up verification; adopt both if OTP is an MFA factor.
 - **test-mode** — keeps SSO/MFA/DSAR flows walkable without a live IdP, KMS, or mail provider; stub delivery, never the control logic.
 - **`db/CLAUDE.md`** — retention, erasure, and legal-hold schema changes follow its reversible-migration and expand→migrate→contract rules.

@@ -23,3 +23,4 @@ The active pack names: the provider SDK and its adapter home; the canned-respons
 - **Base *Integrations*** — an LLM call is one; all its rules (idempotency, failure classes, gating) apply.
 - **test-mode** — the canned-response sink doubles as the test-mode stub, so flows stay walkable without a live provider.
 - **Base *Configuration*** — model id, caps, and the flag are validated config.
+- **multi-tenancy / saas-billing** — the per-tenant cost/usage monitoring keys on multi-tenancy's tenant id where that add-on is adopted, and can feed saas-billing's usage metering so AI usage becomes a billable, quota-enforced metric.
