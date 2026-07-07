@@ -84,6 +84,9 @@ The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`nex
   - **S5** missing entity: `notFound()` → a real 404 status via `not-found.tsx`, not a 200 error UI.
   - **S6** structured data: one shared JSON-LD component fed by the page's own data.
   - **S7** locale alternates: a multilingual page declares `alternates.languages` (hreflang) from the same locale set the dictionaries define.
+  - **S8** intent record + inventory: each indexable entry in the routes module carries its target-intent phrase (per locale); a route handler (e.g. `app/page-intents.json/route.ts`) serves the derived page↔intent pairs the same way `app/sitemap.ts` derives the sitemap — generated, never hand-kept.
+  - **S9** ownership verification: a validated env key (e.g. `SEARCH_CONSOLE_VERIFICATION_TOKEN`) feeds the root layout's Metadata API `verification` field — absent key, absent tag.
+  - **S10** budget + measurement: a checked-in per-route payload budget asserted in CI against `next build` output (gate G6); the three loading-experience axes are the Core Web Vitals (LCP, INP, CLS) — Lighthouse for lab runs, Vercel Speed Insights for field data (already CSP-allow-listed above).
 
 ## Testing — typecheck + build + Playwright e2e
 

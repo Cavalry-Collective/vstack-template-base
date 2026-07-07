@@ -94,6 +94,9 @@ The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`nex
   - **S5** missing entity: `notFound()` + `not-found.tsx` → a real 404 response.
   - **S6** structured data: one shared JSON-LD component fed by the page's own data.
   - **S7** locale alternates: n/a until the project pins a locale mechanism; if it goes multilingual, derive alternates from the base i18n locale set.
+  - **S8** intent record + inventory: each indexable `routes` link-helper entry carries its target-intent phrase (per locale); a small route handler (e.g. `app/page-intents.json/route.ts`) serves the derived page↔intent pairs off the same registry as `app/sitemap.*` — generated, never hand-kept.
+  - **S9** ownership verification: a validated env key (e.g. `SEARCH_CONSOLE_VERIFICATION_TOKEN`, documented in `.env.example`) feeds the Metadata API `verification` field — absent key, absent tag.
+  - **S10** budget + measurement: a checked-in per-route payload budget asserted in CI against `next build` output (gate G6); the three loading-experience axes are the Core Web Vitals (LCP, INP, CLS) — Lighthouse for lab runs, Vercel Speed Insights for field data.
 - **premium-design** (`add-ons/premium-design/`): motion primitives are atoms/molecules driven by `@theme` duration/easing tokens — CSS transitions/keyframes by default; reach for the **`motion`** library only at a `'use client'` interaction leaf when a sequence outgrows CSS, recording the choice per the base dependency rule. Scroll reveals go through one shared IntersectionObserver hook in `lib/` (client leaf). Fonts stay on `next/font`, imagery on `next/image` (see *Responsive layout*). Honour `prefers-reduced-motion` by collapsing the duration tokens under the media query, and watch Speed Insights for motion-caused Web Vitals regressions.
 
 ## Conflict register
