@@ -2,20 +2,13 @@
 
 The shipped packs' answers to seam items S1–S10 (`README.md`, *Binds to a stack*), kept in this directory so the add-on's whole footprint lives here — keeping or deleting `add-ons/seo/` at Day-1 carries everything, and no stack appendix changes either way. At Day-1, keep the section for the adopted pack and delete the rest along with their packs. A pack with no section here is **silent** — a defect: add its bound section (one line per seam item, keyed by id) or record it unbound like the Taro section below.
 
-## vercel — bound
+## vercel — unbound
 
-Per seam item:
+Unmeetable seam item: **S1** — that pack is a **client-rendered SPA with no SSR by deliberate design** (`stacks/vercel/frontend.md` → *Rendering model*). Every route is served as the same static `index.html` and painted by JavaScript, so there is no mechanism that makes an indexable route complete without client-side scripts, and nothing to hang S2–S9 off either: no server render to emit per-route `<head>` tags, no server response to carry a 301 or a real 404 status. Adding one is a pack change, not a patch — do not reach for a prerender/SSG plugin to close this gap; that is precisely what the pack's forbidden list rules out.
 
-- **S1** rendering: indexable routes stay Server Components rendered complete on the server (this pack's default); static-generate where the data allows.
-- **S2** metadata: the App Router Metadata API — `metadataBase` once in the root layout, `generateMetadata()` per indexable segment (title/description/canonical/Open Graph incl. the share image); no hand-written `<head>` tags.
-- **S3** canonical origin + redirects: a validated env key (e.g. `NEXT_PUBLIC_CANONICAL_ORIGIN`, documented in `.env.example`) feeds `metadataBase`; permanent moves via `next.config` `redirects()` with `permanent: true`.
-- **S4** sitemap/robots: `app/sitemap.*` + `app/robots.*`, enumerating indexable routes through the `routes` link-helper (this pack's registry binding); Vercel preview deployments already answer `X-Robots-Tag: noindex` — keep it, production is the only indexable origin, and a test still asserts the non-production noindex response (gate G3 — platform behaviour is not the gate).
-- **S5** missing entity: `notFound()` + `not-found.tsx` → a real 404 response.
-- **S6** structured data: one shared JSON-LD component fed by the page's own data.
-- **S7** locale alternates: n/a until the project pins a locale mechanism; if it goes multilingual, derive alternates from the base i18n locale set.
-- **S8** intent record + inventory: each indexable `routes` link-helper entry carries its target-intent phrase (per locale); a small route handler (e.g. `app/page-intents.json/route.ts`) serves the derived page↔intent pairs off the same registry as `app/sitemap.*` — generated, never hand-kept.
-- **S9** ownership verification: a validated env key (e.g. `SEARCH_CONSOLE_VERIFICATION_TOKEN`, documented in `.env.example`) feeds the Metadata API `verification` field — absent key, absent tag.
-- **S10** budget + measurement: a checked-in per-route payload budget asserted in CI against `next build` output (gate G6); the three loading-experience axes are the Core Web Vitals (LCP, INP, CLS) — Lighthouse for lab runs, Vercel Speed Insights for field data.
+Workable alternative: adopt the sibling **`vercel-ssr`** pack, whose bound section is directly below — it is the same platform and the same database, and it exists for this requirement. A project that must keep the SPA serves its crawlable surface **outside** the app bundle (its own server-rendered origin — a marketing site, a docs site) and binds the add-on there.
+
+Residual posture: **R10 survives unbinding** — the SPA origin is publicly reachable, so it still serves a refuse-indexing response. Bind that much: a static `public/robots.txt` disallowing all, plus `X-Robots-Tag: noindex` from the `vercel.json` `headers` block on every non-production deployment, and a Playwright assertion on the non-production response (gate G3). Vercel previews already answer `noindex` — assert it anyway; platform behaviour is not the gate.
 
 ## vercel-ssr — bound
 

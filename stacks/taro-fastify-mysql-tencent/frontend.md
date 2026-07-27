@@ -57,7 +57,7 @@ Video is an addition (no base rule): upload with **`vod-js-sdk-v6`**, fetching a
 
 ## Versioning / build identity (base rule — kept)
 
-This stack **keeps** the base's version.json approach (contrast the `vercel` pack, where the platform handles skew): emit a build-stamped `version.json`, poll it cache-busted on launch/foreground, and show a dismissible "Refresh" banner when the running build differs — plus the visible `v<version>` tag from `apps/frontend/package.json`. The app is also a PWA (install banner); `version.json` is served `no-store`.
+This stack **keeps** the base's version.json approach (contrast the `vercel-ssr` pack, where the platform's render handles skew): emit a build-stamped `version.json`, poll it cache-busted on launch/foreground, and show a dismissible "Refresh" banner when the running build differs — plus the visible `v<version>` tag from `apps/frontend/package.json`. The app is also a PWA (install banner); `version.json` is served `no-store`.
 
 ## Internationalisation & test-mode sign-in
 

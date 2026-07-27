@@ -2,7 +2,7 @@
 
 One **full-stack Next.js** app (App Router, TypeScript) owning both the UI and the server side — Server Components and Server Actions instead of a separate API app · DB **Postgres** — **Neon** (serverless) in production, Docker locally — via **node-pg-migrate** + **`pg`**. Deploys to **Vercel** as a **single project**; Terraform (Vercel provider) as IaC. This is the **manifest** — it wires the pack onto a project; bindings and conflict registers live in the appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
 
-> **Naming.** Named for the platform plus its distinguishing shape — full-stack SSR on Vercel — under the platform exception in `../README.md`; the would-be convention triple collapses to the pair `nextjs-postgres` (Next.js fills both the frontend and backend slots). Sibling contrast: the `vercel` pack (would-be triple `nextjs-fastify-postgres`) keeps a separate Fastify API on the same platform — this pack is the one-app alternative.
+> **Naming.** Named for the platform plus its distinguishing shape — full-stack SSR on Vercel — under the platform exception in `../README.md`; the would-be convention triple collapses to the pair `nextjs-postgres` (Next.js fills both the frontend and backend slots). Sibling contrast: the `vercel` pack (would-be triple `react-fastify-postgres`) is a **client-rendered SPA with no SSR at all**, served as static assets beside a separate Fastify API on the same platform — **this pack is the server-rendered alternative**, and the `-ssr` suffix marks exactly that. Pick this one when routes must arrive as complete HTML (public search indexability above all); pick `vercel` when they need not.
 
 ## Appendix → base mapping
 

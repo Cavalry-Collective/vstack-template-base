@@ -1,6 +1,6 @@
 # Feature Specification: SEO Add-on — Structural Expansion
 
-> **Historical record (annotated 2026-07-07).** After 004 shipped, the folder-isolation relocation moved the pack bindings into `add-ons/seo/bindings.md` (not the packs' own files) and removed the registry row and root-file mentions FR-015/US6 required; a later consistency review restored the add-on's row in the `add-ons/README.md` registry table while keeping bindings and specs inside the add-on. `quickstart.md` carries the post-relocation notes — read US6, FR-015, SC-001, and SC-002 with them.
+> **Historical record (annotated 2026-07-07).** After 004 shipped, the folder-isolation relocation moved the pack bindings into `add-ons/seo/bindings.md` (not the packs' own files) and removed the registry row and root-file mentions FR-015/US6 required; a later consistency review restored the add-on's row in the `add-ons/README.md` registry table while keeping bindings and specs inside the add-on. `quickstart.md` carries the post-relocation notes — read US6, FR-015, SC-001, and SC-002 with them. **Also superseded:** the `vercel` pack was later changed to a client-rendered SPA with no SSR, so it can no longer meet S1 and is recorded **unbound** in `bindings.md` — wherever these artifacts count it among the bound packs (`research.md`, `data-model.md`, `quickstart.md`'s pack loop), the bound set is now `vercel-ssr` and `nextjs-nestjs-postgres`.
 
 **Feature Branch**: `004-seo-structural-expansion`
 

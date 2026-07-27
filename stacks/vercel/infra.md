@@ -2,13 +2,14 @@
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `infra/CLAUDE.md` to the **Vercel Terraform provider** (`vercel/vercel`): the product runs entirely on Vercel — two projects (web + api), Vercel Blob, and marketplace Postgres (Neon). Read the base first; its workflow, risk-review format, and approval guardrails apply unchanged.
+Binds `infra/CLAUDE.md` to the **Vercel Terraform provider** (`vercel/vercel`): the product runs entirely on Vercel — two projects (a **static** web project + an api project), Vercel Blob, and marketplace Postgres (Neon). Read the base first; its workflow, risk-review format, and approval guardrails apply unchanged.
 
 ## Workload shape
 
 - One self-contained workload directory per product under `infra/<workload>/` (base layout stands): `versions.tf` (provider `vercel/vercel`), `providers.tf` (`api_token` from `TF_VAR_vercel_api_token` — never committed), `variables.tf`, plus concern files — `web.tf` (frontend project + its env vars), `api.tf` (backend project + its env vars), `storage.tf` (Blob store + project connection).
-- **Two `vercel_project` resources:** web (`framework = "nextjs"`, `root_directory = "apps/frontend"`) and api (`root_directory = "apps/backend"`). Pin `node_version` (keep in sync with the workspace `engines`) and the function region per project via `resource_config`.
-- **One explicit resource block per environment variable** (`vercel_project_environment_variable`), `sensitive = true` for secrets — the base explicit-over-DRY authoring style, bound. Store connections inject their own variables — the Neon marketplace integration injects `DATABASE_URL`, the Blob store connection injects `BLOB_READ_WRITE_TOKEN` — don't duplicate those as Terraform-managed variables.
+- **Two `vercel_project` resources:** web (`framework = "vite"`, `root_directory = "apps/frontend"`, `output_directory = "dist"`) and api (`root_directory = "apps/backend"`). Pin `node_version` (keep in sync with the workspace `engines`); the function region setting applies to the **api** project only.
+- **The web project is static — it must never gain a runtime.** `framework = "vite"` makes the build a pure asset upload served from the CDN; the SPA has no SSR and no functions (`frontend.md` → *Rendering model*). Setting `framework = "nextjs"`, or letting an `api/` directory appear under `apps/frontend/`, silently gives the web project a serverless runtime — that is the drift to catch in review. Routing (`/api` proxy + SPA fallback) lives in `apps/frontend/vercel.json`, not Terraform.
+- **One explicit resource block per environment variable** (`vercel_project_environment_variable`), `sensitive = true` for secrets — the base explicit-over-DRY authoring style, bound. **The web project's variables are `VITE_`-prefixed, build-time, and baked into a publicly readable bundle** — never mark one `sensitive` and assume it stays secret; secrets belong on the api project only. Store connections inject their own variables — the Neon marketplace integration injects `DATABASE_URL`, the Blob store connection injects `BLOB_READ_WRITE_TOKEN` — don't duplicate those as Terraform-managed variables.
 - **The state file holds the secret env-var values — treat it like a credential.** Use a remote, access-controlled backend from day 1 (Terraform Cloud, an object-store backend, etc.); a laptop-only local state file is unencrypted, unbacked-up, and one `git add` away from a leak. Never commit state.
 
 ## Auth / context
@@ -29,7 +30,7 @@ The base's start-of-session context check, bound: the provider authenticates wit
 
 Stand up a persistent staging environment on day 1 — a shipped project wants a stable URL to demo and to smoke-test a release before it reaches `main`:
 
-- **Both `vercel_project` resources get a `develop`-branch preview environment** (branch-scoped env vars); pushing `develop` deploys both as Preview at the stable branch alias, while `main` stays production. The web preview's `BACKEND_URL` points at the API preview alias.
+- **Both `vercel_project` resources get a `develop`-branch preview environment** (branch-scoped env vars); pushing `develop` deploys both as Preview at the stable branch alias, while `main` stays production. **Give the `develop` API a stable custom domain** — the web app reaches it through a host-conditioned rewrite in `apps/frontend/vercel.json` (`frontend.md` → *`vercel.json`*), and a static rewrite cannot target a per-deployment URL.
 - **A dedicated long-lived Neon branch** — a copy-on-write fork of prod, on its own endpoint — backs the develop API, Terraform-authored alongside the projects. Preview reads/writes never touch prod data.
 - **Migrations for `develop` are manual too**, run before the push, with its own connection string — see `db.md` → *Production & staging migrations* (including the `vercel env pull` gotcha).
 - Pushing `develop` is a safe staging release; pushing `main` is the production release. Per-PR previews (the git integration's default) still exist for isolated review — `develop` is the shared, always-on one.

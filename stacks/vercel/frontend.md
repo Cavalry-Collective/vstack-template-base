@@ -1,48 +1,71 @@
-# Next.js (App Router) on Vercel — frontend appendix
+# React SPA (Vite) on Vercel — frontend appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `apps/frontend/CLAUDE.md` to **Next.js (App Router, TypeScript)**, deployed as a Vercel project, consuming the Fastify backend (`./backend.md`) over REST. Read the base file first; this only adds the bindings and the marked overrides.
+Binds `apps/frontend/CLAUDE.md` to **React 19 + TypeScript, built by Vite into static assets**, served from Vercel's CDN and consuming the Fastify backend (`./backend.md`) over REST. Read the base file first; this only adds the bindings and the marked overrides.
+
+## Rendering model: client-only. No SSR. (load-bearing)
+
+**This pack is a single-page app. There is no server-side rendering, and adding any is a defect, not an improvement.** The base contract's SPA framing (`apps/frontend/CLAUDE.md`, root `CLAUDE.md`, root `README.md`) applies **verbatim** — do **not** soften it on Day 1; that instruction in the root `README.md` is for the server-first packs only.
+
+- **`vite build` emits `dist/`: one `index.html` shell plus hashed JS/CSS.** Every route returns that same shell; React renders the page in the browser. Vercel serves it as static files — the web project runs **no** function, at request time or at build time.
+- **No render-to-HTML step anywhere** — not per request (SSR), not at build (SSG/prerender). HTML is authored once, by hand, in `index.html`.
+- **Entry is `createRoot(...).render(...)` in `src/main.tsx`** — never `hydrateRoot`, which exists only to attach to server-rendered markup.
+- **Routing is React Router in library mode** — `createBrowserRouter` + `<RouterProvider>` fed by the central registry (see *Routing*). If the project ever moves to React Router **framework mode**, `react-router.config.ts` **must** set `ssr: false`; framework mode defaults to SSR on.
+
+**Forbidden — each one is greppable, and any hit is a violation:**
+
+| Grep for | Why it's a violation |
+|---|---|
+| `next`, `next/*` in `apps/frontend/package.json` | Next.js is the sibling `vercel-ssr` pack, not this one |
+| `'use client'` / `'use server'` | React Server Component directives — there is no server component tree here |
+| `renderToString`, `renderToPipeableStream`, `renderToReadableStream`, `hydrateRoot` | server rendering / hydration |
+| `vike`, `vite-plugin-ssr`, any prerender/SSG plugin | build-time HTML generation |
+| `*.server.ts(x)`, an `api/` directory under `apps/frontend/` | a server tier on the web project |
+
+**If a requirement genuinely needs server-rendered HTML — public search indexability above all — that is a pack change, not a patch.** Switch deliberately to `vercel-ssr` (or serve the crawlable surface outside this app); do not bolt a render step onto this one. See `add-ons/seo/bindings.md`, where this pack is recorded **unbound** for exactly that reason.
 
 ## Stack binding at a glance
 
-- **App Router under `src/app/`**, TypeScript. A file is a Server Component unless it opens `'use client'`; place the directive at the smallest interaction leaf — never on a page/layout "to be safe".
-- **REST-only data flow — no Server Actions, no direct DB.** Every read and mutation goes through `services/` to the backend's `/internal/v1` API. Pack decision — rejected alternative: Server Actions / route-handler data access (the Fastify backend owns the domain; a second server-side mutation path would fork the contract and bypass its aspects).
+- **Vite 7 + React 19 + TypeScript**, sources under `src/` in the base's shape (below). `@vitejs/plugin-react`.
+- **REST-only data flow.** Every read and mutation goes through `services/` to the backend's `/internal/v1` API. Pack decision — rejected alternative: any client-side direct-DB or BFF layer; the Fastify backend owns the domain and its aspects.
 - **Plain `fetch` through the services layer — no react-query/SWR by default.** Pack decision — rejected alternative: react-query (add it only when client-side cache invalidation genuinely appears; don't pre-install).
-- **State: React Context providers under `src/store/`** — one provider per domain, seeded with server-fetched data passed down from Server Components (a deliberate divergence from the sibling `nextjs-nestjs-postgres` pack — see the conflict register). Pack decision — rejected alternative: an external store library (Redux/Zustand); context + props cover this architecture's client-state needs.
+- **State: React Context providers under `src/store/`** — one provider per domain, holding client state and service results. Pack decision — rejected alternative: an external store library (Redux/Zustand); context + props cover this architecture's needs.
+- **Config: only `VITE_`-prefixed vars reach the bundle**, read once through one typed `src/lib/env.ts` parsed by Zod at module load — binds the base *Configuration* fail-fast rule. Everything in the bundle is **public**; a secret in a `VITE_` var is the base *No secrets in the bundle* violation.
 
-## The `/api` proxy (load-bearing)
+## `vercel.json` — the SPA fallback and the `/api` proxy (load-bearing)
 
-- `next.config` `rewrites()` maps **`/api/:path*` → `${BACKEND_URL}/internal/v1/:path*`**. The browser only ever talks to the frontend origin — session cookies stay first-party and CORS never enters the picture.
-- **Browser path:** one fetch wrapper `services/http.ts` calling relative `/api/...` paths; it maps the backend's error envelope to a typed `ApiError { code, status, message }` so failures feed the base error state and carry the correlation id.
-- **Server path (RSC):** `services/server-api.ts` calls `BACKEND_URL` directly (relative URLs don't resolve server-side) and **forwards the incoming request's cookies**.
-- Both paths live in `services/` — the base "all network access lives here" rule, bound. A `fetch` inlined in a component is the greppable smell.
-- `BACKEND_URL` is read at build time (the rewrite destination) *and* at runtime (RSC fetches) — it must be present in both contexts.
+`apps/frontend/vercel.json` carries two rewrites, and **order matters** — the `/api` rule must precede the catch-all or the proxy is swallowed by it:
 
-## Folder mapping (base `src/` shape → App Router)
+1. **`/api/:path*` → `<api-origin>/internal/v1/:path*`.** The browser only ever talks to the web origin, so session cookies stay first-party and CORS never enters the picture.
+2. **Catch-all → `/index.html`.** Without it, a deep link or a refresh on any route but `/` returns the CDN's 404 — the canonical SPA-on-a-CDN bug.
 
-| Base layer | Here |
+- **⚠️ `vercel.json` is static — it is read *before* the build, so it cannot interpolate an env var.** The API origin is therefore a literal hostname, not `BACKEND_URL`. Give each environment its own rule with a **host condition** (`has: [{ "type": "host", "value": "…" }]`): the production domain routes to the production API's domain, the `develop` alias to the staging API's. Per-PR preview hosts are random, so they fall through to the **staging** API — a recorded tradeoff, not an oversight; a PR whose change spans both apps is verified against its own preview pair by pointing `E2E_BASE_URL` at the API preview directly.
+- **Browser path:** one fetch wrapper `services/http.ts` calling relative `/api/...` paths. It parses responses with Zod, and maps the backend's error envelope to a typed `ApiError { code, status, message, correlationId }` so failures feed the base error state and carry the correlation id.
+- **Locally, `vercel.json` is inert** — the Vite dev server does the same job through `server.proxy` (`/api` → `http://localhost:4000/internal/v1`), so relative `/api/...` paths and first-party cookies behave identically in dev and deployed. Keep the two destinations in step; a drift between them is the "works locally, 404s on preview" bug.
+- Both the wrapper and every domain module live in `services/` — the base "all network access lives here" rule, bound. A `fetch` inlined in a component is the greppable smell.
+
+## Folder mapping (base `src/` shape)
+
+The base shape holds **as written** — `store/`, `services/`, `pages/`, `components/{atoms,molecules,organisms/<feature>,templates}`, `i18n/`, `lib/`. Two file bindings only:
+
+| Base file | Here |
 |---|---|
-| `pages/` | `src/app/` route segments (`page`, `layout`, `loading`, `error`, `not-found`); "pages hold no business logic" applies to `page.tsx` |
-| `store/` | `src/store/` — React Context providers + hooks |
-| `services/` | `src/services/` — `http.ts` (browser), `server-api.ts` (RSC), one module per backend route group |
-| `components/atoms/`, `components/molecules/`, `components/organisms/<feature>/`, `components/templates/` | unchanged (atomic tiers per the base *Component structure*) |
-| `lib/`, `i18n/` | unchanged |
-| `routes.<ext>` | the `app/` tree + a `routes` link-helper module (see *Routing*) |
+| `routes.<ext>` | `src/routes.tsx` — the React Router route objects **and** the link helpers, one module (see *Routing*) |
 | `tokens.<ext>` | CSS variables declared via Tailwind 4 `@theme` in the global stylesheet (see *Styling*) |
 
 ## Routing
 
-The `app/` tree replaces the central `routes.<ext>` registry; the surviving base intent is rename-safe links. Build every parameterized href through a `routes` link-helper module (`src/lib/routes.ts`) — never a hand-concatenated URL string; static routes may use literal hrefs. `<Link href>` is the default navigation primitive; `useRouter().push`/`redirect()` for programmatic cases.
+`src/routes.tsx` is the base's single central registry, bound: the `createBrowserRouter` route array plus a typed link-helper per parameterized route. `<Link to>` is the default navigation primitive; `useNavigate()` for programmatic cases. Never hand-concatenate a path string — resolve it through the helper. **Code-split at the route and nowhere else**: each entry loads its page through the route object's own `lazy` field, so one chunk maps to one screen. Don't scatter `React.lazy` below the route — it fragments the bundle without shortening the critical path.
 
-## Four data states → App Router files
+## Four data states → React Router
 
-Binding only — the base owns the why. **Loading** → `loading.tsx` / `<Suspense>` with shared skeletons. **Error** → `error.tsx` (must be a Client Component), wiring `reset()` into the shared `<ErrorState>` and surfacing the correlation id from the failed call; root-layout failures need `global-error.tsx`. **Empty** → the shared `<EmptyState>` primitive. **Missing resource** → `not-found.tsx` + `notFound()`. Segment files stay thin and delegate to the shared `atoms/`/`molecules/` primitives.
+Binding only — the base owns the why. **Loading** → the shared skeletons, driven by the router's pending navigation state while a route chunk is in flight and by the store's per-domain `status` for in-page fetches. **Error** → a route `errorElement` wired into the shared `<ErrorState>`, surfacing `ApiError.correlationId`; one top-level `errorElement` on the root route catches what a leaf doesn't. **Empty** → the shared `<EmptyState>` primitive. **Missing resource** → a 404 route element (the SPA answers HTTP 200 with a not-found *screen*; a real 404 status is impossible without a server — see the SEO note above). Page components stay thin and delegate to the shared `atoms/`/`molecules/` primitives.
 
 ## Styling & primitives
 
-- **Tailwind CSS 4** (CSS-first config): design tokens are CSS variables declared in `@theme` in the global stylesheet — that declaration **is** the base's single token source; components consume semantic tokens through Tailwind utilities.
-- **Foundation: Radix UI primitives**, wrapped as **atoms** in `components/atoms/` (base *Component structure* unchanged). Atom/molecule variants via `class-variance-authority`; class composition via `clsx` + `tailwind-merge` (one `cn()` helper in `lib/`). Icons: `lucide-react`. Fonts via `next/font`.
+- **Tailwind CSS 4** (CSS-first config, `@tailwindcss/vite`): design tokens are CSS variables declared in `@theme` in the global stylesheet — that declaration **is** the base's single token source; components consume semantic tokens through Tailwind utilities.
+- **Foundation: Radix UI primitives**, wrapped as **atoms** in `components/atoms/` (base *Component structure* unchanged). Atom/molecule variants via `class-variance-authority`; class composition via `clsx` + `tailwind-merge` (one `cn()` helper in `lib/`). Icons: `lucide-react`. Fonts are **self-hosted** (`@fontsource-variable/*` imported in the entry stylesheet) with `font-display: swap` — no render-blocking third-party font request, and one less CSP origin.
 - Don't import a prebuilt styled component kit on top — compose Radix + tokens in `components/atoms/`/`molecules/`. Swapping the headless library is allowed only by recording the choice in `apps/frontend/CLAUDE.md`; don't mix two.
 
 ## Responsive layout (Tailwind v4)
@@ -59,36 +82,37 @@ Binds the base *Responsive layout* rules to Tailwind v4 — the base owns the *w
 - **`text-balance` is the heading default** — set it in the shared heading atom, don't retrofit per screen.
 - **`<DataTable>` primitive.** `overflow-x-auto` wrapper + `whitespace-nowrap` columns (opt-in `truncate max-w-*` for free text) + **windowed pagination (≤ ~7 slots: first, last, current ± 1, ellipsis)** so a large page count can't widen the layout.
 - **Modal sizing is fixed once.** Keep the Radix/shadcn dialog baseline `w-full max-w-[calc(100%-2rem)] sm:max-w-lg` — full-width-minus-gutter on phones, capped above `sm`; don't re-solve dialog sizing per feature.
-- **Images: `next/image` `fill` + explicit `sizes` + an `aspect-[…]` wrapper.** Art-direct across breakpoints with `object-position` / `object-cover` rather than shipping crops — unless a crop genuinely must differ, which is what `<picture>` / `media` is for. Use `unoptimized` only for `data:` URLs and the logo.
+- **Images: a plain `<img>` with explicit `width`/`height`** (reserving the box, so nothing shifts) inside an `aspect-[…]` wrapper, `object-cover` + `object-position` to art-direct across breakpoints, `loading="lazy"` + `decoding="async"` below the fold. There is no image-optimization server here — ship pre-sized assets and offer them through `srcset`/`sizes`; reach for `<picture>`/`media` only when a crop genuinely must differ.
 
 ## Versioning / build identity
 
-Inline the version at build time — `next.config` sets `env.NEXT_PUBLIC_APP_VERSION` from `npm_package_version` — and render the unobtrusive `v<version>` tag from it. Vercel + App Router handle deployment skew (deployment ids, asset versioning, RSC re-fetch on navigation) — see the conflict register; no `version.json` poll.
+**The base *Versioning / build identity* rule applies in full** — this is a cached static bundle, exactly the case it was written for; there is no platform render to paper over a stale client.
+
+- `vite.config` injects `VITE_APP_VERSION` from `npm_package_version`; render the unobtrusive `v<version>` tag from `import.meta.env.VITE_APP_VERSION`.
+- Emit a build-stamped `public/version.json`, served **`no-store`** via a `vercel.json` `headers` entry, and poll it on launch/foreground — a mismatch shows the dismissible "Refresh to update" banner. Never force the reload.
+- **One exception to "never force a reload":** a failed lazy-route `import()` after a redeploy (the old hashed chunk is gone from the CDN) is unrecoverable — catch it in the route `errorElement` and offer an explicit reload as the retry action.
 
 ## Analytics & Speed Insights
 
-Wire Vercel's product analytics in from day 1 — both are drop-in for the App Router and stream to the project dashboard:
+Wire Vercel's product analytics in from day 1 — both ship React entrypoints that work in a plain SPA:
 
-- **Web Analytics** — add `@vercel/analytics` and render `<Analytics />` in the root layout (`app/layout.tsx`).
-- **Speed Insights** — add `@vercel/speed-insights` and render `<SpeedInsights />` in the root layout, for real-user Core Web Vitals.
+- **Web Analytics** — add `@vercel/analytics` and render `<Analytics />` once in the root layout component.
+- **Speed Insights** — add `@vercel/speed-insights` and render `<SpeedInsights />` there too, for real-user Core Web Vitals.
 
 Enable Web Analytics + Speed Insights on the **frontend** project in the Vercel dashboard (the API serves only JSON — the browser scripts are a no-op there). This is the frontend half of the observability story whose backend/log-drain half lives in `infra.md`.
 
 ## Security headers (binding)
 
-The base *Security baseline* (`apps/frontend/CLAUDE.md`) is bound here to **`next.config` `async headers()`**: emit `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and a **`Content-Security-Policy-Report-Only`** to start. Allow-list the origins this app actually loads — the Vercel Analytics / Speed Insights endpoints and any payment drop-in or embed — then promote the report-only header to the enforcing `Content-Security-Policy` once violation reports are clean.
+The base *Security baseline* header rule binds to **`vercel.json` `headers`** — there is no framework header layer in a static build, so the platform is it. Emit `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and a **`Content-Security-Policy-Report-Only`** to start. Allow-list the origins this app actually loads — the Vercel Analytics / Speed Insights endpoints and any payment drop-in or embed — then promote the report-only header to the enforcing `Content-Security-Policy` once violation reports are clean. `connect-src` needs only `'self'`, because the API is reached through the same-origin `/api` rewrite.
 
 ## Testing — typecheck + build + Playwright e2e
 
-- The frontend suite is `tsc --noEmit`, `next build`, and **Playwright** specs under `apps/frontend/e2e/` exercising the real app — every screen's four states and primary flows. `E2E_BASE_URL` selects the target: the local dev stack or a deployed preview.
+- The frontend suite is `tsc --noEmit`, `vite build`, and **Playwright** specs under `apps/frontend/e2e/` exercising the real app — every screen's four states and primary flows. `E2E_BASE_URL` selects the target: the local dev stack or a deployed preview.
 - **Run the specs at a narrow viewport as well as desktop** (base *Testing* rule). Define a second Playwright project on a mobile device — `{ name: 'mobile', use: { ...devices['Pixel 7'] } }` beside the desktop project — so the four-state specs also run at phone width; a suite pinned to one desktop viewport ships mobile-layout regressions. Add mobile-only assertions (nav collapses, no horizontal scroll) where a screen's layout genuinely diverges.
+- **One spec asserts the SPA fallback**: request a deep route path directly (not by in-app navigation) and assert the screen renders — that is the regression test for the `vercel.json` catch-all.
 - See the conflict register for what this replaces. The moment a store slice or service accrues branching logic worth isolating, add a unit runner for that code — don't scaffold one speculatively.
 
 ## Conflict register
 
-- **Base says:** `apps/frontend` is "the single-page app" (also root `CLAUDE.md` and `README.md`). **In this stack:** it is server-first Next.js App Router on Vercel, not a client-rendered SPA. **Because:** the chosen stack. **Concretely:** default every component to server; add `'use client'` only at interaction leaves. (Soften the root-file SPA framing on day 1 per the root README; the repo name stays stale.)
-- **Base says:** every route lives in one central registry `routes.<ext>`, and URLs are built through it. **In this stack:** the `app/` tree *is* the registry; a `routes` link-helper replaces hand-built URLs, so `routes.<ext>` is dropped. **Because:** App Router is filesystem-routed. **Concretely:** resolve parameterized links through the helper — never concatenate path strings; don't recreate a route→URL table (the base already forbids a second one).
-- **Base says:** the client `store/` "owns application state" and may front service data. **In this stack:** a `store/` context provider may be seeded with server-fetched data passed down from a Server Component, and owns it on the client from then on — refreshed after a mutation via `router.refresh()` or a service refetch through the same provider. **Because:** with REST-only data flow (no Server Actions, no client cache library), an interactive subtree that shares and mutates server data needs exactly one client-side carrier, and the seeded provider is it; the per-request server render alone can't hold state the subtree mutates. **Concretely:** seed a provider only for data an interactive subtree actually shares or mutates — purely-display data stays props; DON'T reflexively mirror every fetch into a provider.
-- **Base says:** a deployed SPA is cached, so detect a stale bundle (poll a build-stamped `version.json` / react to a new service worker) and prompt to refresh. **In this stack:** Vercel's deployment skew protection plus App Router asset versioning and RSC re-fetch handle stale clients. **Because:** the platform solves what the base rule hand-rolls. **Concretely:** ship only the visible `v<version>` tag (from `NEXT_PUBLIC_APP_VERSION`); DON'T build a `version.json` poll.
-- **Base says:** test store slices and `lib/` helpers as plain units, and services with the network mocked at the edge. **In this stack:** the default frontend suite is typecheck + build + Playwright e2e covering the four-state contract; per-unit suites are added on demand, not scaffolded. **Because:** this architecture keeps business logic behind the REST API, so frontend units would mostly re-test glue — e2e against the real contract catches what matters, and this was validated in production use of the stack. **Concretely:** DO cover every new screen's states in an e2e spec in the same change; DON'T add a unit runner until a slice/service holds real branching logic — then test that unit per the base rules.
-- **Base says:** product analytics stay vendor-agnostic — emitted through one shared service/hook, with no pinned analytics SDK. **In this stack:** `@vercel/analytics` and `@vercel/speed-insights` are pinned and rendered in the root layout (see *Analytics & Speed Insights*). **Because:** they are platform page/performance telemetry that ships with the Vercel deployment — not the product-event taxonomy; if the project adds product events, those still flow through a shared service with by-meaning names per the base rule. **Concretely:** DO keep `<Analytics />`/`<SpeedInsights />` in `app/layout.tsx`; DON'T scatter product-event calls through components — those still need the shared hook.
+- **Base says:** test store slices and `lib/` helpers as plain units, and services with the network mocked at the edge. **In this stack:** the default frontend suite is typecheck + build + Playwright e2e covering the four-state contract; per-unit suites are added on demand, not scaffolded. **Because:** this architecture keeps business logic behind the REST API, so frontend units would mostly re-test glue — e2e against the real contract catches what matters, and it is the only kind that exercises the two rewrites this pack's routing depends on. **Concretely:** DO cover every new screen's states in an e2e spec in the same change; DON'T add a unit runner until a slice/service holds real branching logic — then test that unit per the base rules.
+- **Base says:** product analytics stay vendor-agnostic — emitted through one shared service/hook, with no pinned analytics SDK. **In this stack:** `@vercel/analytics` and `@vercel/speed-insights` are pinned and rendered in the root layout component (see *Analytics & Speed Insights*). **Because:** they are platform page/performance telemetry that ships with the Vercel deployment — not the product-event taxonomy; if the project adds product events, those still flow through a shared service with by-meaning names per the base rule. **Concretely:** DO keep `<Analytics />`/`<SpeedInsights />` in the root layout component; DON'T scatter product-event calls through components — those still need the shared hook.
