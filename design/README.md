@@ -8,7 +8,9 @@ section in the root `CLAUDE.md`.
 
 This folder also holds the **design guide** — `design-guide.html` + `tokens.css`,
 the visual keystone confirmed before any UI work (`apps/frontend/CLAUDE.md` →
-*Design guide*). Everything below concerns the mockups.
+*Design guide*) — and **`CLAUDE.md`**, the product-agnostic design principles for
+creating the mockups (mockup work only, not app development). Everything below
+concerns the mockups.
 
 ## Layout
 
