@@ -1,26 +1,34 @@
-# Design principles
+# UI prototypes
 
-Apply these when creating or iterating **UI mockups in this folder only** — they do not govern actual app development (`apps/*` follows its own `CLAUDE.md` files). They are product-agnostic; product-specific rules (palette semantics, navigation model, component specifics) live in `design-guide.html` + `tokens.css`.
+Rules for creating and iterating **UI prototypes in this folder only** — they do not govern app development (`apps/*` has its own `CLAUDE.md` files). The requirements spec under `specs/` is the source of truth for what to build; these rules govern how.
 
-1. **Start simple, iterate.** Generate the minimum UI that serves the task and refine through iteration — first drafts tend to include things that aren't needed. Exception: patterns that are table-stakes in the domain ship complete from day one (see 3). Match effort to the artifact — a UI mockup gets no persistence, tests, or app mechanics.
-2. **Research before designing.** Deep-research existing and similar products first. Users have spent years in established tools — follow the patterns they already know instead of inventing an alien experience. Divergence needs a defensible improvement; novelty alone is not one.
-3. **Tables are the enterprise workhorse.** Growing collections get full datagrids — search, pagination, sort and filters in the column headers, customizable columns. A too-simple table is as wrong as a cluttered one.
-4. **Order by attention, place by belonging.** Pages put what needs the user first and metrics last; the main content fills the available space. Every control, setting, and piece of information lives on the object it conceptually belongs to — no catch-all sections.
-5. **Don't overload — disclose progressively.** Big forms become multi-step wizards; records show the most-used, basic details first with the rest behind tabs or accordions until needed. But don't hide what fits: show what there's room for.
-6. **Realistic, business-logic-correct data.** Mock data must be causally consistent, at credible scale, with realistic edge cases. Metrics are honest: nothing fabricated; undefined shows as an em dash, never a fake zero.
-7. **Every state designed.** Loading, empty, error, and success are all designed and reachable. Phone layouts are intentionally designed, never a compressed desktop.
-8. **Consistency through reuse.** Build atomic-design style: shared atoms and molecules, so consistency is structural rather than disciplinary. One concept gets one name everywhere.
-9. **Sweat the details.** Every visual encoding must decode at a glance. Signal only exceptions — healthy states stay silent. Direct manipulation gives fluid, live feedback — drag-and-drop shows its effect during the drag, not after the drop.
+## Deliverable contract
+
+- **One prototype = one self-contained HTML file.** Plain HTML, CSS, and JavaScript only — no frameworks, build step, package manager, or external requests. Everything (styles, scripts, data, icons) is inlined; the file opens from disk and works.
+- **No backend.** All data is an in-file fake dataset; all behaviour is simulated client-side. Simulated latency is fine where it makes a loading state reviewable.
+- **Fully interactive, honestly.** Navigation, forms, filters, dialogs, menus, sorting, and other controls the spec implies actually work against the fake data. A control that can't act is absent — never a dead button or fake link.
+- **No tests.** No test code, harnesses, or app mechanics (persistence, auth, routing infrastructure). Effort goes into the experience, not engineering.
+
+## Visual source
+
+`tokens.css` + `design-guide.html` are the visual keystone. Use the semantic tokens (colour, type, spacing, radius) so every prototype looks like the same product. If a needed value is missing, extend the token scale — never hard-code per screen.
+
+## What to cover
+
+- **The main user journeys** in the spec, end to end — a reviewer should be able to *do* the tasks, not just look at screens.
+- **Every relevant state**: loading, empty, success, error, validation, disabled, and permission-restricted where roles exist. Make states reachable through the UI itself (or an unobtrusive demo switch if they can't be triggered naturally).
+- **Representative edge cases**: long names, large counts, zero results, partial data — chosen from what the domain will really produce.
+
+## Principles
+
+1. **Follow the spec; exercise judgement in its gaps.** Where the spec is silent, follow the patterns of established products in the domain — users already know them. Divergence needs a defensible improvement.
+2. **Start lean, iterate to polished.** First pass covers the journeys plainly; refinement comes through review rounds. Exception: patterns that are table-stakes in the domain ship complete from day one.
+3. **Tables are the enterprise workhorse.** Growing collections get real datagrids — search, sort, column filters, pagination — not cards or simple lists.
+4. **Order by attention, place by belonging.** What the user acts on comes first; metrics last. Every control lives on the object it conceptually belongs to.
+5. **Disclose progressively.** Big forms become steps; records lead with the most-used details, rest behind tabs — but don't hide what fits.
+6. **Realistic, causally consistent data.** Credible scale, honest metrics: undefined is an em dash, never a fake zero. Numbers that should add up, do.
+7. **Sweat the details.** Alignment, centred glyphs, conventional icons, live feedback during direct manipulation. Polished enough that stakeholders discuss the product, not the prototype.
 
 ## Anti-patterns (remove on sight)
 
-- **Commentary** — subtitles, taglines, explainer banners, self-narrating copy. The UI shows through structure (columns, icons, color, hierarchy); genuinely needed help lives in a tooltip or compact info panel, never a paragraph.
-- **Elements that don't earn their place** — speculative features, configurability, or telemetry the current scope doesn't need.
-- **Redundant marks** — the same fact shown twice: a name beside its avatar, duplicate pills, status echoed across columns.
-- **Dead or misleading controls** — non-working buttons, fake links, disabled-looking actions. What can't act is absent, not broken-looking.
-- **Cards or simple lists for growing collections** — use a datagrid (see 3).
-- **Bold on data values** — in tables and rows, weight marks identity; color marks state.
-- **Misalignment and clipping** — disjointed row lines, uncentered glyphs, overlapping or cut-off elements.
-- **Wrapping toolbars or tab bars** — show what fits and overflow the rest into a … menu.
-- **Scrolling content inside a modal** — the modal scrolls as a whole.
-- **Non-standard icons** — X for delete, arrows for reorder. Use conventional metaphors: trash to delete, grip to reorder.
+Commentary copy (subtitles, explainer banners, self-narrating UI) · elements that don't earn their place · redundant marks (same fact twice) · dead or misleading controls · bold on data values (weight marks identity; colour marks state) · wrapping toolbars (overflow into …) · scrolling content inside a modal (the modal scrolls whole) · non-standard icons · desktop layouts compressed into phone widths.
