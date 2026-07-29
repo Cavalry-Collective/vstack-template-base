@@ -1,6 +1,6 @@
 # Add-on: test-mode
 
-> Optional add-on. Opt in at Day-1 by keeping this directory (see `add-ons/README.md`). Agnostic approach; the active stack pack supplies the concrete signal, sinks, and picker.
+> Optional add-on. Adopt at Day-1 by keeping this directory (see `add-ons/README.md`); the active stack pack supplies the seams named under *Binds to a stack*.
 
 A first-class runtime mode that stubs external side effects so the whole app runs end to end — locally, in CI/e2e, on staging — without hitting real providers. Adopt it when the app has side effects you can't fire freely: one-time codes, SMS/email, payments, push, third-party calls. Distinct from a feature flag (which gates *whether* an integration runs) and from seed data (which supplies *content*).
 
@@ -20,7 +20,7 @@ A one-tap login picker of seeded accounts so a tester or e2e run signs in as any
 - Render it only on the login screen and only under the mode signal.
 - Back it with realistic, named seed accounts, stable across runs (base `db/CLAUDE.md`).
 
-## Verify it fails closed
+## Verify
 
 "Returns empty in production" and "unreachable in production" are assertions in the test suite, not hopes — a test-only endpoint that succeeds in prod is the exact failure this add-on prevents.
 
