@@ -1,6 +1,8 @@
-# Stack pack: nextjs-nestjs-postgres
+# Stack pack: enterprise
 
 Frontend **Next.js** (App Router, server-first) · Backend **NestJS** · DB **Postgres via Prisma**. Language-neutral: TypeScript or plain JavaScript, with JS-path notes in each appendix. This is the **manifest** — it wires the pack onto a project; the bindings and conflict registers live in the three appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
+
+> **Naming.** Named for its architectural character — the structured, batteries-included stack (NestJS modules + DI, Prisma, App Router) an adopter picks for team-scale, convention-heavy work; the underlying triple is `nextjs-nestjs-postgres` (per `../README.md`). Unlike the platform-named siblings (`vercel-csr`, `vercel-ssr`, `wechat`), this pack is platform-neutral — it deploys through whatever the base `infra/` contract stands up.
 
 ## Appendix → base mapping
 
@@ -18,7 +20,7 @@ Run as part of the root `README.md` `## Day-1 checklist`: delete every other `st
 
 Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and the **CI** block into `.github/workflows/ci.yml` — never the same block in both, and never `prisma migrate dev` in CI.
 
-Record in root `CLAUDE.md` **Learnings**: `Stack: nextjs-nestjs-postgres; appendices under stacks/nextjs-nestjs-postgres/`.
+Record in root `CLAUDE.md` **Learnings**: `Stack: enterprise; appendices under stacks/enterprise/`.
 
 ## Suggested toolchain (pnpm workspaces)
 

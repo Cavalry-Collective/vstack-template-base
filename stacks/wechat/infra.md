@@ -38,7 +38,7 @@ Binds `infra/CLAUDE.md` to the **`tencentcloud` Terraform provider**: the produc
 
 ## Deploy pipeline — GitHub Actions (`.github/workflows/deploy.yml`)
 
-This stack **fills `deploy.yml` in** (contrast `vercel`, which deletes it). On a push to the default branch (or `workflow_dispatch` with `reset_schema` / `force_reseed_test_users` inputs), the ordered job:
+This stack **fills `deploy.yml` in** (contrast `vercel-csr`, which deletes it). On a push to the default branch (or `workflow_dispatch` with `reset_schema` / `force_reseed_test_users` inputs), the ordered job:
 
 1. builds the frontend same-origin (`TARO_APP_API_BASE=/api`);
 2. esbuild-bundles `handler.js` + `migrate.js` and composes **one SCF zip** — bootstrap + `node_modules` (`mysql2` only) + `db/migrations/` + the H5 `public/`;
