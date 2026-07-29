@@ -6,11 +6,34 @@
 
 Give the CRM the enterprise controls a compliance-ready SaaS vendor is expected to provide — access control, auditability, data protection, retention/deletion, recovery, and governance — so customers can satisfy SOC 2, ISO 27001, GDPR, and PDPA requirements that depend on their vendor. The product provides controls and evidence; it does not claim certification.
 
-## How this program is organised
+## Area specs
 
-Each control area is an independently shippable spec (listed at the bottom). Every area spec follows one section template — Goal · Product requirements · User flows · Admin capabilities · API behavior · Data model changes · Backend implementation requirements · Audit log events · Security considerations · Error cases · User stories & acceptance criteria · UX & non-functional notes · Out of scope · Open questions — and **inherits the shared conventions below rather than restating them**. A conflict between an area spec and this index is a defect; flag it, don't fork.
+Each control area is an independently shippable spec. Every area spec follows one section template — Goal · Scope & ownership · User stories & acceptance criteria · Requirements · User flows · API & permissions · Data model · Audit events · Implementation notes · Edge cases & errors · Notes & decisions · Out of scope · Open questions — and **inherits the shared conventions below rather than restating them**.
+
+| # | Area | File | Phases | Purpose |
+|---|---|---|---|---|
+| 1 | SSO & identity lifecycle | `sso-identity.md` | P2–P3 | Federated login (SAML 2.0 / OIDC), domain verification, JIT + SCIM provisioning, enforced SSO with break-glass. |
+| 2 | Multi-factor authentication | `mfa.md` | P1–P2 | TOTP + recovery codes now, WebAuthn next; per-org enforcement policy; reusable step-up verification. |
+| 3 | Role-based access control | `rbac.md` | P1–P2 | Permission catalog, fixed system roles, custom roles; safe, race-free, audited role changes. |
+| 4 | Audit logs | `audit-logs.md` | P1–P3 | The program's spine: append-only store, shared `record()`, viewer, export, retention. |
+| 5 | Data retention & deletion | `retention-deletion.md` | P1–P2 | Soft delete → grace → purge lifecycle, retention policies, legal holds, org offboarding. |
+| 6 | Backup & disaster recovery | `backup-dr.md` | P1–P3 | Automated encrypted backups, declared RPO/RTO, drilled restores recorded as evidence. |
+| 7 | Encryption & key management | `encryption.md` | P1–P3 | TLS + at-rest baseline, field-level encryption under per-org keys, rotation, crypto-shredding. |
+| 8 | Admin security controls | `admin-security.md` | P1–P2 | Session and password policy, session management, IP allowlists, API keys, security notifications. |
+| 9 | Export & bulk-action controls | `export-bulk-controls.md` | P1–P2 | Permission-gated async exports with expiring artifacts; preview/confirm bulk actions. |
+| 10 | Maker-checker workflows | `maker-checker.md` | P2 | One shared dual-control framework every guarded capability routes through. |
+| 11 | Privacy requests (DSAR) | `privacy-requests.md` | P1–P2 | DSAR registry, export packages, hold-aware erasure with anonymisation, suppression list. |
+| 12 | Subprocessors & compliance documentation | `trust-transparency.md` | P1–P3 | Versioned, change-notified subprocessor register; public trust page; document library. |
+
+## MVP & build order
+
+The program-level MVP (all P1 stories) is: **RBAC (fixed roles), audit logs, MFA (TOTP), admin session controls, export permission gating, retention policy + soft-delete lifecycle, encryption at rest/in transit, documented backups with restore drill, DSAR export & erasure, subprocessor page.** SSO, SCIM, custom roles, maker-checker, BYOK, and the trust-center UI build on that spine as P2/P3.
+
+Build **audit-logs and RBAC first** — every other area depends on `record()` coverage and permission gating existing. Priorities are set per story inside each area spec.
 
 ## Shared conventions (binding on every area spec)
+
+A conflict between an area spec and this index is a defect; flag it, don't fork.
 
 ### Domain model & terminology
 
@@ -54,12 +77,6 @@ context { correlation_id, ip, user_agent, session_id, request_path }
 
 Each area ships behind a default-off validated-config boolean (base *Integrations* gating) until GA'd; org-visible behaviour changes (e.g. MFA enforcement) additionally respect the org's own policy switch so a platform flag flip never force-changes a tenant's posture.
 
-### Phasing
-
-Priorities are set per story inside each area spec, but the program-level MVP (all P1 stories) is: **RBAC (fixed roles), audit logs, MFA (TOTP), admin session controls, export permission gating, retention policy + soft-delete lifecycle, encryption at rest/in transit, documented backups with restore drill, DSAR export & erasure, subprocessor page.** SSO, SCIM, custom roles, maker-checker, BYOK, and the trust-center UI build on that spine as P2/P3.
-
-Build order note: **audit-logs and RBAC first** — every other area depends on `record()` coverage and permission gating existing.
-
 ## Cross-cutting acceptance criteria (apply to every area)
 
 1. Every new privileged endpoint has a named permission; calling it without that permission returns `403 PERMISSION_DENIED` and emits a `…denied` audit event. *Verify: contract test per endpoint exercising allowed + denied.*
@@ -80,20 +97,3 @@ Build order note: **audit-logs and RBAC first** — every other area depends on 
 - Which IdPs must be certified for launch (Okta, Entra ID, Google Workspace assumed)? Owner: product; needed before the SSO spec's P2 stories start.
 - Are audit-log and backup retention floors contractual (per-plan) or uniform? Owner: product/legal; before retention GA.
 - `design/` has no mockups for the new admin surfaces (security settings, audit viewer, approvals, trust center) — each area spec lists its screens; mockups must exist before each initial build per the spec convention.
-
-## Area specs
-
-| # | Area | File |
-|---|---|---|
-| 1 | SSO & identity lifecycle | `sso-identity.md` |
-| 2 | Multi-factor authentication | `mfa.md` |
-| 3 | Role-based access control | `rbac.md` |
-| 4 | Audit logs | `audit-logs.md` |
-| 5 | Data retention & deletion | `retention-deletion.md` |
-| 6 | Backup & disaster recovery | `backup-dr.md` |
-| 7 | Encryption & key management | `encryption.md` |
-| 8 | Admin security controls | `admin-security.md` |
-| 9 | Export & bulk-action controls | `export-bulk-controls.md` |
-| 10 | Maker-checker workflows | `maker-checker.md` |
-| 11 | Privacy requests (DSAR) | `privacy-requests.md` |
-| 12 | Subprocessors & compliance documentation | `trust-transparency.md` |
