@@ -21,7 +21,7 @@ This pack ships the optional `infra.md` (permitted by `../README.md`): the deplo
 
 Run as part of the root `README.md` `## Day-1 checklist`: delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Finally record in root `CLAUDE.md` **Learnings**: `Stack: vercel-csr; appendices under stacks/vercel-csr/ (4 appendices incl. infra)`.
 
-> **Skip the root `README.md`'s "soften the SPA framing" step.** That instruction targets the server-first packs. This pack **is** a SPA, so the base framing in root `CLAUDE.md`, `apps/frontend/CLAUDE.md`, and the **What's included** "Frontend SPA" row is already correct — leave every one of them as shipped. The repo name is accurate here too.
+> **Skip the root `README.md`'s "soften the SPA framing" step.** That instruction targets the server-first packs. This pack **is** a SPA, so the base framing in root `CLAUDE.md`, `apps/frontend/CLAUDE.md`, and the **What's included** "Frontend SPA" row is already correct — leave every one of them as shipped.
 
 ## Suggested toolchain (pnpm workspaces, ESM, Node 22)
 
