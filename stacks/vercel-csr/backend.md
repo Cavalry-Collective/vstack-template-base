@@ -2,18 +2,22 @@
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `apps/backend/CLAUDE.md` (the onion) and the root `CLAUDE.md` to **Fastify, plain JavaScript (ESM), deployed as a Vercel serverless function**. Read those first; this file does not restate them. Data layer → `./db.md`; provisioning and deploys → `./infra.md`.
+Binds `apps/backend/CLAUDE.md` (the onion) and the root `CLAUDE.md` to **Fastify, plain JavaScript (ESM), deployed as a Vercel serverless function**. Read those first; this file does not restate them.
+
+## Scope
+
+This file owns the Fastify bindings: composition root, controller ring, aspects, sessions and edge concerns, the Vercel entrypoint, and backend testing. Data layer → `./db.md`; provisioning and deploys → `./infra.md`.
 
 ## Stack binding at a glance
 
 - **HTTP layer: Fastify 5, used directly** — no framework on top. The base's illustrative "Express/Fastify-style" layer is bound to real Fastify: plugins, hooks, and decorators are the aspect mechanism.
-- **Language: plain JavaScript, ESM** (`"type": "module"`), with **no build or typecheck step** — the `build`/`typecheck` scripts are explicit no-ops, not omissions. Pack decision — rejected alternative: TypeScript (see conflict register).
-- **Folder layout: the base shape verbatim** — `modules/<feature>/{domain,service,repo,controller,dtos}`, `shared/{aspects,utils}`, `container.js`. No mapping table needed; this stack is the layout the base illustrates.
+- **Language: plain JavaScript, ESM** (`"type": "module"`), with **no build or typecheck step** — the `build`/`typecheck` scripts are explicit no-ops (pack decision — see the conflict register).
+- **Folder layout: the base shape verbatim** — `modules/<feature>/{domain,service,repo,controller,dtos}`, `shared/{aspects,utils}`, `container.js`; this stack is the layout the base illustrates.
 - **Validation: Zod** — `dtos/` are Zod schemas at the controller edge; one Zod schema parses env at boot.
 
 ## Composition root — `container.js` is an Awilix container
 
-- `container.js` stays the single composition root, implemented with **Awilix**: every repo, gateway, and use case registered as a factory (`asFunction`/`asValue`), resolved **once at boot** when routes are registered. Pack decision — rejected alternative: the base's manual constructor wiring (see conflict register).
+- `container.js` stays the single composition root, implemented with **Awilix**: every repo, gateway, and use case registered as a factory (`asFunction`/`asValue`), resolved **once at boot** when routes are registered (pack decision — see the conflict register).
 - **Rings never import `awilix`.** Services and repos are plain factory functions — `makeCreateOrder({ orderRepo, withTransaction })` — receiving dependencies as one argument; the container is glue only.
 - `buildContainer({ env, overrides })`: tests replace any registration by name via `overrides` (an in-memory gateway fake, a stub repo) without touching a ring.
 
@@ -39,27 +43,38 @@ Binds `apps/backend/CLAUDE.md` (the onion) and the root `CLAUDE.md` to **Fastify
 - **Sessions are signed HTTP-only cookies** (`@fastify/cookie` with `SESSION_SECRET`) — stateless by construction, so scale-to-zero costs nothing and there is no session store to manage.
 - **`TRUST_PROXY=true` in deployed env** (Fastify `trustProxy`): requests arrive through Vercel and the SPA's `vercel.json` `/api` rewrite, so without it rate limiting and logging key on the proxy IP, not the client.
 - `@fastify/rate-limit`'s default in-memory store is **per-instance** on serverless — acceptable as a soft limit; reach for a shared store only when a limit must be globally exact.
-- **Security headers via `@fastify/helmet`**, registered once at bootstrap — binds the base *Security baseline* header rule. The API's `*.vercel.app` URL is directly reachable, so it sets its own headers rather than trusting the Next app's. Helmet's default `Content-Security-Policy` (`default-src 'self'`) is fine for a JSON API; only tune or relax it if the API serves HTML.
-- **SSRF guard + write-only secrets bind the base *Security baseline*.** Put the URL guard in a shared `shared/utils` (or domain) helper — public `https` only; **resolve the host and reject when the resolved IP is loopback/private/link-local or a cloud-metadata address** — called at config-save *and* immediately before the outbound `fetch` (a string-only re-check misses a host that resolves to a private IP). For admin-managed secrets, the read DTO **masks** each secret and adds a `…Set` flag, and the update handler **preserves** a blank field over the stored value, so a secret never round-trips to the client.
+- **Security headers via `@fastify/helmet`**, registered once at bootstrap — binds the base *Security baseline* header rule. The API's `*.vercel.app` URL is directly reachable, so it sets its own headers rather than trusting the web app's. Helmet's default `Content-Security-Policy` (`default-src 'self'`) is fine for a JSON API; only tune or relax it if the API serves HTML.
+- **SSRF guard** (base *Security baseline*): one URL-guard helper in `shared/utils` (or domain), called at config-save *and* immediately before the outbound `fetch`:
+  1. Allow public `https` URLs only.
+  2. Resolve the host; reject when the resolved IP is loopback, private, link-local, or a cloud-metadata address (a string-only re-check misses a host that resolves to a private IP).
+- **Write-only secrets** (base *Security baseline*): for admin-managed secrets, the read DTO **masks** each secret and adds a `…Set` flag, and the update handler **preserves** a blank field over the stored value — a secret never round-trips to the client.
 
-## Vercel entrypoint — `src/server.js` (load-bearing)
+## Vercel entrypoint — `src/server.js`
 
 One file is both entrypoints:
 
 - **Vercel path:** default-export an async `handler(req, res)` that lazily builds the app once (`appPromise ??= buildApp(...)` — **no top-level await**: the module must evaluate to a plain handler), `await app.ready()`, then dispatch with `app.server.emit("request", req, res)`. **Never call `listen()` on Vercel.**
 - **Local path:** when `!process.env.VERCEL`, start a real listener on `PORT` (dev: `node --watch --env-file=../../.env src/server.js`) — so the base "exercise the actual endpoint over HTTP" verification gate works unchanged.
 - `apps/backend/vercel.json`: an `@vercel/node` build of `src/server.js` with a catch-all rewrite to it — the whole Fastify app is **one function**, keeping Fastify's router (not Vercel's filesystem routing) in charge.
-- **Serverless rules:** instances scale to zero and multiply — never rely on instance memory for correctness (durable state lives in Postgres or the signed cookie; a module-level memo is a cache, nothing more), and finish all work inside the request — no fire-and-forget after the response is sent; the instance freezes.
+- **Serverless rules:** instances scale to zero and multiply — never rely on instance memory for correctness (durable state lives in Postgres or the signed cookie; a module-level memo is a cache, nothing more). Finish all work inside the request — no fire-and-forget after the response is sent; the instance freezes.
 
 ## Testing
 
-- **Runner: `node:test`** (`node --test tests/`; `tests/` mirrors `src/`). Pack decision — rejected alternative: Jest/Vitest (plain ESM JavaScript needs no transform; the built-in runner is zero-dependency).
+- **Runner: `node:test`** (`node --test tests/`; `tests/` mirrors `src/`). Pack decision (rejected: Jest/Vitest — plain ESM JavaScript needs no transform; the built-in runner is zero-dependency).
 - Base per-ring kinds, bound: **domain** — plain units; **service** — build the app/container with `overrides` fakes; **controller** — Fastify `app.inject()` (no listener needed); **repo** — integration against the real local Postgres (use `--test-concurrency=1` where suites share it).
 
 ## Add-on bindings (if adopted)
 
-- **test-mode** (`add-ons/test-mode/`): a `shared/aspects/` plugin resolves the mode signal from an inbound header onto the request context — fail closed: missing or unknown means production. In test mode the flag-gated integrations (the base default-off booleans) route to their stdout/no-op sinks. The test-user picker is a route gated on the same signal; it returns `[]` in production, and a test asserts that.
-- **otp-auth** (`add-ons/otp-auth/`): model A (self-managed) — an `otp_challenge` table (hashed code, short TTL, `purpose` column) via node-pg-migrate; hashing + timing-safe verify in `shared/utils/`; delivery through gateway adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`; a unique constraint on (target, purpose) resolves the double-submit race to `409` per the base status table. Attempt rate limits keep their counters in Postgres (no separate store on this pack); in test mode delivery is sinked to the structured log — the tester reads the real code there, and verify is never stubbed.
+- **test-mode** (`add-ons/test-mode/`):
+  - A `shared/aspects/` plugin resolves the mode signal from an inbound header onto the request context — fail closed: missing or unknown means production.
+  - In test mode the flag-gated integrations (the base default-off booleans) route to their stdout/no-op sinks.
+  - The test-user picker is a route gated on the same signal; it returns `[]` in production, and a test asserts that.
+- **otp-auth** (`add-ons/otp-auth/`), model A (self-managed):
+  - An `otp_challenge` table (hashed code, short TTL, `purpose` column) via node-pg-migrate; hashing + timing-safe verify in `shared/utils/`.
+  - Delivery through gateway adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`.
+  - A unique constraint on (target, purpose) resolves the double-submit race to `409` per the base status table.
+  - Attempt rate limits keep their counters in Postgres — no separate store on this pack.
+  - In test mode delivery is sinked to the structured log — the tester reads the real code there, and verify is never stubbed.
 
 ## Conflict register
 
