@@ -2,13 +2,17 @@
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `apps/frontend/CLAUDE.md` to **Next.js (App Router, TypeScript)** — the UI half of the single full-stack app; the server half is `./backend.md`. Read the base file first; this only adds the bindings and the marked overrides.
+Binds `apps/frontend/CLAUDE.md` to **Next.js (App Router, TypeScript)** — the UI half of the single full-stack app. Read the base file first; this only adds the bindings and the marked overrides.
+
+## Scope
+
+This file owns the App Router UI: folder mapping, routing, the four data states, auth UX, styling and responsive idioms, versioning, analytics, headers, and frontend testing. The server half is `./backend.md`; provisioning and deploys are `./infra.md`.
 
 ## Stack binding at a glance
 
 - **App Router under `src/app/`**, TypeScript. A file is a Server Component unless it opens `'use client'`; place the directive at the smallest interaction leaf — never on a page/layout "to be safe".
 - **Data flow is function calls, not HTTP.** Server Components read by importing a module's `controller/queries.ts`; client components mutate by invoking its `controller/actions.ts` Server Actions. No internal REST API, no fetch wrapper, and no react-query/SWR (add a client cache library only when client-side invalidation needs genuinely appear). See the conflict register.
-- **State: React Context providers under `src/store/`** — one provider per domain, seeded with server-fetched data passed down from Server Components. After a successful mutation the action calls `revalidatePath`/`revalidateTag` (or the client calls `router.refresh()`), so the seeded provider re-hydrates from fresh server data. Pack decision — rejected alternative: an external store library (Redux/Zustand); context + props cover this architecture's client-state needs.
+- **State: React Context providers under `src/store/`** — one provider per domain, seeded with server-fetched data passed down from Server Components (pack decision — see the README). After a successful mutation the action calls `revalidatePath`/`revalidateTag` (or the client calls `router.refresh()`), so the seeded provider re-hydrates from fresh server data.
 - **Authenticated screens are dynamically rendered by construction** (they read the session cookie); don't fight that with route-level cache tuning. Static/ISR rendering is for the public indexable surface.
 
 ## Folder mapping (base `src/` shape → App Router)

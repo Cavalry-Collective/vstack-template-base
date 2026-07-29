@@ -1,14 +1,16 @@
 # `stacks/` — stack packs
 
-The base CLAUDE.md files are framework-agnostic on purpose. A **stack pack** binds those agnostic contracts to one concrete stack (frameworks, ORM, package manager) through appendix docs that **ride on top of** the base — they add bindings and resolve conflicts, never restate the base. One pack is chosen at instantiation; the rest are deleted. This file is the **system doc** (read once, not loaded during normal work); each pack carries its own manifest `README.md`.
+The base CLAUDE.md files are framework-agnostic on purpose. A **stack pack** binds those agnostic contracts to one concrete stack (frameworks, ORM, package manager) through appendix docs that **ride on top of** the base: they add bindings and resolve conflicts, never restate the base. One pack is chosen at instantiation; the rest are deleted. This file is the system doc — read once, not loaded during normal work. Each pack carries its own manifest `README.md`.
 
 ## What a pack is
 
-A pack is a directory `stacks/<pack-name>/` of **guidance-as-text** — concrete config and command snippets to copy, never installed dependencies, lockfiles, or generated scaffolding in the buildable tree. `<pack-name>` is a **short identity name**, lowercase and hyphenated — the name an adopter recognizes the stack by: the deployment platform or product surface when that is the load-bearing choice (`vercel-csr`, `vercel-ssr`, `wechat`), a well-known stack acronym (`mern`), or the stack's architectural character (`enterprise`). The identity name stays auditable because **every pack README records the underlying `<frontend>-<backend>-<database>` triple** in a *Naming* note. Packs sharing one platform coexist by suffixing the architectural shape that distinguishes them — e.g. `vercel-csr` (a client-rendered SPA, no SSR) and `vercel-ssr` (its server-rendered full-stack sibling), where the suffix *is* the rendering model; each README names its sibling(s) and the contrast, so an adopter picks deliberately.
+A pack is a directory `stacks/<pack-name>/` of **guidance-as-text**: concrete config and command snippets to copy. A pack never ships installed dependencies, lockfiles, or generated scaffolding in the buildable tree.
+
+`<pack-name>` is a short identity name, lowercase and hyphenated — the name an adopter recognizes the stack by. It comes from the deployment platform or product surface when that choice defines the stack (`vercel-csr`, `vercel-ssr`, `wechat`), from a well-known stack acronym (`mern`), or from the stack's architectural character (`enterprise`). The name stays auditable because every pack README records the underlying `<frontend>-<backend>-<database>` triple in its naming note. Packs sharing one platform coexist by suffixing the shape that distinguishes them — for `vercel-csr` / `vercel-ssr` the suffix *is* the rendering model. Each README names its sibling(s) and the contrast, so an adopter picks deliberately.
 
 ## Required file set
 
-Every pack carries at least these four files (one may be thin, but all four exist); `infra.md` is the only optional fifth (see the note at the bottom):
+Every pack carries at least these four files (one may be thin, but all four exist). A pack MAY also add `infra.md` as an optional fifth appendix, under the same invariants — infra is cloud-shaped, not app-stack-shaped, so no pack is required to ship it.
 
 | File | Binds onto base file | Holds |
 |---|---|---|
@@ -31,14 +33,12 @@ Every pack carries at least these four files (one may be thin, but all four exis
 
 ## Activation (by instruction)
 
-Packs activate by **instruction, not machinery**. Each area's `CLAUDE.md` (`apps/backend`, `apps/frontend`, `db`, `infra`) tells the agent to read the adopted pack's matching appendix before working in that area — so a backend task pulls in `backend.md`, and only that. Adoption is structural: keep exactly **one** pack directory under `stacks/` and delete the rest, so "the adopted pack" is unambiguous. The appendix is read directly from `stacks/` — it is the single source of truth, with no generated copy to regenerate and nothing to drift.
+Packs activate by **instruction, not machinery**. Each area's `CLAUDE.md` (`apps/backend`, `apps/frontend`, `db`, `infra`) tells the agent to read the adopted pack's matching appendix before working in that area — a backend task pulls in `backend.md`, and only that. Adoption is structural: keep exactly **one** pack directory under `stacks/` and delete the rest, so "the adopted pack" is unambiguous. The appendix is read directly from `stacks/` — it is the single source of truth, with no generated copy to drift.
 
 ## How to add a pack
 
 1. Create `stacks/<pack-name>/` with the four required files.
 2. Put the precedence line atop each appendix and a conflict register at the end; keep every line additions-only.
 3. Write the manifest `README.md` — identity, appendix→base mapping, suggested dev + CI `<pm>` blocks, deploy-seam pointer.
-4. Bind the shipped add-ons: for each directory under `add-ons/`, add its concrete bindings to the matching appendix (what that add-on's *Binds to a stack* section asks for) — except where the add-on carries its own `bindings.md` (see `add-ons/README.md`), in which case add the new pack's bound-or-unbound section **there**. An add-on the pack covers in neither place is declared unbound in the manifest; silence is a defect.
+4. Bind the shipped add-ons. For each directory under `add-ons/`, add its concrete bindings to the matching appendix (what that add-on's *Binds to a stack* section asks for). Where the add-on carries its own `bindings.md` (see `add-ons/README.md`), add the new pack's bound-or-unbound section there instead. An add-on the pack covers in neither place is declared unbound in the manifest; silence is a defect.
 5. Nothing else to wire — the per-area `CLAUDE.md` pointers pick the pack up as soon as it is the only directory under `stacks/` (see *Activation*).
-
-A pack MAY add an optional `infra.md` later under the same invariants (infra is cloud-shaped, not app-stack-shaped — not required in v1).
