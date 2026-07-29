@@ -1,10 +1,10 @@
-# Stack pack: vercel
+# Stack pack: vercel-csr
 
 Frontend **React SPA** (Vite, TypeScript) — **client-rendered, no SSR** · Backend **Fastify** (plain JavaScript, ESM) · DB **Postgres** — **Neon** (serverless) in production, Docker locally — via **node-pg-migrate** + **`pg`**. The whole product deploys to **Vercel**: two Vercel projects (the SPA as static assets on the CDN, and the Fastify API as a serverless function), Vercel Blob for object storage, Terraform (Vercel provider) as IaC. This is the **manifest** — it wires the pack onto a project; bindings and conflict registers live in the appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
 
 > **Rendering model — the choice this pack exists to make.** The frontend is a **single-page app**: one static `index.html`, rendered entirely in the browser. **There is no server-side rendering, and none may be added** — not per request, not at build time. The base contract's SPA framing applies verbatim; the enforceable rules and the greppable forbidden list are in `frontend.md` → *Rendering model*. A requirement that genuinely needs server-rendered HTML (public search indexability above all) is a **pack change** — adopt `vercel-ssr` instead.
 
-> **Naming.** Named for its distinguishing choice — the everything-on-Vercel platform — under the platform exception in `../README.md` (the convention triple would be `react-fastify-postgres`). Sibling: `vercel-ssr` is the server-rendered, one-app full-stack Next.js alternative on the same platform; **the `-ssr` suffix is the contrast — this pack is the SPA one**, and it keeps a separate Fastify API. Platform packs coexist by shape suffix per `../README.md`.
+> **Naming.** Named for the platform plus its distinguishing shape — client-side rendering on Vercel (the underlying triple is `react-fastify-postgres`, per `../README.md`). Sibling: `vercel-ssr` is the server-rendered, one-app full-stack Next.js alternative on the same platform; **the `-csr`/`-ssr` suffixes are the contrast — this pack is the SPA one**, and it keeps a separate Fastify API. Platform packs coexist by shape suffix per `../README.md`.
 
 ## Appendix → base mapping
 
@@ -19,7 +19,7 @@ This pack ships the optional `infra.md` (permitted by `../README.md`): the deplo
 
 ## Day-1 wiring
 
-Run as part of the root `README.md` `## Day-1 checklist`: delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Finally record in root `CLAUDE.md` **Learnings**: `Stack: vercel; appendices under stacks/vercel/ (4 appendices incl. infra)`.
+Run as part of the root `README.md` `## Day-1 checklist`: delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder (delete the banner) and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Finally record in root `CLAUDE.md` **Learnings**: `Stack: vercel-csr; appendices under stacks/vercel-csr/ (4 appendices incl. infra)`.
 
 > **Skip the root `README.md`'s "soften the SPA framing" step.** That instruction targets the server-first packs. This pack **is** a SPA, so the base framing in root `CLAUDE.md`, `apps/frontend/CLAUDE.md`, and the **What's included** "Frontend SPA" row is already correct — leave every one of them as shipped. The repo name is accurate here too.
 

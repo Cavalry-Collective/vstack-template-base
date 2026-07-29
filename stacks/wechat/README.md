@@ -1,8 +1,8 @@
-# Stack pack: taro-fastify-mysql-tencent
+# Stack pack: wechat
 
 Frontend **Taro 4 H5** (React 18, plain JavaScript) · Backend **Fastify 4** (CommonJS) · DB **MySQL 8** — **CynosDB** (serverless) in production, Docker locally — via **Knex** (`mysql2`). Deploys to **Tencent Cloud**: one **SCF Web Function** serves both the JSON API and the built H5 bundle, a separate SCF **event** function runs migrations; **CynosDB** for data, **COS** (private) for media behind signed URLs, **VOD** for video, **EdgeOne** as the CDN/WAF edge; Terraform (`tencentcloud` provider) for IaC and **GitHub Actions** as the deploy pipeline. This is the manifest; bindings and conflict registers live in the appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
 
-> **Naming.** The framework triple is `taro-fastify-mysql`; the `-tencent` suffix marks the deployment platform, appended because the Tencent-Cloud specifics (SCF bundling, CynosDB serverless, COS/VOD, EdgeOne, mainland ICP + public-net egress) are load-bearing (`../README.md` permits appending the distinguishing choice). Lift the app to another cloud and the triple stays, the suffix changes.
+> **Naming.** Named for the product surface — a WeChat mini-program — because that is the identity an adopter picks it by; the underlying triple is `taro-fastify-mysql` on Tencent Cloud (per `../README.md`). The Tencent-Cloud specifics (SCF bundling, CynosDB serverless, COS/VOD, EdgeOne, mainland ICP + public-net egress) are load-bearing throughout the appendices. Lift the app to another cloud and the triple stays; the platform specifics are what change.
 
 ## Appendix → base mapping
 
@@ -17,7 +17,7 @@ This pack ships the optional `infra.md` (permitted by `../README.md`): the deplo
 
 ## Day-1 wiring
 
-Part of the root `README.md` Day-1 checklist. Delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Record in root `CLAUDE.md` **Learnings**: `Stack: taro-fastify-mysql-tencent; appendices under stacks/taro-fastify-mysql-tencent/`.
+Part of the root `README.md` Day-1 checklist. Delete every other `stacks/*` directory so this pack is the only one left — each area's `CLAUDE.md` then points agents at the matching appendix here, `infra.md` included (mechanism: `../README.md` *Activation*). Then copy the **dev** block below over the root `CLAUDE.md` "Common commands" placeholder and apply the **CI** notes to `.github/workflows/ci.yml` — never the same block in both. Record in root `CLAUDE.md` **Learnings**: `Stack: wechat; appendices under stacks/wechat/`.
 
 ## Suggested toolchain
 
@@ -45,4 +45,4 @@ Bindings for the shipped add-ons: **test-mode** and **otp-auth** in `backend.md`
 
 ## Deploy seam
 
-Deployment is a GitHub Actions pipeline (`.github/workflows/deploy.yml`) — this pack fills it in rather than deleting it (contrast `vercel`). On a push to the default branch (or `workflow_dispatch`): build frontend + backend, compose one SCF zip, resume CynosDB if paused, `terraform apply`, push function code out-of-band, invoke the migrate function, smoke-test the live URL. Terraform owns function config / env / role / triggers and every other resource — see `infra.md`. Protect the default branch so CI is green before merge; a push then both merges and deploys.
+Deployment is a GitHub Actions pipeline (`.github/workflows/deploy.yml`) — this pack fills it in rather than deleting it (contrast `vercel-csr`). On a push to the default branch (or `workflow_dispatch`): build frontend + backend, compose one SCF zip, resume CynosDB if paused, `terraform apply`, push function code out-of-band, invoke the migrate function, smoke-test the live URL. Terraform owns function config / env / role / triggers and every other resource — see `infra.md`. Protect the default branch so CI is green before merge; a push then both merges and deploys.

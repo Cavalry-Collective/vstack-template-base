@@ -56,7 +56,7 @@ The template is intentionally framework-agnostic. You choose:
 
 Pick what fits the project. The CLAUDE.md files tell you where things go and how to structure them — not which library to use.
 
-Or choose a stack pack under `stacks/` (e.g. `nextjs-nestjs-postgres`) for a vetted set of these choices plus copy-paste commands; the base CLAUDE.md files stay framework-agnostic. The pack is opt-in, not a mandate — see [`stacks/README.md`](stacks/README.md).
+Or choose a stack pack under `stacks/` (e.g. `enterprise`) for a vetted set of these choices plus copy-paste commands; the base CLAUDE.md files stay framework-agnostic. The pack is opt-in, not a mandate — see [`stacks/README.md`](stacks/README.md).
 
 ## Day-1 checklist
 
@@ -72,7 +72,7 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
    - [`db/CLAUDE.md`](db/CLAUDE.md) — database & migration contract
    - [`infra/CLAUDE.md`](infra/CLAUDE.md) — Terraform authoring style and guardrails
 5. **Choose a stack pack — or stay agnostic.**
-   - **Pack path (fast):** pick the pack under `stacks/` matching your stack (e.g. `nextjs-nestjs-postgres`), then:
+   - **Pack path (fast):** pick the pack under `stacks/` matching your stack (e.g. `enterprise`), then:
      - `rm -rf` every other `stacks/*` directory — the one pack left is the adopted one; each area's `CLAUDE.md` already points agents at its appendices (mechanism: `stacks/README.md` *Activation*).
      - Copy the pack README **dev** command block into the root `CLAUDE.md` "Common commands" placeholder (delete the banner); copy its **CI** block into `.github/workflows/ci.yml`. They are different blocks — never paste a dev-only migration command into CI.
      - Record the choice in root `CLAUDE.md` **Learnings**: `Stack: <pack-name>; appendices under stacks/<pack-name>/`.
@@ -81,7 +81,7 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
 7. **Fill the toolchain placeholders.** On the pack path, step 5 already filled the first two bullets; **both paths** still do the last two:
    - Root `CLAUDE.md` "Common commands" — replace the seven `<pm>`/`TODO` commands and delete the PLACEHOLDER banner.
    - `.github/workflows/ci.yml` — replace every commented gate (**the file is the canonical gate list**): install/lint/typecheck/test/build, the i18n key-parity check, the migration up/down round-trip, and the a11y scan. A pack's CI block covers the toolchain gates; still wire the remaining `ci.yml` gates (migration gates per the pack's `db.md`, the a11y scan).
-   - `.github/workflows/deploy.yml` — replace the TODO step (or, on a pack whose register deletes the stub, e.g. `vercel`/`vercel-ssr`, delete it per that register).
+   - `.github/workflows/deploy.yml` — replace the TODO step (or, on a pack whose register deletes the stub, e.g. `vercel-csr`/`vercel-ssr`, delete it per that register).
    - Add a real `.env.example` (already whitelisted in `.gitignore`).
 8. **Declare the primary form factor.** In `apps/frontend/CLAUDE.md`, fill in the form-factor line:
    ```markdown
@@ -89,10 +89,10 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
    ```
 9. **Rebrand & confirm the design guide — before building any screen.** The template ships **Keystone** (`design/design-guide.html` + `design/tokens.css`): design principles plus the full foundations — colour, type, spacing, layout, elevation, motion, states, content, data formatting — as a token-driven SaaS system shipping the Cavalry palette by default (components deliberately left flexible per app). Rebrand it — edit the **primitive** tier in `tokens.css`, or have your AI assistant regenerate it from your brand — then open the guide in a browser and confirm it reads as one coherent system. This is the visual keystone gate (`apps/frontend/CLAUDE.md` → *Design guide*); the app's token source and `atoms/` then implement what it shows — don't build screens against an unconfirmed system.
 10. **Copy runtime config.** Copy any gitignored runtime config (`.env`, secrets) into your local checkout — it is not carried over from the template.
-11. **Protect `main`.** Add a branch protection rule / ruleset requiring the CI workflow to pass before merge. Install the rule **after step 13's first green push** (or run steps 5–10 on a branch and merge them via a PR) — a required-status rule rejects a direct push whose CI has never run. Trunk must stay releasable — and on packs whose pipeline ships whatever lands on `main` (e.g. `vercel`), green-CI-before-merge *is* the deploy gate.
-12. **Stand up staging (if your pack defines one).** Bring up the persistent preview/staging environment your stack pack specifies before feature work — for the `vercel` and `vercel-ssr` packs that is the `develop` branch plus its dedicated Neon branch (the pack's `infra.md` → *Staging environment*), migrated with the same manual runbook as prod (the pack's `db.md` → *Production & staging migrations*).
+11. **Protect `main`.** Add a branch protection rule / ruleset requiring the CI workflow to pass before merge. Install the rule **after step 13's first green push** (or run steps 5–10 on a branch and merge them via a PR) — a required-status rule rejects a direct push whose CI has never run. Trunk must stay releasable — and on packs whose pipeline ships whatever lands on `main` (e.g. `vercel-csr`), green-CI-before-merge *is* the deploy gate.
+12. **Stand up staging (if your pack defines one).** Bring up the persistent preview/staging environment your stack pack specifies before feature work — for the `vercel-csr` and `vercel-ssr` packs that is the `develop` branch plus its dedicated Neon branch (the pack's `infra.md` → *Staging environment*), migrated with the same manual runbook as prod (the pack's `db.md` → *Production & staging migrations*).
 13. **Confirm green.** Push and watch the first CI run pass. Then confirm no placeholder survives — both must return nothing: `grep -rn 'FILL IN ON SETUP\|TODO: replace' . --exclude-dir=stacks --exclude-dir=specs --exclude-dir=.git | grep -v '^\./README\.md:'` and `grep -n '^<pm> ' CLAUDE.md`. (Only this root README — whose checklist names the markers — is filtered out; delete it once instantiation is done if you prefer a clean tree.)
 
-> If you chose a server-first Next.js pack (`nextjs-nestjs-postgres` or `vercel-ssr`), soften the SPA framing the base ships agnostic: root `CLAUDE.md` "the single-page app" → "the web frontend", the opening line of `apps/frontend/CLAUDE.md` ("how the single-page app is structured") likewise, and the **What's included** "Frontend SPA" row above → "Frontend (server-first Next.js)". (`vercel-ssr`'s one-app restructure step covers this and more — see its README.) The repo name still encodes "spa" and is immutable — accepted as stale.
+> If you chose a server-first Next.js pack (`enterprise` or `vercel-ssr`), soften the SPA framing the base ships agnostic: root `CLAUDE.md` "the single-page app" → "the web frontend", the opening line of `apps/frontend/CLAUDE.md` ("how the single-page app is structured") likewise, and the **What's included** "Frontend SPA" row above → "Frontend (server-first Next.js)". (`vercel-ssr`'s one-app restructure step covers this and more — see its README.) The repo name still encodes "spa" and is immutable — accepted as stale.
 >
-> **The `vercel` pack is not one of them** — it is a client-rendered SPA with no SSR, so the base framing above is already correct for it and every one of those files stays exactly as shipped. Don't soften anything.
+> **The `vercel-csr` pack is not one of them** — it is a client-rendered SPA with no SSR, so the base framing above is already correct for it and every one of those files stays exactly as shipped. Don't soften anything.

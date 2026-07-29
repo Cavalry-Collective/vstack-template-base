@@ -21,7 +21,7 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **Cyn
 
 - Base schema conventions apply unchanged (`db/CLAUDE.md` *Schema conventions*); MySQL-8 specifics below.
 - **A `CHECK` constraint validates against *existing* rows on MySQL 8** — so you cannot add one to a table whose legacy rows already violate it. Enforce such invariants **in the service**, not with a late `CHECK`, when legacy or imported data may violate them.
-- **Fixed value sets: a native MySQL `ENUM` is acceptable** — widening it (`ALTER TABLE ... MODIFY ... ENUM(...)`) is a plain reversible migration (contrast Postgres, where the `vercel` pack avoids native enums). A new challenge `purpose` is added this way.
+- **Fixed value sets: a native MySQL `ENUM` is acceptable** — widening it (`ALTER TABLE ... MODIFY ... ENUM(...)`) is a plain reversible migration (contrast Postgres, where the `vercel-csr` pack avoids native enums). A new challenge `purpose` is added this way.
 
 ## Repo ring binding (Knex)
 
@@ -31,7 +31,7 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **Cyn
 
 ## Local dev, seed & the destructive test-DB ritual
 
-- **Local MySQL is one fixed-name Docker container**, shared across worktrees per the base — reuse it, run `migrate`, never start a second copy (the base shared-DB rule stands; this stack does **not** use per-worktree databases, unlike the `vercel` pack).
+- **Local MySQL is one fixed-name Docker container**, shared across worktrees per the base — reuse it, run `migrate`, never start a second copy (the base shared-DB rule stands; this stack does **not** use per-worktree databases, unlike the `vercel-csr` pack).
 - **Seed** realistic, named accounts + content (base `db/CLAUDE.md`) so manual/e2e testing and the **test-mode** add-on's test-user picker have lifelike data; idempotent, upsert by business key.
 - **The test suite is destructive** — it truncates tables. The runner **refuses to run unless `DB_NAME` ends in `_test`**, and `pnpm test` auto-suffixes it, so the dev schema is never touched. One-time setup creates and migrates the `*_test` schema (`pnpm --filter backend test:db:setup`, idempotent). This `*_test`-schema guard *is* this stack's binding of the base "destructive checks go to a throwaway DB" rule.
 
