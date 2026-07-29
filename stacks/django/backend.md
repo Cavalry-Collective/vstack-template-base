@@ -2,12 +2,16 @@
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `apps/backend/CLAUDE.md` (the onion) and the root `CLAUDE.md` to **Django 5 + Django REST Framework, Python 3.12, managed with uv**. Read those first; this file does not restate them. Data layer → `./db.md`.
+Binds `apps/backend/CLAUDE.md` (the onion) and the root `CLAUDE.md` to **Django 5 + Django REST Framework, Python 3.12, managed with uv**. Read those first; this file does not restate them.
+
+## Scope
+
+This file owns the Django app layout, the DRF edge, config, cross-cutting aspects, and backend testing. Migrations, schema conventions, and query/transaction mechanics → `./db.md`. Rejected alternatives for the tool picks are in the pack README → *Pack decisions*.
 
 ## Stack binding at a glance
 
-- **API layer: Django REST Framework** on Django 5 — views, routers, serializers, permissions, throttles. Pack decision — rejected alternatives: Django Ninja, a FastAPI sidecar (DRF is the ecosystem default with the deepest auth/permission/throttle integration).
-- **Language: Python 3.12, dependencies via uv** (`uv sync`, `uv run`, committed `uv.lock`). Pack decision — rejected: Poetry, pip-tools.
+- **API layer: Django REST Framework** on Django 5 — views, routers, serializers, permissions, throttles.
+- **Language: Python 3.12, dependencies via uv** (`uv sync`, `uv run`, committed `uv.lock`).
 - **Lint: ruff (check + format). Typecheck: mypy with django-stubs + djangorestframework-stubs** — the root `typecheck` verb is real here, not a no-op.
 - **Validation: DRF serializers at the API edge** — a module's serializers are its `dtos/` in Django form: request parsing/validation in, response shaping out. Business rules stay in services/models, never in a serializer's `validate_*`.
 
@@ -33,15 +37,11 @@ apps/backend/
 - Cross-app use goes through the other app's `services.py`/`selectors.py`, never its models or managers directly.
 - **External gateways** (mail, SMS, payments) are adapter modules (`<feature>/gateway.py`, or a shared `gateways/` package) selected by the base default-off validated flags; services call the adapter, never an SDK. Tests swap the adapter at that seam.
 
-## Config — `settings.py` is the single seam
-
-- All env reads live in `config/settings.py` via **django-environ**, validated at import: required keys declared with types and no production defaults, so a missing or malformed value fails at boot with a named error — the base *Configuration* rule, bound. Pack decision — rejected: pydantic-settings (a second config object beside `settings` buys nothing).
-- App code reads `django.conf.settings` (see conflict register); `os.environ` appears **only** in `settings.py`. `.env.example` stays canonical.
-
 ## Cross-cutting — middleware + DRF hooks are the aspects
 
 | Base concern | Binding |
 |---|---|
+| Config | all env reads live in `config/settings.py` via **django-environ**, validated at import: required keys declared with types and no production defaults, so a missing or malformed value fails at boot with a named error — the base *Configuration* rule, bound. App code reads `django.conf.settings` (see conflict register); `os.environ` appears **only** in `settings.py`; `.env.example` stays canonical |
 | Errors | one custom DRF `EXCEPTION_HANDLER` mapping domain exceptions → the base envelope (`error.code`/`message`/`correlationId`); `IntegrityError` unique violations → `409` |
 | Request context | one middleware seeds the correlation id per request, sets the `x-correlation-id` response header, and binds it into logging |
 | Auth | Django **session auth** (signed HTTP-only cookies — the base default, unchanged) via DRF `SessionAuthentication` + permission classes; CSRF stays on (the SPA sends `X-CSRFToken` — `./frontend.md`) |
@@ -51,18 +51,25 @@ apps/backend/
 | Rate limiting | DRF throttle classes on the views that need them, backed by Django's cache framework — **database cache backend** by default, no Redis until a limit must be globally exact and fast |
 
 - **Routing:** each app's `api/urls.py` is included under one `internal/v1/` prefix in `config/urls.py`, plus one unauthenticated `/health` — the base visibility/versioning rule as URLconf structure. The browser reaches it as `/api/...` through the frontend proxy (`./frontend.md`).
-- **SSRF guard + write-only secrets** bind the base *Security baseline*: one shared validator (resolve the host; reject loopback/private/link-local/metadata IPs) called at config-save *and* immediately before the outbound request; secret-bearing serializers mask on read (value → `…Set` flag) and preserve the stored value when the update field is blank.
+- **SSRF guard** (base *Security baseline*) — one shared validator: resolve the host, reject loopback/private/link-local/metadata IPs. It runs at config-save *and* immediately before the outbound request.
+- **Write-only secrets** (base *Security baseline*) — secret-bearing serializers mask on read (value → `…Set` flag) and preserve the stored value when the update field is blank.
 - **Contract artifact:** **drf-spectacular** generates the OpenAPI schema from the serializers/views — the shared contract the frontend generates types from; never hand-copy shapes.
 
 ## Testing
 
-- **Runner: pytest + pytest-django** (`uv run pytest`). Pack decision — rejected: Django's unittest runner (pytest fixtures/parametrize are the ecosystem default).
+- **Runner: pytest + pytest-django** (`uv run pytest`).
 - Base per-ring kinds, bound: **model invariants + pure helpers** — plain units, no DB where possible; **services/selectors** — `pytest.mark.django_db` tests against real Postgres (the ORM *is* the persistence layer — faking it tests nothing); **API** — DRF `APIClient` contract tests asserting status codes, envelope shape, and auth guards. Gateways are faked at the adapter seam, never by patching ORM or framework internals.
 
 ## Add-on bindings (if adopted)
 
 - **test-mode** (`add-ons/test-mode/`): one middleware resolves the mode signal from an inbound header onto the request — fail closed: missing or unknown means production. In test mode the flag-gated gateways (the base default-off booleans) route to their sinks — Django's `console.EmailBackend` is the canonical email sink; other gateways ship a structured-log/no-op adapter. The test-user picker is an unauthenticated DRF view gated on the same signal; it returns `[]` in production, and an `APIClient` test asserts that.
-- **otp-auth** (`add-ons/otp-auth/`): model A (self-managed) — an `OtpChallenge` model (hashed code, short TTL, `purpose` field) in its own Django app with its own migrations; hashing in a shared util with `django.utils.crypto.constant_time_compare` for the timing-safe verify; delivery through the gateway adapters behind the default-off flags; phone numbers canonicalised to E.164 with the **`phonenumbers`** library; a unique constraint on (target, purpose) resolves the double-submit race — `IntegrityError` → `409` through the shared exception handler. Send/verify rate limits are DRF throttles on those views (database cache backend — no separate store on this pack); the per-challenge attempt cap lives on the challenge row. In test mode delivery sinks to the structured log — the tester reads the real code there, and verify is never stubbed.
+- **otp-auth** (`add-ons/otp-auth/`) — model A (self-managed):
+  - **Storage** — an `OtpChallenge` model (hashed code, short TTL, `purpose` field) in its own Django app with its own migrations.
+  - **Verify** — hashing in a shared util, with `django.utils.crypto.constant_time_compare` for the timing-safe verify; verify is never stubbed in test mode.
+  - **Double-submit race** — a unique constraint on (target, purpose); `IntegrityError` → `409` through the shared exception handler.
+  - **Delivery** — through the gateway adapters behind the default-off flags; in test mode delivery sinks to the structured log, where the tester reads the real code.
+  - **Phone numbers** — canonicalised to E.164 with the **`phonenumbers`** library.
+  - **Rate limits** — send/verify are DRF throttles on those views (database cache backend — no separate store on this pack); the per-challenge attempt cap lives on the challenge row.
 
 ## Conflict register
 
