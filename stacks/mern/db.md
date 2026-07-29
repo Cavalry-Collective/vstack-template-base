@@ -4,12 +4,14 @@
 
 Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MongoDB** — a fixed-name Docker container locally, whatever the base `infra/` contract stands up in production — with **Mongoose** as the schema/query layer and **migrate-mongo** for migrations. Read the base files first.
 
-**Scope.** This file owns migrations, seed, schema conventions, and the repo-ring model/session mechanics. Connection wiring lives in `./backend.md`; where `migrate` runs in the pipeline is the base `infra/CLAUDE.md` contract's call.
+## Scope
 
-## Tool picks
+This file owns migrations, seed, schema conventions, and the repo-ring model/session mechanics. Connection wiring lives in `./backend.md`; where `migrate` runs in the pipeline is the base `infra/CLAUDE.md` contract's call. Rejected alternatives for the tool picks are in the pack README → *Pack decisions*.
 
-- **Mongoose** — pack decision; rejected alternative: the raw `mongodb` driver. A document store has no server-side DDL, so the shape must live *somewhere* in code — Mongoose models are that single home (typed casting, schema validation at the app boundary), instead of an untyped shape implied by scattered queries.
-- **migrate-mongo** — migrations with real paired `up`/`down` under `db/migrations/`, so the base reversibility and up→down→up round-trip rules apply. Pack decision; rejected alternative: no migration tool (Mongoose `autoIndex` + ad-hoc scripts) — index builds and document rewrites need ordered, tracked, reversible history exactly as the base demands.
+## Stack binding at a glance
+
+- **Mongoose** — the schema/query layer. A document store has no server-side DDL, so the shape must live somewhere in code; Mongoose models are that single home (typed casting, schema validation at the app boundary).
+- **migrate-mongo** — migrations with real paired `up`/`down` under `db/migrations/`, so the base reversibility and up→down→up round-trip rules apply.
 
 ## What a migration *is* here
 
@@ -20,7 +22,7 @@ No DDL: collections and fields materialise on first write. A migration is what t
 - Live under `db/migrations/`, run via the root `migrate` verb (`migrate-mongo up`; rollback `migrate:down`). `migrate-mongo-config.js` pins `migrationsDir: 'db/migrations'`, the changelog collection, and **`moduleSystem: 'esm'`** — the workspace is `"type": "module"`, and without the option migrate-mongo `require()`s migrations and fails to load them.
 - Create with `migrate-mongo create <verb_noun>` — the generated datetime prefix satisfies the base timestamp rule. Each file exports async `up(db, client)` / `down(db, client)`.
 - **Reversibility, bound:** every `up` ships its real `down` — drop the index it created, reverse the rename, unset the field it set. A genuinely irreversible change has a `down` that **throws**, carrying the base's justification comment (migrate-mongo has no `down = false` convention) — never a silent empty `down`.
-- **Not transactional** — write every migration idempotent and resumable instead; see the conflict register.
+- **Not transactional** — write every migration idempotent and resumable instead; the conflict register owns the rule.
 
 ## Schema conventions (bound)
 
@@ -33,21 +35,27 @@ No DDL: collections and fields materialise on first write. A migration is what t
 - **Only the repo ring imports `mongoose`.** Models are repo-ring artifacts — defined in each module's `repo/`, registered on the single connection the backend's db aspect opens at boot; repos receive their models via the container.
 - **Reads are `.lean()` + mapper.** A hydrated Mongoose document carries `save()` and a live connection — leaking one inward hands an inner ring database access. Repos return domain objects mapped from lean docs; use explicit field projections where a subset suffices.
 - **Query filters are built from validated scalars, never a request-supplied object.** Operator injection (`{"$gt": ""}` arriving in a JSON body) is the document-store shape of SQL injection — this binds the base "never interpolate request data" rule. Spreading `req.query`/`req.body` into a filter is the greppable violation.
-- **Transactions:** the db aspect exports `withTransaction(work)` over a Mongoose session; repos accept an optional session argument so a multi-document use case shares one transaction (requires the replica set, below). A single-document write is atomic by construction — don't open a transaction for one `updateOne`; prefer modelling an aggregate as one document so its invariants commit atomically.
+- **Transactions:** the db aspect exports `withTransaction(work)` over a Mongoose session; repos accept an optional session argument so a multi-document use case shares one transaction (replica set required — *Gotchas*). A single-document write is atomic by construction — don't open a transaction for one `updateOne`; prefer modelling an aggregate as one document so its invariants commit atomically.
 
 ## Local dev & seed
 
-- **Local MongoDB is one fixed-name Docker container** (`mongo:7`), started by the root `bootstrap` script with start-or-run semantics, shared across worktrees per the root `CLAUDE.md` — reuse it, never start a second copy. Run it as a **single-node replica set** (`mongod --replSet rs0`, one-time `rs.initiate()` in bootstrap): multi-document transactions refuse a standalone, so a plain container silently breaks `withTransaction`.
-- **One shared mongod, one database per worktree.** Derive the name deterministically (sanitize the branch to `[a-z0-9_]`, prefix `app_` — `feature/x` → `app_feature_x`) and re-point the db-name path segment of `MONGODB_URL` after copying `.env` in; nothing to create — MongoDB materialises a database on first write. Drop it (`dropDatabase`) on worktree teardown. Round-trip and destructive checks run against your own worktree database — scratch by construction. (Register entry below.)
+- **Local MongoDB is one fixed-name Docker container** (`mongo:7`), started by the root `bootstrap` script with start-or-run semantics, shared across worktrees per the root `CLAUDE.md` — reuse it, never start a second copy. Run it as a **single-node replica set** (`mongod --replSet rs0`, one-time `rs.initiate()` in bootstrap) — *Gotchas*.
+- **One shared mongod, one database per worktree** (register entry below):
+  1. Derive the database name deterministically: sanitize the branch to `[a-z0-9_]`, prefix `app_` — `feature/x` → `app_feature_x`.
+  2. After copying `.env` into the worktree, re-point the db-name path segment of `MONGODB_URL` at that name. There is nothing to create — MongoDB materialises a database on first write.
+  3. Run round-trip and destructive checks against this worktree database — scratch by construction.
+  4. Drop it (`dropDatabase`) on worktree teardown.
 - **Seed:** `db/seed-dev.js`, idempotent (`updateOne(..., { upsert: true })` by business key), run explicitly via a root script — non-production only (base rule stands).
 
-## CI checks (drop into `.github/workflows/ci.yml`)
+## Operations
 
-Against a scratch MongoDB started as a **single-node replica set** (a `docker run … mongod --replSet rs0` step — GitHub service containers can't pass the flag): migrations apply from zero (`up`); **round-trip `up → down → up`** — the base gate stands, migrate-mongo has real downs, so keep the base `ci.yml` round-trip TODO's wording — with drift asserted the document-store way: there is no schema dump to diff, so capture each collection's `listIndexes` output plus the changelog collection before and after the cycle and fail on any difference; run the seed twice (idempotency).
+**CI checks (drop into `.github/workflows/ci.yml`)** — against a scratch MongoDB started as a **single-node replica set** (a `docker run … mongod --replSet rs0` step — *Gotchas*): migrations apply from zero (`up`); **round-trip `up → down → up`** — the base gate stands, migrate-mongo has real downs, so keep the base `ci.yml` round-trip TODO's wording — with drift asserted the document-store way: there is no schema dump to diff, so capture each collection's `listIndexes` output plus the changelog collection before and after the cycle and fail on any difference; run the seed twice (idempotency).
 
-## Rolling out (platform-neutral)
+**Rollout (platform-neutral)** — this pack ships no `infra.md`; where `migrate` runs is the base `infra/CLAUDE.md` pipeline's call. Two rules survive any pipeline: run `migrate` **before** the rollout that reads the new shape, and keep each migration **backward-compatible** (expand → migrate → contract, base `db/CLAUDE.md`) — during a rolling deploy old code meets new documents and new code meets old ones, so a Mongoose model must tolerate both (additive fields with defaults; contract only after nothing reads the old shape).
 
-This pack ships no `infra.md` — where `migrate` runs is the base `infra/CLAUDE.md` pipeline's call. Two rules survive any pipeline: run `migrate` **before** the rollout that reads the new shape, and keep each migration **backward-compatible** (expand → migrate → contract, base `db/CLAUDE.md`) — during a rolling deploy old code meets new documents and new code meets old ones, so a Mongoose model must tolerate both (additive fields with defaults; contract only after nothing reads the old shape).
+## Gotchas
+
+- **Multi-document transactions refuse a standalone `mongod`** — a plain container silently breaks `withTransaction`. Run every MongoDB, local and CI, as a single-node replica set; GitHub service containers can't pass `--replSet`, so CI starts the scratch DB with a `docker run` step.
 
 ## Conflict register
 

@@ -2,7 +2,16 @@
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds the base `db/CLAUDE.md` (+ the backend's data access) to **Postgres 16 via the Django ORM**, with **Django migrations** as the migration tool. Read the base files first. App layout and the services/selectors discipline live in `./backend.md`; this file owns migrations, seed, schema conventions, and query/transaction mechanics.
+Binds the base `db/CLAUDE.md` (+ the backend's data access) to **Postgres 16 via the Django ORM**, with **Django migrations** as the migration tool. Read the base files first.
+
+## Scope
+
+This file owns migrations, seed, schema conventions, and query/transaction mechanics. App layout and the services/selectors discipline live in `./backend.md`. Rejected alternatives for the tool picks are in the pack README → *Pack decisions*.
+
+## Stack binding at a glance
+
+- **Postgres 16 via the Django ORM** — models own the schema; every schema change is a generated, reviewed migration.
+- **Django migrations** — per-app homes, named migrations, `sqlmigrate` review, and the `--check` drift gate (*Operations*).
 
 ## Migrations — Django-owned, per-app
 
@@ -19,10 +28,10 @@ Binds the base `db/CLAUDE.md` (+ the backend's data access) to **Postgres 16 via
 
 - **`USE_TZ = True`** — timestamps stored UTC as `timestamptz`; every model carries `created_at = DateTimeField(auto_now_add=True)` and `updated_at = DateTimeField(auto_now=True)`.
 - Table names: Django's `<app>_<model>` default is already snake_case — keep it; set `db_table` only when binding to a pre-existing schema.
-- **uuid primary keys:** `UUIDField(primary_key=True, default=uuid4)` — opaque, non-enumerable. Pack decision — rejected: the default `BigAutoField` (enumerable in URLs).
+- **uuid primary keys:** `UUIDField(primary_key=True, default=uuid4)` — opaque, non-enumerable.
 - **Django auto-indexes every `ForeignKey`** (unlike raw Postgres) — the base FK-index rule holds by construction; frequent filter/sort columns still need explicit `Meta.indexes`.
 - Money and quantities: `DecimalField(max_digits, decimal_places)` or integer minor units — never `FloatField`.
-- **Fixed value sets: `TextChoices` + a `CheckConstraint`** in `Meta.constraints` — enforced in the database, widened by a plain reversible migration. Pack decision — rejected: native Postgres enums (`ALTER TYPE … ADD VALUE` is non-transactional and effectively one-way).
+- **Fixed value sets: `TextChoices` + a `CheckConstraint`** in `Meta.constraints` — enforced in the database, widened by a plain reversible migration.
 - Unique business invariants: `UniqueConstraint` in `Meta.constraints` (conditional where soft delete applies); the violation maps to the domain conflict → `409` via the shared exception handler (`./backend.md`).
 
 ## Query & transaction mechanics
@@ -39,9 +48,9 @@ Binds the base `db/CLAUDE.md` (+ the backend's data access) to **Postgres 16 via
 - **Seed:** an idempotent management command (`manage.py seed_dev`, upsert via `update_or_create` by business key) with realistic, named accounts (they also back the test-mode picker, base `db/CLAUDE.md`); non-production only — the base rule stands. Backfills: idempotent, batched, resumable management commands under the owning app, invoked explicitly.
 - **pytest-django creates its own `test_*` database** — the suite never touches the dev schema; `--reuse-db` is a local speed-up only.
 
-## CI checks (drop into `.github/workflows/ci.yml`)
+## Operations
 
-Against a scratch `postgres:16` service container:
+**CI checks (drop into `.github/workflows/ci.yml`)** — against a scratch `postgres:16` service container:
 
 - **Apply from zero:** `manage.py migrate` on a clean database.
 - **Drift gate:** `manage.py makemigrations --check --dry-run` — fails when a model change has no migration (also catches an edited model with a forgotten migration after rebase).
@@ -51,7 +60,7 @@ These replace the base `ci.yml` round-trip TODO — see conflict register; the r
 
 ## Conflict register
 
-- **Base says:** `db/` is the shared home — migrations under `db/migrations/`, backfills under `db/backfills/`, seed/reset scripts beside them (`db/CLAUDE.md`; backend *Coding standards*). **In this stack:** migrations live per app under `apps/backend/<app>/migrations/`, and seed/backfills are management commands inside the backend — all still invoked through the root verbs (`make migrate`, the seed script). **Because:** Django's migration loader, dependency resolver, and `makemigrations` operate only on per-app `migrations/` packages; relocating them fights the framework and breaks autodetection, with no auditable gain. **Concretely:** DON'T create `db/migrations/` or hand-write DDL outside a generated migration; DO run every schema change through `makemigrations` in the owning app and apply it via the root `migrate` verb.
-- **Base says:** migration files carry a timestamp prefix, never a hand-incremented sequence — parallel branches must never both claim the same number (`db/CLAUDE.md`). **In this stack:** Django names migrations with a per-app incrementing number plus an explicit `dependencies` graph — sequences by design, with collisions *detected* (`InconsistentMigrationHistory` / conflicting leaf nodes) rather than prevented. **Because:** the numbering is machine-managed and the dependency graph, not the filename, is the real order; Django refuses to run a forked history, so a collision is loud, not silent. **Concretely:** after rebasing, if trunk gained a migration in the same app, delete and regenerate yours so it renumbers after trunk's leaf — DON'T commit a `makemigrations --merge` migration to keep history linear.
-- **Base says:** prove the down path — run up → down → up on a throwaway scratch DB before merging, and the `ci.yml` round-trip TODO wires that gate (`db/CLAUDE.md`; root Day-1). **In this stack:** a whole-project `migrate zero` round-trip is impractical (cross-app dependencies, prior irreversible migrations unrelated to the change), so the standing CI gates are apply-from-zero + the `makemigrations --check --dry-run` drift gate + seed-twice; the reverse proof is per-change: before merge, run `migrate <app> <previous>` then `migrate` for each migration you added, on your worktree database, and state the evidence observed. **Concretely:** when pasting the pack CI block, replace the `ci.yml` "Migration round-trip" TODO with §CI checks above; DON'T merge a migration whose own reverse you haven't run (or that lacks the irreversible justification).
-- **Base says:** the shared local DB's schema is global state across worktrees — reuse the fixed-name container; destructive checks go to a throwaway DB (root `CLAUDE.md`; `db/CLAUDE.md`). **In this stack:** the *container* stays shared by its fixed name, but each worktree migrates its own `app_<sanitized-branch>` database, created on bootstrap and dropped on teardown. **Because:** parallel worktrees applying different branches' migrations to one schema corrupt each other's `django_migrations` history; per-worktree databases remove the hazard and make the per-change reverse proof safe by construction, with no second container. **Concretely:** after copying `.env` in, re-point the db-name segment of `DATABASE_URL` at this worktree's database; DON'T run `migrate`/`migrate <app> <previous>`/seed against the shared default database or another worktree's.
+- **Base says:** `db/` is the shared home — migrations under `db/migrations/`, backfills under `db/backfills/`, seed/reset scripts beside them (`db/CLAUDE.md`; backend *Coding standards*). **In this stack:** migrations live per app under `apps/backend/<app>/migrations/`, and seed/backfills are management commands inside the backend — all still invoked through the root verbs (`make migrate`, the seed script). **Because:** Django's migration loader, dependency resolver, and `makemigrations` operate only on per-app `migrations/` packages, so relocating them fights the framework and breaks autodetection. **Concretely:** DON'T create `db/migrations/` or hand-write DDL outside a generated migration; DO run every schema change through `makemigrations` in the owning app and apply it via the root `migrate` verb.
+- **Base says:** migration files carry a timestamp prefix, never a hand-incremented sequence — parallel branches must never both claim the same number (`db/CLAUDE.md`). **In this stack:** Django names migrations with a per-app incrementing number plus an explicit `dependencies` graph — sequences by design, with collisions *detected* (`InconsistentMigrationHistory` / conflicting leaf nodes) rather than prevented. **Because:** the dependency graph, not the filename, is the real order, and Django refuses to run a forked history — a collision is loud, not silent. **Concretely:** after rebasing, if trunk gained a migration in the same app, delete and regenerate yours so it renumbers after trunk's leaf — DON'T commit a `makemigrations --merge` migration to keep history linear.
+- **Base says:** prove the down path — run up → down → up on a throwaway scratch DB before merging, and the `ci.yml` round-trip TODO wires that gate (`db/CLAUDE.md`; root Day-1). **In this stack:** a whole-project `migrate zero` round-trip is impractical (cross-app dependencies, prior irreversible migrations), so the standing CI gates are apply-from-zero + the `makemigrations --check --dry-run` drift gate + seed-twice, and the reverse proof is per-change: before merge, run `migrate <app> <previous>` then `migrate` for each migration you added, on your worktree database, and state the evidence observed. **Concretely:** when pasting the pack CI block, replace the `ci.yml` "Migration round-trip" TODO with the *CI checks* above; DON'T merge a migration whose own reverse you haven't run (or that lacks the irreversible justification).
+- **Base says:** the shared local DB's schema is global state across worktrees — reuse the fixed-name container; destructive checks go to a throwaway DB (root `CLAUDE.md`; `db/CLAUDE.md`). **In this stack:** the *container* stays shared by its fixed name, but each worktree migrates its own `app_<sanitized-branch>` database, created on bootstrap and dropped on teardown. **Because:** parallel worktrees applying different branches' migrations to one schema corrupt each other's `django_migrations` history, and per-worktree databases remove the hazard with no second container. **Concretely:** after copying `.env` in, re-point the db-name segment of `DATABASE_URL` at this worktree's database; DON'T run `migrate`/`migrate <app> <previous>`/seed against the shared default database or another worktree's.
