@@ -4,119 +4,13 @@
 
 ## Goal
 
-Make webhook-synchronised local state the trustworthy source of billing access: every provider event lands in one signature-verified endpoint, is recorded idempotently, and converges local subscription state through a single apply path that a stale or duplicated event can never corrupt — with a reconciliation sweep as the safety net for anything the webhook channel drops.
+Webhook-synchronised local state is the trustworthy source of billing access. Every provider event lands in one signature-verified endpoint and is recorded idempotently. A single apply path converges local subscription state, so a stale or duplicated event can never corrupt it. The reconciliation sweep is the safety net for anything the webhook channel drops.
 
-## Product requirements
+## Scope & ownership
 
-1. One inbound endpoint, `POST /internal/v1/billing/webhooks/{provider}`, receives all provider events. No session auth; the provider signature is the only authentication (index: provider boundary).
-2. The raw request body is preserved for signature verification — the seam the active stack pack binds — and verification runs **before any parsing**. An invalid or missing signature returns `400 WEBHOOK_SIGNATURE_INVALID`, is logged, and emits `billing.webhook.rejected`; no state changes.
-3. An unknown `{provider}` path segment returns `404 UNKNOWN_PROVIDER`.
-4. Every verified event is persisted **insert-first** into `billing_events` under the unique `(provider, provider_event_id)` key (index invariant). A duplicate delivery returns `200` immediately, recorded with status `skipped` — safe under provider retries.
-5. Tenant resolution maps the event to an organisation via `provider_customer_id` → `billing_customers` (checkout.md) or the `organisation_id` carried in provider object metadata. An event resolving to no tenant is recorded `failed` with an alerting log and still returns `200` — a permanent failure per the base *Integrations* classes; the provider must not retry what can never succeed. Transient handler failures return `500` so the provider retries.
-6. Handlers treat events as **triggers, not truth**: on any subscription-affecting event, the apply path fetches the object's current state from the provider (or compares `provider_created_at` against the local row's last-synced timestamp) and converges local state to it. A stale, out-of-order event can never regress newer local state.
-7. State writes validate allowed status transitions per subscription-lifecycle.md before applying — never transition merely because a callback asked (base *Business rules*).
-8. **The apply path is single.** Webhook processing, the post-redirect verification read (checkout.md), and the reconciliation sweep all call the same use case — conceptually `syncSubscriptionFromProvider(…)`. No second code path writes local billing state.
-9. Unhandled or unknown event types are recorded as processed-as-ignored (status `skipped`, with a reason) and return `200` — never `500` on an unknown type.
-10. Processing is synchronous within the request by default (small writes only; long work forbidden). Where a pack's serverless shape requires deferral, the pack binds a queue behind this seam — named here, not implemented here.
-11. A scheduled reconciliation sweep (runner bound by the active pack) lists local non-terminal subscriptions and converges each against the provider in bounded, resumable batches (base backfill discipline); it also runs targeted after checkout verification. Detected drift — a missed webhook — is corrected, logged `warn` per corrected row, and emits the same audit events the equivalent webhook would.
-12. With `BILLING_ENABLED=false` the endpoint returns `503` (index: config & rollout).
-
-### Handled event families
-
-Agnostic family names; the active stack pack maps the provider's concrete event types onto them.
-
-| Event family | Local effect | Audit events |
-|---|---|---|
-| customer created / updated | upsert the `billing_customers` linkage (columns: checkout.md) | — (linkage, not a billing state change) |
-| checkout session completed | converge the resulting subscription via the apply path | `billing.checkout.completed` |
-| subscription created | create the local subscription in converged state | `billing.subscription.created`; `billing.trial.started` where a trial begins at creation |
-| subscription updated | converge status, plan, interval, quantity, period, cancellation intent | `billing.subscription.updated`; `billing.trial.ended` when the update leaves `trialing` |
-| subscription deleted | converge to the terminal state | `billing.subscription.canceled` |
-| invoice paid | record the payment outcome; converge the subscription period | `billing.invoice.paid` |
-| invoice payment failed | record the failure; converge status (grace handling: subscription-lifecycle.md) | `billing.invoice.payment_failed` |
-| payment method updated | refresh the stored payment-method display summary (surface: settings-invoices.md) | — (display metadata; subscription state unchanged) |
-| trial will end (where the provider supports it) | record the approaching trial end (notice surface: subscription-lifecycle.md) | — |
-
-## User flows
-
-No end-user flows — this area is entirely backend. Processing flows, for testability:
-
-**F1 — Valid event applied (P1).** 1. Provider POSTs an event. 2. Signature verifies over the raw body. 3. Insert-first into `billing_events` (`received`). 4. Tenant resolves; the apply path fetches current provider state and converges the local row, validating transitions. 5. Audit events emit in the same transaction; row marked `processed`; `200`.
-
-**F2 — Duplicate delivery (P1).** 1. The same `provider_event_id` arrives again. 2. The unique-key insert conflicts. 3. `200` immediately; a row recorded `skipped`; no state change, no audit event.
-
-**F3 — Out-of-order delivery (P1).** 1. A stale event arrives after a newer one was applied. 2. The apply path converges against current provider state (or the timestamp comparison short-circuits). 3. Local state is unchanged or moves forward — never backward.
-
-**F4 — Reconciliation sweep (P2).** 1. The scheduled job lists non-terminal local subscriptions in bounded batches. 2. Each converges through the same apply path. 3. Corrected rows log `warn` and emit the webhook-equivalent audit events.
-
-## Admin capabilities
-
-None in-product. Operators diagnose via `billing_events` rows (status, error, payload) and structured logs; registering the webhook endpoint and rotating its secret at the provider is an ops runbook (see Open questions). Failed-event replay is out of scope (re-delivery is the provider's; the sweep covers gaps).
-
-## API behavior
-
-| Method & path | Purpose | Auth | Notable behaviour |
-|---|---|---|---|
-| `POST /internal/v1/billing/webhooks/{provider}` | Receive one provider event | Signature over the raw body — no session, no permission | `200` processed / duplicate / skipped-unknown / unresolvable-tenant; `400` bad signature; `404` unknown provider; `500` transient failure (provider retries); `503` billing disabled |
-
-Response bodies are minimal acknowledgements; the provider only inspects the status code. No pagination, no envelope beyond the base error shape on failures.
-
-## Data model changes
-
-New table **`billing_events`** (owned here; unique key pinned by the index; reversible migration per `db/CLAUDE.md`):
-
-- `id` (PK); `provider`; `provider_event_id` — unique `(provider, provider_event_id)`, the idempotency key.
-- `event_type` (provider's type string); `organisation_id` (nullable FK, indexed — set when tenant resolution succeeds).
-- `payload` (JSON) — redacted per the logging rules: ids and object snapshots only, no card/bank fields (the provider sends none).
-- `status` (`received` | `processed` | `skipped` | `failed`); `error` (nullable text, set on `failed`).
-- `provider_created_at` (the provider's event timestamp — the ordering comparand); `processed_at` (nullable).
-- `created_at`; `updated_at`.
-
-No other table changes. `subscriptions` columns are owned by subscription-lifecycle.md; `billing_customers` by checkout.md — this spec only writes to them through the apply path.
-
-## Backend implementation requirements
-
-- Lives in the `billing` module. Controller ring: the webhook route, raw-body capture, signature verification, provider-name validation. Service ring: the per-event use case and `syncSubscriptionFromProvider(…)`. Repo ring: the `BillingGateway` calls that fetch current provider state; mappers keep provider SDK objects out of inner rings (index: provider boundary).
-- **Idempotency is the database's job**: insert-first against the unique key; the conflict, not a pre-check, detects duplicates (base *Integrations* concurrency — no read-then-write race).
-- **One transaction per event**: the `billing_events` status update, local state write, and audit `record()` commit together; a failure rolls all back and the row is marked `failed` (or the request returns `500` for transient classes, leaving the provider to retry).
-- **Failure classification** per the base *Integrations* table: bad signature = invalid (400); unknown provider = invalid (404); unresolvable tenant / unknown type = permanent (200, recorded); provider fetch timeout or DB error = transient (500). An unclear outcome is never recorded `processed` (base *Unclear outcomes*).
-- **Ordering**: converge-to-current is the primary defence; the `provider_created_at` vs last-synced comparison is the fallback where a fetch is unnecessary or unavailable. Never apply an event's embedded object state directly.
-- The sweep job is a service-ring use case invoked by the pack-bound scheduler; batch size and resume cursor per the base backfill discipline. It shares the apply path — no sweep-only write logic.
-- **Observability**: one structured log per event (event id, type, organisation id, outcome, duration); counters for signature rejections and `failed` rows; the webhook signing secret (env name bound by the pack; index: config) is never logged.
-
-## Audit log events
-
-Via the shared `record()` in the service ring, same transaction as the state change. Actor is `system` (provider-originated).
-
-| `action` | When emitted |
-|---|---|
-| `billing.webhook.rejected` | Signature verification failed |
-| `billing.checkout.completed` | Checkout-session-completed event applied |
-| `billing.subscription.created` / `.updated` / `.canceled` | Subscription state converged (webhook or sweep) |
-| `billing.trial.started` / `.ended` | Trial begins at subscription creation / subscription leaves `trialing` |
-| `billing.invoice.paid` / `.payment_failed` | Invoice outcome events applied |
-
-Where enterprise-compliance is adopted, these flow through its audit envelope. Duplicate and skipped-unknown events emit no audit event — nothing changed.
-
-## Security considerations
-
-- Signature verification is the **only** authentication; comparison is constant-time. Failure is logged and audited but the response reveals nothing beyond `400`.
-- Replay window: where the provider signs a timestamp, reject events older than the provider's documented tolerance — a captured request cannot be replayed later even with a valid signature.
-- The endpoint carries a rate limit and a request body size cap (values bound by the active pack) — it is the app's only unauthenticated POST surface besides `/health`.
-- `payload` stores ids and object snapshots only; no card, bank, or raw payment data is ever stored or logged (program criterion 4).
-- The signing secret comes from validated config, is never logged, and rotates per the ops runbook (Open questions).
-
-## Error cases
-
-| Scenario | HTTP | Code |
-|---|---|---|
-| Invalid or missing signature | 400 | `WEBHOOK_SIGNATURE_INVALID` |
-| Unknown `{provider}` path segment | 404 | `UNKNOWN_PROVIDER` |
-| Transient processing failure (provider fetch, DB) | 500 | — (provider retries) |
-| Duplicate `provider_event_id` | 200 | — (recorded `skipped`) |
-| Tenant unresolvable | 200 | — (recorded `failed`, alerting log) |
-| Unknown event type | 200 | — (recorded `skipped`, reason) |
-| `BILLING_ENABLED=false` | 503 | — (index: config & rollout) |
+- **Owns:** `POST /internal/v1/billing/webhooks/{provider}`, the `billing_events` table, the apply path (`syncSubscriptionFromProvider(…)`), the reconciliation sweep, the error codes `WEBHOOK_SIGNATURE_INVALID` and `UNKNOWN_PROVIDER`, and the audit event `billing.webhook.rejected`. The sync site also emits the subscription, trial, checkout-completed, and invoice audit events (table below).
+- **Consumes:** the allowed-transition rules and `subscriptions` columns (subscription-lifecycle.md); `billing_customers` for tenant resolution (checkout.md); `BillingGateway` for converge fetches. **Used by:** checkout.md (the verification read calls the apply path); seats.md (quantity confirmations and drift correction); every access decision relies on the state synced here.
+- **Phases:** P1 = endpoint, idempotency, ordering, event families (S1–S4). P2 = the reconciliation sweep (S5).
 
 ## User stories & acceptance criteria
 
@@ -143,15 +37,121 @@ Where enterprise-compliance is adopted, these flow through its audit envelope. D
 
 - [ ] Deleting the local sync effect of an applied event and running the sweep converges the row and logs a `warn` plus the webhook-equivalent audit events. *Verify: integration test forcing local drift, invoking the sweep use case, asserting convergence, the `warn` line, and the audit rows.*
 
-## UX & non-functional notes
+## Requirements
 
-- No UI — this area has no screens, i18n keys, or frontend states; user-visible consequences surface through the specs that read the synchronised state (settings-invoices.md, subscription-lifecycle.md).
-- Per-event processing budget stays well inside the provider's delivery timeout; the converge fetch is the only outbound call per event.
-- The sweep's cadence and batch size must keep drift detection under a business day without hammering the provider API (bounded batches, resumable cursor).
+Core (P1):
+1. One inbound endpoint, `POST /internal/v1/billing/webhooks/{provider}`, receives all provider events. No session auth; the provider signature is the only authentication (index: provider boundary).
+2. The raw request body is preserved for signature verification — the seam the active stack pack binds — and verification runs **before any parsing**. An invalid or missing signature returns `400 WEBHOOK_SIGNATURE_INVALID`, is logged, and emits `billing.webhook.rejected`; no state changes.
+3. An unknown `{provider}` path segment returns `404 UNKNOWN_PROVIDER`.
+4. Every verified event is persisted **insert-first** into `billing_events` under the unique `(provider, provider_event_id)` key (index invariant). A duplicate delivery returns `200` immediately, recorded with status `skipped` — safe under provider retries. The conflict, not a pre-check, detects duplicates (base *Integrations* concurrency — no read-then-write race).
+5. Tenant resolution maps the event to an organisation via `provider_customer_id` → `billing_customers` (checkout.md) or the `organisation_id` carried in provider object metadata. An event resolving to no tenant is recorded `failed` with an alerting log and still returns `200` — a permanent failure per the base *Integrations* classes; the provider must not retry what can never succeed. Transient handler failures return `500` so the provider retries.
+6. Handlers treat events as **triggers, not truth**: on any subscription-affecting event, the apply path fetches the object's current state from the provider (or compares `provider_created_at` against the local row's last-synced timestamp) and converges local state to it. A stale, out-of-order event can never regress newer local state.
+7. State writes validate allowed status transitions per subscription-lifecycle.md before applying — never transition merely because a callback asked (base *Business rules*).
+8. **The apply path is single.** Webhook processing, the post-redirect verification read (checkout.md), and the reconciliation sweep all call the same use case — conceptually `syncSubscriptionFromProvider(…)`. No second code path writes local billing state.
+9. Unhandled or unknown event types are recorded as processed-as-ignored (status `skipped`, with a reason) and return `200` — never `500` on an unknown type.
+10. Processing is synchronous within the request by default (small writes only; long work forbidden). Where a pack's serverless shape requires deferral, the pack binds a queue behind this seam; this spec does not build one.
+11. With `BILLING_ENABLED=false` the endpoint returns `503` (index: config & rollout).
+
+Later phases (P2):
+12. A scheduled reconciliation sweep (a service-ring use case; runner and schedule bound by the active pack) lists local non-terminal subscriptions and converges each against the provider in bounded, resumable batches (base backfill discipline); it also runs targeted after checkout verification. It shares the apply path — no sweep-only write logic. Detected drift — a missed webhook — is corrected, logged `warn` per corrected row, and emits the same audit events the equivalent webhook would.
+
+### Handled event families
+
+Agnostic family names; the active stack pack maps the provider's concrete event types onto them.
+
+| Event family | Local effect | Audit events |
+|---|---|---|
+| customer created / updated | upsert the `billing_customers` linkage (columns: checkout.md) | — (linkage, not a billing state change) |
+| checkout session completed | converge the resulting subscription via the apply path | `billing.checkout.completed` |
+| subscription created | create the local subscription in converged state | `billing.subscription.created`; `billing.trial.started` where a trial begins at creation |
+| subscription updated | converge status, plan, interval, quantity, period, cancellation intent | `billing.subscription.updated`; `billing.trial.ended` when the update leaves `trialing` |
+| subscription deleted | converge to the terminal state | `billing.subscription.canceled` |
+| invoice paid | record the payment outcome; converge the subscription period | `billing.invoice.paid` |
+| invoice payment failed | record the failure; converge status (grace handling: subscription-lifecycle.md) | `billing.invoice.payment_failed` |
+| payment method updated | refresh the stored payment-method display summary (surface: settings-invoices.md) | — (display metadata; subscription state unchanged) |
+| trial will end (where the provider supports it) | record the approaching trial end (notice surface: subscription-lifecycle.md) | — |
+
+## User flows
+
+No end-user flows — this area is entirely backend. Processing flows, for testability:
+### F1 — Valid event applied (P1)
+
+1. The provider POSTs an event; the signature verifies over the raw body.
+2. Insert-first into `billing_events` (`received`); the tenant resolves.
+3. The apply path fetches current provider state and converges the local row, validating transitions. Audit events emit in the same transaction; the row is marked `processed`; `200`.
+
+### F2 — Duplicate delivery (P1)
+
+1. The same `provider_event_id` arrives again; the unique-key insert conflicts.
+2. `200` immediately; a row recorded `skipped`. No state change, no audit event.
+
+### F3 — Out-of-order delivery (P1)
+
+1. A stale event arrives after a newer one was applied; the apply path converges against current provider state (or the timestamp comparison short-circuits).
+2. Local state is unchanged or moves forward — never backward.
+
+### F4 — Reconciliation sweep (P2)
+
+1. The scheduled job lists non-terminal local subscriptions in bounded batches; each converges through the same apply path.
+2. Corrected rows log `warn` and emit the webhook-equivalent audit events.
+
+## API & permissions
+
+| Method & path | Purpose | Auth | Notable behaviour |
+|---|---|---|---|
+| `POST /internal/v1/billing/webhooks/{provider}` | Receive one provider event | Signature over the raw body — no session, no permission | `200` processed / duplicate / skipped-unknown / unresolvable-tenant; `400` bad signature; `404` unknown provider; `500` transient failure (provider retries); `503` billing disabled |
+
+- Response bodies are minimal acknowledgements; the provider only inspects the status code. No pagination, no envelope beyond the base error shape on failures. Nothing in-product administers this area. Operators diagnose via `billing_events` rows (status, error, payload) and structured logs; registering the webhook endpoint and rotating its secret at the provider is an ops runbook (see Open questions). Failed-event replay is out of scope: re-delivery is the provider's, and the sweep covers gaps.
+
+## Data model
+
+New table **`billing_events`** (owned here; unique key pinned by the index; reversible migration per `db/CLAUDE.md`). No other table changes: `subscriptions` columns are owned by subscription-lifecycle.md and `billing_customers` by checkout.md — this spec only writes to them through the apply path.
+
+- `id` (PK); `provider`; `provider_event_id` — unique `(provider, provider_event_id)`, the idempotency key.
+- `event_type` (provider's type string); `organisation_id` (nullable FK, indexed — set when tenant resolution succeeds); `payload` (JSON) — redacted per the logging rules: ids and object snapshots only, no card/bank fields (the provider sends none).
+- `status` (`received` | `processed` | `skipped` | `failed`); `error` (nullable text, set on `failed`); `provider_created_at` (the provider's event timestamp — the ordering comparand); `processed_at` (nullable); `created_at`; `updated_at`.
+
+## Audit events
+
+Via the shared `record()` in the service ring, same transaction as the state change; actor is `system` (provider-originated). Where enterprise-compliance is adopted, these flow through its audit envelope. Duplicate and skipped-unknown events emit no audit event — nothing changed.
+
+| `action` | When emitted |
+|---|---|
+| `billing.webhook.rejected` | Signature verification failed |
+| `billing.checkout.completed` | Checkout-session-completed event applied |
+| `billing.subscription.created` / `.updated` / `.canceled` | Subscription state converged (webhook or sweep) |
+| `billing.trial.started` / `.ended` | Trial begins at subscription creation / subscription leaves `trialing` |
+| `billing.invoice.paid` / `.payment_failed` | Invoice outcome events applied |
+
+## Implementation notes
+
+- Lives in the `billing` module. Controller ring: the webhook route, raw-body capture, signature verification, provider-name validation. Service ring: the per-event use case and `syncSubscriptionFromProvider(…)`. Repo ring: the `BillingGateway` calls that fetch current provider state; mappers keep provider SDK objects out of inner rings (index: provider boundary).
+- **One transaction per event**: the `billing_events` status update, local state write, and audit `record()` commit together; a failure rolls all back and the row is marked `failed` (or the request returns `500` for transient classes, leaving the provider to retry). **Failure classification** per the base *Integrations* table: bad signature = invalid (400); unknown provider = invalid (404); unresolvable tenant / unknown type = permanent (200, recorded); provider fetch timeout or DB error = transient (500). An unclear outcome is never recorded `processed` (base *Unclear outcomes*).
+- **Ordering**: converge-to-current is the primary defence; the `provider_created_at` vs last-synced comparison is the fallback where a fetch is unnecessary or unavailable. Never apply an event's embedded object state directly.
+- **Signature verification is the only authentication**; the comparison is constant-time, and the response reveals nothing beyond `400` on failure. Where the provider signs a timestamp, reject events older than the provider's documented tolerance — a captured request cannot be replayed later even with a valid signature. The endpoint carries a rate limit and a request body size cap (values bound by the active pack); it is the app's only unauthenticated POST surface besides `/health`.
+- **Observability**: one structured log per event (event id, type, organisation id, outcome, duration); counters for signature rejections and `failed` rows. The webhook signing secret comes from validated config (env name bound by the pack; index: config), is never logged, and rotates per the ops runbook (Open questions).
+
+## Edge cases & errors
+
+| Scenario | HTTP | Code |
+|---|---|---|
+| Invalid or missing signature | 400 | `WEBHOOK_SIGNATURE_INVALID` |
+| Unknown `{provider}` path segment | 404 | `UNKNOWN_PROVIDER` |
+| Transient processing failure (provider fetch, DB) | 500 | — (provider retries) |
+| Duplicate `provider_event_id` | 200 | — (recorded `skipped`) |
+| Tenant unresolvable | 200 | — (recorded `failed`, alerting log) |
+| Unknown event type | 200 | — (recorded `skipped`, reason) |
+| `BILLING_ENABLED=false` | 503 | — (index: config & rollout) |
+
+## Notes & decisions
+
+- **Events are triggers, not truth (req. 6):** applying an event's embedded object state directly would let stale deliveries regress newer local state; converge-to-current makes ordering harmless.
+- Performance: per-event processing stays well inside the provider's delivery timeout; the converge fetch is the only outbound call per event. The sweep's cadence and batch size must keep drift detection under a business day without hammering the provider API.
+- No UI: this area has no screens, i18n keys, or frontend states — user-visible consequences surface through the specs that read the synchronised state (settings-invoices.md, subscription-lifecycle.md).
 
 ## Out of scope
 
-- Entitlement decisions and access-tier interpretation — plans-entitlements.md and the index's access table (lifecycle spec).
+- Entitlement decisions and access-tier interpretation — plans-entitlements.md and the access table (subscription-lifecycle.md).
 - Any UI surface, including webhook diagnostics screens.
 - Provider dashboard configuration — registering per-environment endpoint URLs and rotating signing secrets is an ops runbook, not product behaviour (its home is an open question below).
 - Queue-based asynchronous processing — the seam is named (req. 10); building it is a pack/scale decision.
