@@ -2,9 +2,11 @@
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **CynosDB** (serverless) in production, a fixed-name Docker container locally — with **Knex** for both migrations and the query layer, over the **`mysql2`** driver. Read the base files first.
+Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **CynosDB** (serverless) in production, a fixed-name Docker container locally — with **Knex** for both migrations and the query layer, over the **`mysql2`** driver. Read the base files first; base schema conventions apply unchanged (`db/CLAUDE.md` *Schema conventions*).
 
-**Scope.** This file owns migrations, seed, schema conventions, and the repo-ring query/transaction mechanics. The SCF entry and bundle live in `./backend.md`; provisioning and the migrate-function invocation live in `./infra.md`.
+## Scope
+
+This file owns migrations, seed, schema conventions, and the repo-ring query/transaction mechanics. The SCF entry and bundle live in `./backend.md`; provisioning and the migrate-function invocation live in `./infra.md`.
 
 ## Tool picks
 
@@ -13,15 +15,8 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **Cyn
 
 ## Migrations
 
-- Live under `db/migrations/`, run via the root `migrate` verb (`knex migrate:latest`; rollback `migrate:rollback`). Each file exports `up(knex)` and `down(knex)`.
-- **Reversibility, bound:** every `up` ships its real `down`; a genuinely irreversible change carries the base's justification comment. Each migration runs in a transaction where MySQL DDL permits (note: most MySQL DDL auto-commits — keep one logical change per migration so a failure is diagnosable).
+- Live under `db/migrations/`, run via the root `migrate` verb (`knex migrate:latest`; rollback `migrate:rollback`). Each file exports `up(knex)` and `down(knex)`; every `up` ships its real `down`, and a genuinely irreversible change carries the base's justification comment. Most MySQL DDL auto-commits, so keep one logical change per migration so a failure is diagnosable.
 - **Separate schema from data;** backfills are batched, idempotent, resumable (base rule) — add a column nullable, backfill it in an idempotent data migration, then enforce/consume it in a later one.
-
-## Schema & MySQL-8 gotchas
-
-- Base schema conventions apply unchanged (`db/CLAUDE.md` *Schema conventions*); MySQL-8 specifics below.
-- **A `CHECK` constraint validates against *existing* rows on MySQL 8** — so you cannot add one to a table whose legacy rows already violate it. Enforce such invariants **in the service**, not with a late `CHECK`, when legacy or imported data may violate them.
-- **Fixed value sets: a native MySQL `ENUM` is acceptable** — widening it (`ALTER TABLE ... MODIFY ... ENUM(...)`) is a plain reversible migration (contrast Postgres, where the `vercel-csr` pack avoids native enums). A new challenge `purpose` is added this way.
 
 ## Repo ring binding (Knex)
 
@@ -31,13 +26,18 @@ Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **Cyn
 
 ## Local dev, seed & the destructive test-DB ritual
 
-- **Local MySQL is one fixed-name Docker container**, shared across worktrees per the base — reuse it, run `migrate`, never start a second copy (the base shared-DB rule stands; this stack does **not** use per-worktree databases, unlike the `vercel-csr` pack).
+- **Local MySQL is one fixed-name Docker container**, shared across worktrees per the base — reuse it, run `migrate`, never start a second copy. This stack does **not** use per-worktree databases.
 - **Seed** realistic, named accounts + content (base `db/CLAUDE.md`) so manual/e2e testing and the **test-mode** add-on's test-user picker have lifelike data; idempotent, upsert by business key.
 - **The test suite is destructive** — it truncates tables. The runner **refuses to run unless `DB_NAME` ends in `_test`**, and `pnpm test` auto-suffixes it, so the dev schema is never touched. One-time setup creates and migrates the `*_test` schema (`pnpm --filter backend test:db:setup`, idempotent). This `*_test`-schema guard *is* this stack's binding of the base "destructive checks go to a throwaway DB" rule.
 
-## Production migrations — a separate SCF function
+## Operations
 
-**The deploy does not run `migrate` inline.** Migrations run in a dedicated SCF **event** function (`<project>-migrate`), invoked by the pipeline **after** `terraform apply` (`scripts/invoke-migrate.js` → SCF Invoke, options passed via `ClientContext`: `resetSchema`, `forceReseedTestUsers`). Because the function code and schema ship in the same pipeline run, keep every migration **backward-compatible** (expand → migrate → contract, base rule) so the brief window where old code meets new schema never breaks. Full pipeline order → `./infra.md`.
+- **Production migrations run in a dedicated SCF event function, never inline in the deploy.** The pipeline invokes `<project>-migrate` **after** `terraform apply` (`scripts/invoke-migrate.js` → SCF Invoke, options passed via `ClientContext`: `resetSchema`, `forceReseedTestUsers`). Because the function code and schema ship in the same pipeline run, keep every migration **backward-compatible** (expand → migrate → contract, base rule) so the brief window where old code meets new schema never breaks. Full pipeline order → `./infra.md`. **CI checks** live in the pack README's CI checklist: the `*_test` schema setup, the vitest run against it, the migration up→down→up round-trip, and the OpenAPI drift guards.
+
+## Gotchas (MySQL 8)
+
+- **A `CHECK` constraint validates against *existing* rows on MySQL 8** — you cannot add one to a table whose legacy rows already violate it. Enforce such invariants **in the service**, not with a late `CHECK`, when legacy or imported data may violate them.
+- **Fixed value sets: a native MySQL `ENUM` is acceptable** — widening it (`ALTER TABLE ... MODIFY ... ENUM(...)`) is a plain reversible migration. A new challenge `purpose` is added this way.
 
 ## Conflict register
 
