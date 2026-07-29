@@ -1,6 +1,6 @@
 # Add-on: seo
 
-> Optional add-on. Opt in at Day-1 by keeping this directory (see `add-ons/README.md`). Agnostic approach; the adopted stack pack's answers to seam items S1–S10 below — or its unbound declaration — live in `bindings.md` beside this file, so the add-on's whole footprint stays in this directory. The Spec Kit records it was built from live under `specs/` here.
+> Optional add-on. Opt in at Day-1 by keeping this directory (see `add-ons/README.md`). Agnostic approach; the adopted stack pack's answers to seam items S1–S10 below — or its unbound declaration — live in `bindings.md` beside this file, so the add-on's whole footprint stays in this directory.
 
 Search discoverability for the app's public pages — being crawled, indexed, and previewed correctly when shared — plus the structural work of keyword strategy, paid search, rank tracking, and page-speed ranking factors. The ongoing practice of each stays out of scope: keyword research and selection, campaign purchase and management, running or reading rank reports, hands-on performance tuning, and analytics/conversion measurement.
 
