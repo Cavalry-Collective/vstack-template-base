@@ -73,6 +73,23 @@ Readable code is a review priority. A reviewer should understand intent from nam
 - Delete any comment that repeats what the code says.
 - Notes to the reviewer ("fixed X here") go in the commit message, not in comments.
 
+## Documentation style
+
+Applies to every Markdown document in this repo: specs, READMEs, stack packs, add-ons.
+
+- Write plain business English. Say it the way you would explain it to a colleague.
+- Lead with the purpose. Open a document or section with why it exists ("To support seat-based subscriptions…"), then drill into detail. Edge cases and notes go at the end.
+- One idea per sentence. One rule per bullet. Prefer bullets and numbered lists over paragraphs. Use tables for reference material (keys, codes, bounds).
+- Make a person or the system the subject: "the app blocks the invite", not "over-invitation is blocked at the boundary".
+- No slogans, no compressed abstractions ("Seats are one enforced number"). Contrast is fine when it prevents a mistake ("return 404, not 403"); drop it when it is only for effect ("assertions, not hopes").
+- No em-dash chains or nested parentheticals. If a sentence needs more than one qualifier, split it.
+- State rules imperatively. Rationale and rejected alternatives live in the document's designated notes/decisions section, or a pack's conflict register — never inline with the rule.
+- No document history or meta-narration. Don't describe how the document came to be, what moved where, or what another file deliberately omits.
+- State a rule once, in the document that owns it. Link to it from everywhere else.
+- Exception: verbatim contract strings (precedence lines, conflict-register field formats, copy-paste command blocks) are never reworded for style.
+
+Reference examples: `add-ons/saas-billing/specs/seats.md` (spec) and `stacks/vercel-csr/README.md` (pack manifest).
+
 ## Principles (must follow)
 
 Load-bearing engineering rules; honor them on every change. They are stack- and tooling-agnostic. The first four are adapted from Andrej Karpathy's coding guidelines, folded into this file so no external reference is needed.
