@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Do not use the persistent file-based memory.** Never write to or read from Claude's own memory directory. (`.specify/memory/` is Spec Kit's constitution home, not that memory — it's fine.) If something is worth remembering across sessions, record it in this file under **Learnings** (at the bottom) instead.
+> **Do not use the persistent file-based memory.** Never write to or read from Claude's own memory directory. If something is worth remembering across sessions, record it in this file under **Learnings** (at the bottom) instead.
 
 ## Repo shape
 
@@ -144,4 +144,4 @@ Where `main` is protected (Day-1 step 11) or the work is spec-backed (`specs/REA
 
 Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it. At instantiation the usual first entry is the stack-pack choice (see the Day-1 checklist in `README.md`).
 
-- Spec tool: **Spec Kit** adopted (`.specify/` + `.claude/skills/speckit-*`; numbered feature dirs, per `specs/README.md`). Numbers 001–004 are consumed: 001 (design guide) retired after completion; 002 (repo-guidance audit) retired without its directory ever landing; 003/004 live under `add-ons/seo/specs/` — an add-on's spec program may ship inside the add-on.
+- Spec tool: **none by default** — Spec Kit was removed 2026-07-29 (`.specify/` + `.claude/skills/speckit-*` deleted); adopt one per `specs/README.md` if wanted. Feature numbers 001–004 remain consumed from its era: 001 (design guide) retired after completion; 002 (repo-guidance audit) retired without its directory ever landing; 003/004 live under `add-ons/seo/specs/` — an add-on's spec program may ship inside the add-on. Don't reuse them.
