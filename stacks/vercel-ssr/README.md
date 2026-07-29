@@ -22,7 +22,7 @@ This stack has no separate backend app — the onion lives inside the Next.js ap
 1. `git mv apps/backend/CLAUDE.md apps/frontend/src/server/CLAUDE.md` — the onion contract moves with the code it governs; agents pick it up when working under `src/server/`.
 2. Prepend one line to the moved file: `> Relocated from apps/backend/ — this directory is the backend; path references to apps/backend/src/ map here. Bindings: the adopted pack's backend.md.`
 3. `rm -rf apps/backend`.
-4. Soften the root framing: in the root `CLAUDE.md` repo shape, drop the `apps/backend` row and describe `apps/frontend` as "the full-stack Next.js app (UI + server side)"; update the root `README.md` **What's included** rows to match. The repo name still encodes "spa" and is immutable — accepted as stale.
+4. Soften the root framing: in the root `CLAUDE.md` repo shape, drop the `apps/backend` row and describe `apps/frontend` as "the full-stack Next.js app (UI + server side)"; update the root `README.md` **What's included** rows to match.
 
 `backend.md`'s conflict register records this override; the relocated contract applies unchanged apart from paths.
 
