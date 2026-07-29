@@ -43,3 +43,11 @@ Per seam item:
 ## wechat — unbound
 
 Unmeetable seam item: **S1** — the form factor is a phone-first, app-like H5/PWA client, and Taro H5's client-only rendering cannot serve indexable routes complete without client JS. Workable alternative: a project on this stack that grows a public crawlable surface serves it outside the Taro bundle (its own prerendered or server-rendered pages) and binds the add-on there. Residual posture: R10 survives unbinding — a publicly reachable H5 origin that shouldn't appear in search results still serves a refuse-indexing response (deny-all robots / noindex header) regardless.
+
+## mern — unbound
+
+Unmeetable seam item: **S1** — that pack is a **client-rendered SPA with no SSR by deliberate design** (`stacks/mern/frontend.md` → *Rendering model*). Every route is served as the same static `index.html` and painted by JavaScript, so there is no mechanism that makes an indexable route complete without client-side scripts, and nothing to hang S2–S9 off either: no server render to emit per-route `<head>` tags, no server response to carry a 301 or a real 404 status. Adding one is a pack change, not a patch — do not reach for a prerender/SSG plugin to close this gap; that is precisely what the pack's forbidden list rules out.
+
+Workable alternative: this pack has no same-stack SSR sibling — adopt a server-rendered pack instead (**`vercel-ssr`** or **`enterprise`**, both bound above), or keep the SPA and serve the crawlable surface **outside** the app bundle (its own server-rendered origin — a marketing site, a docs site) and bind the add-on there.
+
+Residual posture: **R10 survives unbinding** — the SPA origin is publicly reachable, so it still serves a refuse-indexing response. Bind that much: a static `public/robots.txt` disallowing all, plus `X-Robots-Tag: noindex` from the serving layer's headers on every non-production environment (the pack's deploy seam — `stacks/mern/frontend.md` → *Serving `dist/`*, requirement 3's header home), and a Playwright assertion on the non-production response (gate G3). No platform answers noindex for this pack by default — the serving layer must, and the suite assertion, not platform behaviour, is the gate.
