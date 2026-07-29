@@ -1,8 +1,8 @@
 # Add-on: otp-auth
 
-> Optional add-on. Opt in at Day-1 by keeping this directory (see `add-ons/README.md`). Agnostic approach; the active stack pack supplies the concrete store/provider, SDK, and canonicalisation.
+> Optional add-on. Adopt at Day-1 by keeping this directory (see `add-ons/README.md`); the active stack pack supplies the seams named under *Binds to a stack*.
 
-One-time-code auth: a user proves control of a phone or email by entering a code sent to it. Use for passwordless login, signup verification, and adding/changing a contact method.
+One-time-code auth: a user proves control of a phone or email by entering a code sent to it. Use it for passwordless login, signup verification, and adding or changing a contact method. Pick the challenge model first — it decides what you build and what you still own.
 
 ## Choose a model
 
@@ -22,13 +22,13 @@ One-time-code auth: a user proves control of a phone or email by entering a code
 ## Make it robust
 
 - **Idempotent verify.** A retry or double-submit must never create a second account or double-consume. Put a unique constraint on the natural key (target + purpose) so the race resolves to `409`, and have the client treat `409` as "already done, proceed".
-- **A knowable test code.** Gate a knowable code behind **test mode** (a logged real code, or a fixed code valid *only* in test mode) so the flow is walkable without a live provider. The verify path still runs — only delivery is stubbed.
-- **Log every send and verify** with `{purpose, masked target, test-mode, provider status, correlation id}` — never the code or full contact.
-- **Rate-limit send and verify** (per target, per challenge); answer `429` with a retry hint.
-- **Codes are single-use and attempt-capped.** A code is consumed on first successful verify and never verifies again; cap failed attempts per challenge (a small fixed number), then invalidate the challenge — per-target rate limits alone don't stop brute-forcing one code.
-- **Surface delivery failures** — "provider accepted" is not "user received". Classify transient (resend) vs permanent (terminal error); never swallow a failed send.
+- **Codes are single-use, attempt-capped, and rate-limited.** A code is consumed on first successful verify and never verifies again. Cap failed attempts per challenge (a small fixed number), then invalidate the challenge — per-target rate limits alone don't stop brute-forcing one code. Rate-limit send and verify per target and per challenge; answer `429` with a retry hint.
+- **Log every send and verify, and surface delivery failures.** Log `{purpose, masked target, test-mode, provider status, correlation id}` — never the code or full contact. "Provider accepted" is not "user received": classify transient failures (resend) vs permanent (terminal error); never swallow a failed send.
 - **Offer an admin-issued fallback** — a per-account, hashed, short-lived, revocable code behind its own flag — for users who genuinely can't receive one.
-- **Select credentials by the record's mode, not the caller's session;** live credentials never fall back to a test default.
+
+## Verify
+
+Assert in the suite: a verified code never verifies again; the attempt cap invalidates the challenge; a double-submit resolves to `409` and the client proceeds; sends and verifies past the limit answer `429`; the knowable test code verifies only under the test-mode signal.
 
 ## Binds to a stack
 
@@ -36,6 +36,6 @@ The active pack names: model A or B and the concrete store/provider; the hashing
 
 ## Interactions
 
-- **test-mode** — required to stay walkable without a live provider; adopt both.
+- **test-mode** — adopt both: gate a knowable code behind the mode (a logged real code, or a fixed code valid *only* in test mode) so the flow is walkable without a live provider; the verify path still runs, only delivery is stubbed. Credentials follow the record's mode, not the caller's session (test-mode's rule); live credentials never fall back to a test default.
 - **Base default-off integration flag** — the real sender ships behind it, routed to a no-op sink until configured per environment.
 - **Base security-baseline + audit-trail** — this instantiates them (hashing, ownership, idempotency; record sensitive auth events).

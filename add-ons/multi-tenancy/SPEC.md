@@ -1,6 +1,6 @@
 # Multi-tenancy — tenant model, membership, resolution & switching
 
-> Buildable program for the `multi-tenancy` add-on (`add-ons/multi-tenancy/README.md`); ships beside it — on adoption you may move it under `specs/` (renamed to the dated convention) if the project keeps one spec home. Status: proposed. The tenant noun for this product is **organisation**, matching the enterprise-compliance program (`add-ons/enterprise-compliance/specs/program-index.md`), which assumes this model where both add-ons are adopted.
+> Buildable program for the `multi-tenancy` add-on (`add-ons/multi-tenancy/README.md`). Status: proposed. The tenant noun for this product is **organisation**, matching the enterprise-compliance program (`add-ons/enterprise-compliance/specs/program-index.md`), which assumes this model where both add-ons are adopted.
 
 ## Goal
 
