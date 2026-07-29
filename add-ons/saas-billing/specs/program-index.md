@@ -4,14 +4,45 @@
 
 ## Goal
 
-Let the product charge real customers without ever rewriting it: tenant-level subscriptions on data-defined plans, provider-hosted checkout and payments, webhook-synchronised local state as the single source of truth for access, centralised entitlements enforcing features, seats, and usage on the backend, and a billing settings area that shows every state honestly. The payment provider owns money movement and card data; the app owns the billing model and every access decision.
+The product charges real customers for subscription billing without ever rewriting it: data-defined plans with monthly and yearly prices, provider-hosted checkout and payment, webhook-synchronised renewal and subscription lifecycle as the single source of truth for access, and a billing settings area with invoices that shows every state honestly. Seats and usage quotas are supporting enforcement areas built on the same entitlements. The payment provider owns money movement and card data; the app owns the billing model and every access decision.
 
-## How this program is organised
+## Area specs
 
-Each area is an independently shippable spec (listed at the bottom). Every area spec follows one section template — Goal · Product requirements · User flows · Admin capabilities · API behavior · Data model changes · Backend implementation requirements · Audit log events · Security considerations · Error cases · User stories & acceptance criteria · UX & non-functional notes · Out of scope · Open questions — and **inherits the shared conventions below rather than restating them**. A conflict between an area spec and this index is a defect; flag it, don't fork.
+Each area is an independently shippable spec, following one section template: Goal · Scope & ownership · User stories & acceptance criteria · Requirements · User flows · API & permissions · Data model · Audit events · Implementation notes · Edge cases & errors · Notes & decisions · Out of scope · Open questions.
+
+| Area | File | Purpose & phases |
+|---|---|---|
+| Plan catalog & entitlements | `plans-entitlements.md` | Plans as pure data; the `EntitlementChecker` resolver every access decision goes through. P1; operator packaging changes P2. |
+| Checkout | `checkout.md` | Free tier → paid subscription on the provider's hosted payment page. P1; cancelled-checkout return P2. |
+| Subscription lifecycle, trials & access states | `subscription-lifecycle.md` | The one `subscriptions` row, trials, cancellation, and the fail-closed access derivation. P1; state surfacing P2; trial notice P3. |
+| Customer portal & plan changes | `portal-plan-changes.md` | The hosted billing portal; in-app plan/interval/quantity changes with proration. P2. |
+| Billing settings & invoices UI | `settings-invoices.md` | The settings page, status copy, gating hints, and the invoice list. Page P1; invoices P2. |
+| Provider webhooks & state sync | `webhooks-sync.md` | Signature-verified events, idempotent sync, and the reconciliation sweep. P1; sweep P2. |
+| Seat-based billing | `seats.md` | Seat counting and limit enforcement behind the plans' member caps. Limits P1; per-seat billing P2. |
+| Usage metering & quotas | `usage-quotas.md` | Flow-metric metering and quota enforcement per billing period. P2; notifications/overage P3. |
+
+## Phasing & build order
+
+Priorities are set per story inside each area spec. The program-level MVP (all P1 stories):
+- Plan catalog with a seeded Free plan; entitlement resolver + backend enforcement.
+- Subscription model with the fail-closed access table.
+- Hosted checkout with server-side outcome verification; webhook sync with signature verification + idempotency.
+- Seat limits (member count + invite gate).
+- The billing settings page's current-state view with an upgrade path.
+
+Per-seat quantity billing, the customer portal, plan changes with proration, invoices UI, usage metering, and trial-ending notices build on that spine as P2/P3. Build order: **plans-entitlements and webhooks-sync first** — nothing enforces access until the resolver exists, and checkout is not "done" until its outcome arrives through webhook-synchronised state.
+
+## Cross-cutting acceptance criteria (apply to every area)
+1. Every billing endpoint verifies authentication, organisation membership, tenant scope, and its named permission; a cross-tenant id returns `404`, never another organisation's data. *Verify: contract tests per endpoint — allowed, denied, cross-tenant.*
+2. No paid feature is reachable when the access tier resolves to `free` — including past-due-beyond-grace, unpaid, expired-trial, and missing-billing-row states. *Verify: integration tests per state driving one gated endpoint through the resolver.*
+3. Webhook processing rejects an invalid signature (`400`, logged, no state change) and replays of a seen `provider_event_id` are recorded no-ops. *Verify: integration tests with a tampered payload and a duplicated event.*
+4. No card number, CVC, or raw payment detail is ever stored or logged — only provider ids and receipt metadata. *Verify: schema review plus log/audit assertions in the checkout and webhook tests.*
+5. Every billing state change emits its audit event; every entitlement denial emits the structured warn log. *Verify: integration tests asserting the audit row / log line after exercising the flow.*
+6. With `BILLING_ENABLED=false`, no call reaches the real provider and no paid access is granted. *Verify: use-case tests against the stub sink asserting both.*
 
 ## Shared conventions (binding on every area spec)
 
+Area specs inherit these conventions rather than restating them. A conflict between an area spec and this index is a defect; flag it, don't fork.
 ### Domain model & terminology
 
 - **Organisation** — the tenant, as everywhere else in the product. All billing state hangs off exactly one organisation; nothing billing-related attaches to an individual user.
@@ -98,45 +129,14 @@ Index `subscriptions.status` and `subscriptions.current_period_end` (sweep and e
 - Validated at boot (base *Configuration*): `BILLING_ENABLED` (boolean, **default off** — routes `BillingGateway` to the stub sink), `BILLING_PAST_DUE_GRACE_DAYS` (default 7), the provider secret key and webhook signing secret (env names bound by the active pack), and the app base URL the checkout/portal return URLs derive from.
 - With billing off: billing screens render the free/empty state; checkout, portal, and subscription mutations return `409 BILLING_DISABLED`; the webhook route returns `503`; entitlement checks still run (everything resolves to the Free plan). The flag never grants paid access in either position.
 
-### Phasing
-
-Priorities are set per story inside each area spec; the program-level MVP (all P1 stories) is: **plan catalog with a seeded Free plan, entitlement resolver + backend enforcement, subscription model with the fail-closed access table, hosted checkout with server-side outcome verification, webhook sync with signature verification + idempotency, seat limits (member count + invite gate), and the billing settings page's current-state view with an upgrade path.** Per-seat quantity billing, the customer portal, plan changes with proration, invoices UI, usage metering, and trial-ending notices build on that spine as P2/P3.
-
-Build order note: **plans-entitlements and webhooks-sync first** — nothing enforces access until the resolver exists, and checkout is not "done" until its outcome arrives through webhook-synchronised state.
-
-## Cross-cutting acceptance criteria (apply to every area)
-
-1. Every billing endpoint verifies authentication, organisation membership, tenant scope, and its named permission; a cross-tenant id returns `404`, never another organisation's data. *Verify: contract tests per endpoint — allowed, denied, cross-tenant.*
-2. No paid feature is reachable when the access tier resolves to `free` — including past-due-beyond-grace, unpaid, expired-trial, and missing-billing-row states. *Verify: integration tests per state driving one gated endpoint through the resolver.*
-3. Webhook processing rejects an invalid signature (`400`, logged, no state change) and replays of a seen `provider_event_id` are recorded no-ops. *Verify: integration tests with a tampered payload and a duplicated event.*
-4. No card number, CVC, or raw payment detail is ever stored or logged — only provider ids and receipt metadata. *Verify: schema review plus log/audit assertions in the checkout and webhook tests.*
-5. Every billing state change emits its audit event; every entitlement denial emits the structured warn log. *Verify: integration tests asserting the audit row / log line after exercising the flow.*
-6. With `BILLING_ENABLED=false`, no call reaches the real provider and no paid access is granted. *Verify: use-case tests against the stub sink asserting both.*
-
 ## Out of scope (program-wide)
 
-- Tax/VAT calculation and invoice legal formatting — delegated to the provider's tax features; configuration only.
-- Refunds, disputes, and chargeback operations — handled in the provider dashboard; webhook sync records the resulting subscription/invoice states only.
+- Tax/VAT calculation and invoice legal formatting — delegated to the provider's tax features; configuration only. Refunds, disputes, and chargeback operations — handled in the provider dashboard; webhook sync records the resulting subscription/invoice states only.
 - Multiple concurrent subscriptions per organisation; coupons/promotions; multi-currency price localisation beyond each price row's single currency. The data model must not preclude them; nothing implements them.
-- A self-serve plan-authoring UI — plans change via seed/operator data change plus provider sync, not product UI.
-- Personal (per-user) billing.
+- A self-serve plan-authoring UI — plans change via seed/operator data change plus provider sync, not product UI. Personal (per-user) billing.
 
 ## Open questions
 
-- Concrete launch plan names, prices, and entitlement values (Free/Starter/Pro/Business are working examples). Owner: product; needed before checkout P1 lands.
-- Payment provider per market: the stack packs bind the default; a mainland-China deployment swaps the gateway adapter (e.g. WeChat Pay) behind the same port. Owner: product + infra at instantiation.
+- Concrete launch plan names, prices, and entitlement values (Free/Starter/Pro/Business are working examples). Owner: product; needed before checkout P1 lands. Payment provider per market: the stack packs bind the default; a mainland-China deployment swaps the gateway adapter (e.g. WeChat Pay) behind the same port. Owner: product + infra at instantiation.
 - Do pending invites consume seats? Program default: **yes** (the seats spec pins the counting rule); revisit with product before seats P1.
 - `design/` has no mockups for the billing surfaces (settings page, plan picker, paywall/limit states); each area spec lists its screens — mockups must exist before each initial build per the spec convention.
-
-## Area specs
-
-| # | Area | File |
-|---|---|---|
-| 1 | Plan catalog & entitlements | `plans-entitlements.md` |
-| 2 | Subscription lifecycle, trials & access states | `subscription-lifecycle.md` |
-| 3 | Checkout | `checkout.md` |
-| 4 | Customer portal & plan changes | `portal-plan-changes.md` |
-| 5 | Provider webhooks & state sync | `webhooks-sync.md` |
-| 6 | Seat-based billing | `seats.md` |
-| 7 | Usage metering & quotas | `usage-quotas.md` |
-| 8 | Billing settings & invoices UI | `settings-invoices.md` |
