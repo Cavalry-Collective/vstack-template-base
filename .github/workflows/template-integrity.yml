@@ -7,10 +7,12 @@ name: Template integrity
 # Instantiating the template? Delete this workflow and copy the scaffolds in
 # .github/workflows/examples/ instead (README.md → Day-1 checklist, step 7).
 
+# No push trigger: the `main` ruleset requires a pull request and requires this
+# check, so a run on the merge commit would only repeat what already passed.
+# Use workflow_dispatch to re-run it by hand.
 on:
   pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
