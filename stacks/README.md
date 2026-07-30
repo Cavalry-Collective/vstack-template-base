@@ -1,44 +1,57 @@
-# `stacks/` — stack packs
+# Stack packs
 
-The base CLAUDE.md files are framework-agnostic on purpose. A **stack pack** binds those agnostic contracts to one concrete stack (frameworks, ORM, package manager) through appendix docs that **ride on top of** the base: they add bindings and resolve conflicts, never restate the base. One pack is chosen at instantiation; the rest are deleted. This file is the system doc — read once, not loaded during normal work. Each pack carries its own manifest `README.md`.
+The base instruction files are framework-independent. A stack pack binds them to one concrete application stack, database toolchain, package manager, and deployment platform.
 
-## What a pack is
+A project adopts exactly one pack during Day-1 setup. Keep that pack under `stacks/` and delete the others.
 
-A pack is a directory `stacks/<pack-name>/` of **guidance-as-text**: concrete config and command snippets to copy. A pack never ships installed dependencies, lockfiles, or generated scaffolding in the buildable tree.
+## How packs work
 
-`<pack-name>` is a short identity name, lowercase and hyphenated — the name an adopter recognizes the stack by. It comes from the deployment platform or product surface when that choice defines the stack (`vercel-csr`, `vercel-ssr`, `wechat`), from a well-known stack acronym (`mern`), from the stack's defining framework (`django`), or from its architectural character (`enterprise`). The name stays auditable because every pack README records the underlying `<frontend>-<backend>-<database>` triple in its naming note. Packs sharing one platform coexist by suffixing the shape that distinguishes them — for `vercel-csr` / `vercel-ssr` the suffix *is* the rendering model. Each README names its sibling(s) and the contrast, so an adopter picks deliberately.
+- Each area instruction tells the agent to read the adopted pack's matching appendix.
+- Appendices add stack bindings and resolve explicit conflicts.
+- The base remains authoritative wherever the appendix is silent.
+- The retained files are the source of truth. There is no generated copy.
+- Add-on bindings are derived from the add-on's **Binds to a stack** section and the adopted appendices.
 
-## Required file set
+## Required files
 
-Every pack carries at least these four files (one may be thin, but all four exist). A pack MAY also add `infra.md` as an optional fifth appendix, under the same invariants — infra is cloud-shaped, not app-stack-shaped, so no pack is required to ship it.
+Every pack contains:
 
-| File | Binds onto base file | Holds |
+| File | Binds to | Contains |
 |---|---|---|
-| `README.md` | — (manifest) | identity, appendix→base mapping, suggested `<pm>` blocks, day-1 wiring, deploy-seam pointer |
-| `backend.md` | `apps/backend/CLAUDE.md` | HTTP-framework bindings, DI/composition root, language-path deltas |
-| `frontend.md` | `apps/frontend/CLAUDE.md` | UI-framework bindings, rendering model, four-states/mutation mapping |
-| `db.md` | `db/CLAUDE.md` (+ repo ring) | ORM/migration bindings, schema/migration mechanics |
+| `README.md` | pack manifest | stack identity, Day-1 changes, commands, CI, deployment |
+| `backend.md` | `apps/backend/CLAUDE.md` | framework, language, dependency injection, edge, testing |
+| `frontend.md` | `apps/frontend/CLAUDE.md` | rendering, routing, data flow, UI toolchain, testing |
+| `db.md` | `db/CLAUDE.md` and the repo ring | schema, migrations, transactions, local and CI databases |
 
-## Pack invariants (a pack is valid iff it satisfies all of these)
+A pack may add `infra.md` when its deployment platform is part of the stack.
 
-- **Additions-only.** No restating base content — only (a) stack bindings and (b) explicit conflict resolutions. If a line is true without naming the stack, it does not belong.
-- **Register or obey.** A pack may override any base rule — even a structural one, like swapping the onion's feature-first axis for layer-first — but only through a conflict-register entry; a silent contradiction makes the pack invalid. What no pack may drop is the discipline itself: layers stay separated and dependencies point one way, whatever the axis.
-- **Precedence line atop every appendix** (verbatim): `> Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.`
-- **Conflict register ending every appendix.** The four registers are the single audit surface — where the appendix replaces a base statement, it is listed here, not left as a live contradiction. An entry that contradicts nothing is not a conflict — plain bindings stay in the body; padding the register weakens the audit. Each entry (bullet or blockquote — the fields matter, not the markup), ending in a checkable imperative:
-  > **Base says:** … **In this stack:** … **Because:** … **Concretely:** … *(one DO/DON'T an agent can check or grep for)*
+## Appendix rules
 
-  A zero-conflict appendix states so: `_No conflicts — this appendix only adds bindings; the base contract is unchanged._`
-- **No project-specific values.** No DB URLs, secrets, env, per-project form-factor declarations, or per-project route tables — those go into project-local files at instantiation.
-- **Size discipline.** Each appendix is well under 200 lines, terse and checkable.
+- Add only stack-specific bindings and conflict resolutions.
+- Do not repeat rules that are already complete in the base.
+- Keep project-specific values, routes, secrets, and environment choices out of the pack.
+- Keep each appendix easy to scan and under 200 lines.
+- Record the underlying `<frontend>-<backend>-<database>` identity in the manifest.
 
-## Activation (by instruction)
+Every appendix must open with this line verbatim:
 
-Packs activate by **instruction, not machinery**. Each area's `CLAUDE.md` (`apps/backend`, `apps/frontend`, `db`, `infra`) tells the agent to read the adopted pack's matching appendix before working in that area — a backend task pulls in `backend.md`, and only that. Adoption is structural: keep exactly **one** pack directory under `stacks/` and delete the rest, so "the adopted pack" is unambiguous. The appendix is read directly from `stacks/` — it is the single source of truth, with no generated copy to drift.
+> Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-## How to add a pack
+Every appendix must end with **Conflict register**. Record only real contradictions using all four fields:
+
+> **Base says:** ... **In this stack:** ... **Because:** ... **Concretely:** ...
+
+End **Concretely** with an instruction that can be checked in review. When there is no conflict, write:
+
+`_No conflicts — this appendix only adds bindings; the base contract is unchanged._`
+
+## Add a pack
 
 1. Create `stacks/<pack-name>/` with the four required files.
-2. Put the precedence line atop each appendix and a conflict register at the end; keep every line additions-only.
-3. Write the manifest `README.md` — identity, appendix→base mapping, suggested dev + CI `<pm>` blocks, deploy-seam pointer.
-4. Do no add-on work. Add-on wiring is derived at adoption from each add-on's *Binds to a stack* seam list plus this pack's appendices. Note in the manifest only a genuine incompatibility: an add-on whose requirements the stack cannot meet.
-5. Nothing else to wire — the per-area `CLAUDE.md` pointers pick the pack up as soon as it is the only directory under `stacks/` (see *Activation*).
+2. Add `infra.md` only when the pack owns the deployment platform.
+3. Name the pack after its defining platform, framework, product surface, or established stack acronym.
+4. Put the precedence line and conflict register in every appendix.
+5. Add the Day-1 commands and CI checks to the manifest.
+6. State genuine add-on incompatibilities in the manifest.
+
+Use a short lowercase, hyphenated name. If two packs share a platform, include the distinguishing application shape, as in `vercel-csr` and `vercel-ssr`.

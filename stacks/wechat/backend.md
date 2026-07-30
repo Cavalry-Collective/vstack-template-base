@@ -1,52 +1,65 @@
-# Fastify 4 on Tencent SCF — backend appendix
+# Fastify on Tencent SCF: backend appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `apps/backend/CLAUDE.md` and the root `CLAUDE.md` to **Fastify 4, plain JavaScript (CommonJS), deployed as a Tencent Cloud SCF Web Function**. Read those first; this file does not restate them.
+Bind the backend to Fastify 4, plain JavaScript CommonJS, and a Tencent SCF Web Function.
 
-## Scope
+## Bindings
 
-This file owns the HTTP layer, the layer-first layout, the aspects, and the SCF entry. Data layer → `./db.md`; provisioning and deploys → `./infra.md`.
-
-## Stack binding at a glance
-
-- **HTTP layer: Fastify 4, used directly** — plugins, lifecycle hooks, and decorators are the base's aspect mechanism. **Language: plain JavaScript, CommonJS** (`require`, no `"type": "module"`), no typecheck step (explicit no-op) — the deploy `esbuild` bundle packages, it doesn't verify types.
-- **Layout: layer-first, not the base's feature-first onion** — see *Layers* below and the conflict register.
-- **Validation: Fastify JSON Schema** — every route declares request *and* response schemas from `schemas/<domain>.js`; **OpenAPI is the source of truth** — the document lives at `apps/backend/openapi.yaml`; `lint:openapi` validates the document itself, `lint:schemas` asserts every route's attached schema matches its OpenAPI operation (pack decision — see the README).
-
-## Layers — the flat shape (`routes/ services/ repos/ schemas/ lib/ utils/ plugins/ db/` under `src/`)
-
-- **`routes/<domain>.js` (controllers)** — thin Fastify plugins: attach JSON Schema, run guards, call **one** `services/` function, shape the reply. Never touch Knex or a repo directly; no business rules beyond validation.
-- **`services/<domain>.js` (business layer)** — orchestrate use cases: own the transaction (`knex.transaction`), enforce rules, call `lib/` integrations, emit audit events. Never see `request`/`reply`; raise failures as `HttpError`. This ring carries the domain logic the base places in a separate `domain/` ring — see the register.
-- **`repos/<domain>.js` (data access)** — Knex query building only; first arg is always `db` (a knex instance *or* a transaction), then a named-args object. No rules, no `HttpError`. Mechanics → `./db.md`.
-- **`schemas/`** — all JSON Schemas (`<Thing>Schema`, `<Action>BodySchema`, params/query), no inline schemas. **`lib/`** — side-effecting integrations (SMS/email/COS/translation/audit). **`utils/`** — pure, no-I/O helpers (code hashing, phone canonicalisation, cursor codec, `HttpError`). **`plugins/`** — the aspects (below).
-
-## Aspects — `plugins/` as Fastify decorators/plugins
-
-| Base concern | Binding |
+| Concern | Binding |
 |---|---|
-| Config | validated at boot in the entry (below) — `handler.js`/`server.js` fail fast (exit non-zero) on a missing required env var; values flow inward, no `process.env` in rings |
-| DB access | `plugins/db.js` sets the single Knex instance (`getKnex()`); repos receive it (or a `trx`) as their first arg — never construct their own |
-| Request context | `plugins/ctx.js` packs `{ requestId, sourceIp, userAgent, logger }` into `request.ctx`, passed inward as a value (the base correlation-id rule: honour an inbound `x-request-id`/`x-correlation-id`, and return the id as the base's `x-correlation-id` response header on every response) |
-| Errors | one global handler in `app.js` maps `HttpError` (from `utils/httpError`) → the base *Error responses* envelope; rings never shape an HTTP response. A rate-limit sets `retryAfterSeconds` for the handler to surface |
-| Auth | `plugins/auth.js` — `fastify.requireAuth` plus one `fastify.require<Role>` decorator per role the app defines, as `preHandler`s on the scopes that need them |
-| Mode signal | `plugins/tenant.js` — resolves the `x-tenant` header to `request.tenant`, selecting test vs `production` (missing/unknown ⇒ `production`, fail-closed), cached in memory |
-| Audit trail | services call `services/audit.record(ctx, { eventType, ... })` — one durable append per state change, never `lib/audit` directly (base *Cross-cutting → Audit trail*) |
-| Integration gating | default-off booleans (e.g. `EMAIL_SENDING_ENABLED`) route SMS/email to a stdout sink until flipped per-environment (base *Integrations*) |
-| Scope-to-subtree | Fastify plugin encapsulation — register a guard on the route scope that needs it; only db, cookie, ctx, tenant, and the error handler register app-wide |
+| HTTP | Fastify plugins, hooks, and decorators |
+| Language | plain JavaScript CommonJS; typecheck is an explicit no-op |
+| Layout | layer-first `routes`, `services`, `repos`, `schemas`, `lib`, `utils`, `plugins` |
+| Validation | Fastify JSON Schema with OpenAPI as source |
+| Database | Knex passed explicitly to repositories |
+| Tests | Vitest, Fastify `inject()`, guarded test MySQL |
 
-## SCF entrypoint — `handler.js` (SCF) vs `server.js` (local)
+## Layers
 
-- **Two entries, one `buildApp()`.** `handler.js` builds the app and **`listen()`s on the SCF-provided port** (default `9000`) — SCF Web Functions run a normal HTTP server the platform proxies to, so there is **no per-request wrapper** (no `tencent-serverless-http`); `scf_bootstrap` (`exec node /var/user/handler.js`) is the container entry. `server.js` does the same `buildApp()` and `listen()`s on `PORT` for `node --watch`, adding swagger-ui + multipart in non-production, so the base "exercise the actual endpoint over HTTP" gate works unchanged.
-- **Deploy bundle, one function serving API + UI:** `esbuild src/handler.js --bundle --platform=node --target=node20 --external:mysql2` (all other SQL drivers externalized too, then only `mysql2` is `npm install`ed into the zip's `node_modules`); `migrate.js` bundles the same way as a separate function — `./db.md`. The built Taro H5 bundle ships inside the zip and is served by `@fastify/static` at `/`, so the same process answers `/api/*` and the SPA (`./infra.md` owns the zip + EdgeOne edge).
-- **Serverless rules:** instances scale to zero and multiply — never rely on instance memory for correctness (durable state is in MySQL or the signed session cookie; a module-level value is a cache only), and finish all work inside the request. CynosDB **auto-pauses** when idle, so a cold path may hit a resuming DB — `./infra.md` covers the deploy-time resume.
+- Put request validation, guards, one service call, and response mapping in `routes/`.
+- Put business rules, transactions, integrations, and audit calls in `services/`.
+- Put Knex query construction in `repos/`; accept `db` or `trx` as the first argument.
+- Put all request and response schemas in `schemas/`.
+- Put side-effecting provider adapters in `lib/`.
+- Put pure helpers and `HttpError` in `utils/`.
+- Put Fastify aspects in `plugins/`.
+
+Every route must attach request and response schemas. Keep `apps/backend/openapi.yaml` authoritative and run both drift checks.
+
+## Aspects
+
+| Base concern | Fastify binding |
+|---|---|
+| Configuration | validate in the entrypoint and pass values inward |
+| Database | `plugins/db.js` exposes one Knex instance |
+| Request context | `plugins/ctx.js` provides request ID, source IP, user agent, and logger |
+| Errors | one global handler maps `HttpError` to the base envelope |
+| Authentication | `plugins/auth.js` decorators used as `preHandler` hooks |
+| Test mode | `plugins/tenant.js` resolves `x-tenant`; missing or unknown means production |
+| Audit | services call the shared durable audit service |
+| Integration flags | validated default-off booleans select real adapters or sinks |
+
+Use Fastify encapsulation for subtree scope. Register only database, cookies, context, mode, and errors application-wide.
+
+## SCF entrypoints
+
+- Expose one `buildApp()` used by `handler.js` and local `server.js`.
+- In SCF, listen on the platform port through `scf_bootstrap`; do not add an HTTP adapter wrapper.
+- In development, listen on the configured port and add Swagger UI or multipart only outside production.
+- Bundle `handler.js` and `migrate.js` with esbuild for Node 20.
+- Externalise SQL drivers, install only `mysql2` into the deployment bundle, and include the built H5 files.
+- Serve `/api/*` and the SPA from the same Fastify process.
+- Keep correctness-bearing state in MySQL or signed cookies and finish work before returning.
 
 ## Testing
 
-- **Runner: Vitest** (`pnpm test`). Base per-ring kinds, bound: **service** — drive the use case with the real Knex against the `*_test` schema (this stack keeps rules in services, not a pure domain ring, so most coverage sits here); **route** — Fastify `app.inject()`; **repo** — integration against the `*_test` MySQL schema. The suite is **destructive** and guarded — `./db.md` owns the `*_test` ritual.
+- Test services and repositories against the guarded `*_test` database.
+- Test routes with `app.inject()`.
+- Do not run the destructive suite against development or production data.
 
 ## Conflict register
 
-- **Base says:** organise **feature-first** — `modules/<feature>/{domain,service,repo,controller}` with a pure `domain/` ring at the centre and a composition root (`container.js`) wiring ports to implementations. **In this stack:** the layout is **layer-first** — `routes/ services/ repos/ schemas/ lib/ utils/ plugins/` — with **no separate `domain/` ring** (business rules live in `services/`) and **no DI container** (Fastify plugins + a `getKnex()` singleton do the wiring). **Because:** in a mostly-CRUD product a distinct pure-domain ring and a resolver earned little over disciplined layers. **Concretely:** DO keep each rule at its layer (a repo with branching logic, or a service reading `request`, is the violation to flag); DON'T scaffold a `modules/<feature>/domain` tree or a DI container for this stack unless a genuinely rules-heavy domain appears — then reach for the base onion.
-- **Base says:** the stack is unchosen; JS-style filenames and the Express/Fastify HTTP layer are illustrative, and (per the base) inner rings are pure with ports. **In this stack:** bound for real — Fastify 4, plain JavaScript **CommonJS**, no typecheck, but an **esbuild bundle** for the SCF artifact. **Because:** the deploy target runs bundled Node source directly, and JSON-Schema-guarded edges plus small pure `utils/` make a transpile/typecheck step weight without payoff. **Concretely:** DON'T add a `tsconfig`/transpiler under `apps/backend/`; keep `typecheck` an explicit no-op; DON'T confuse the deploy `esbuild` bundle with a typecheck — it packages, it doesn't verify types.
-- **Base says:** the domain raises failures in domain terms; the controller ring is the single place that maps them onto transport responses. **In this stack:** services raise `HttpError` (from `utils/httpError`) — a transport-shaped error carrying its status — and the one global handler in `app.js` maps it to the base error envelope. **Because:** with no separate domain ring (see the layout entry above), a parallel domain-error taxonomy plus a mapping table earned nothing over one error helper. **Concretely:** DO raise `HttpError` from `services/` only; DON'T shape a reply (`reply.code(...)`/`send`) anywhere but the global handler, and DON'T throw `HttpError` from `repos/` — data-access failures surface as plain errors for the service to classify.
+- **Base says:** organise feature-first with a separate pure domain ring and a composition root. **In this stack:** organise layer-first, keep business rules in services, and use Fastify plus explicit repository arguments for wiring. **Because:** this pack targets a mostly CRUD product where the extra domain and DI layers did not earn their cost. **Concretely:** keep routes thin, services free of request objects, and repositories free of rules; DON'T scaffold a feature onion unless the domain becomes rules-heavy.
+- **Base says:** the language and HTTP stack are illustrative. **In this stack:** Fastify 4 and plain CommonJS JavaScript are mandatory; esbuild packages but does not typecheck. **Because:** Tencent SCF runs the bundled Node artifact. **Concretely:** keep typecheck as a no-op and CommonJS throughout; DON'T add TypeScript or treat the bundle as type verification.
+- **Base says:** inner rings raise domain failures and the controller maps them to transport. **In this stack:** services raise `HttpError` and one global Fastify handler produces the envelope. **Because:** this pack has no separate domain ring or parallel error taxonomy. **Concretely:** raise `HttpError` only from services; DON'T send replies outside routes or the global handler, and DON'T throw it from repositories.

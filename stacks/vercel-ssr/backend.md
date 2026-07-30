@@ -1,61 +1,66 @@
-# Next.js server side (full-stack) — backend appendix
+# Next.js server side: backend appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `apps/backend/CLAUDE.md` — relocated at Day-1 to `apps/frontend/src/server/CLAUDE.md` (manifest → *Day-1 wiring*) — to **the server side of the single Next.js app (App Router, TypeScript)**. Read the relocated base file first; this file does not restate it.
+Bind the relocated backend onion to the server side of the TypeScript Next.js application.
 
-## Scope
+## Bindings
 
-This file owns the server side: composition root, the queries/actions controller edge, aspects, sessions and edge concerns, and server testing. Data layer → `./db.md`; the UI half → `./frontend.md`; provisioning and deploys → `./infra.md`.
+| Concern | Binding |
+|---|---|
+| Location | `apps/frontend/src/server/` |
+| Delivery | server-only queries, Server Actions, external route handlers |
+| Layout | base feature-first ring folders under `src/server/` |
+| Validation | Zod DTOs |
+| Composition | manual wiring in `container.ts` |
+| Session | sealed HTTP-only cookie through `iron-session` |
+| Tests | Vitest, real Postgres for repositories, Playwright for flows |
 
-## Stack binding at a glance
+Open `container.ts` and every server aspect with `import 'server-only'`.
 
-- **Delivery mechanism: Next.js itself — no separate HTTP framework.** The onion lives under `src/server/`; the App Router invokes its controller edge directly (pack decision — see the conflict register).
-- **Language: TypeScript.** Ports are interfaces; DTOs are Zod schemas with inferred types.
-- **Folder layout: the base shape under `src/server/`** — `src/server/modules/<feature>/{domain,service,repo,controller,dtos}`, `src/server/shared/{aspects,utils}`, `src/server/container.ts`. Path references in the relocated contract map `apps/backend/src/` → `apps/frontend/src/server/`.
-- **The server boundary is enforced, not hoped for:** `container.ts` and every aspect open with `import 'server-only'`, so a client-component import fails the build instead of leaking server code into the bundle.
+## Composition
 
-## Composition root — `container.ts`
+- Keep manual constructor wiring in `container.ts`.
+- Expose `buildContainer({ env, overrides })`.
+- Memoise the built container per serverless instance.
+- Keep Next.js imports out of the domain, service, and repository rings.
 
-Manual constructor wiring per the base — no DI library; the base's "reach for a container only once the graph grows unwieldy" stands unchanged. `buildContainer({ env, overrides })` lets tests swap any port for a fake; the app resolves it through a module-level memo (`container ??= buildContainer(…)`) so each serverless instance wires once.
+## Controller edge
 
-## Controller ring — queries, actions, and the external edge
+UI code may import only a module's `controller/` files.
 
-The base controller ring ("validates input, invokes one use case, maps the result") binds to three edge kinds. UI code imports **only** `controller/` files — anything outside `src/server/` importing a module's `domain/`, `service/`, or `repo/` is the greppable violation.
+- Put reads in `controller/queries.ts`. Authorise, invoke one use case, return a plain DTO, and use React `cache()` for duplicate reads within one render.
+- Put mutations in `controller/actions.ts` with `'use server'`. Parse, authorise, invoke one use case, and return the result envelope.
+- Treat every Server Action as a publicly invokable endpoint. Never rely on the rendering UI for authorisation.
+- Use route handlers only for `/health`, webhooks, and real external consumers.
+- Return `{ ok: true, data }` or `{ ok: false, error: { code, message, correlationId } }` from actions.
+- Keep the base pagination envelope on list queries.
 
-- **Reads — `controller/queries.ts`:** server-only functions imported by Server Components: authorize, invoke one use case, return a plain DTO. Wrap each in React `cache()` so a layout and page calling the same query share one execution per render. List queries return the base pagination envelope shape (`data` / `page` / `recordsPerPage` / `totalRecords`) so tables stay uniform.
-- **Mutations — `controller/actions.ts` (`'use server'`):** one Server Action per use case: parse the Zod DTO, authorize, invoke the use case, map the result. **Every Server Action is a publicly invokable HTTP endpoint** — it authorizes inside itself, never relying on the UI that renders it, and treats malformed input as a parse failure, not a crash.
-- **External HTTP — route handlers, only for consumers outside the app:** an unauthenticated `/health` liveness route (`app/health/route.ts`), webhooks, a future `/external/v1`. The base RESTful conventions govern these; each `route.ts` stays a thin delegate to the module's controller. Webhooks follow the base *Integrations* rules in full.
-- **One result envelope:** every action returns `{ ok: true, data } | { ok: false, error: { code, message, correlationId } }` — the base error envelope's fields, transported as a typed value instead of an HTTP body. Route handlers map the same domain errors to the base HTTP envelope and status table.
-
-## Aspects — `src/server/shared/aspects/`
+## Aspects
 
 | Base concern | Binding |
 |---|---|
-| Config | `env.ts` — one Zod schema, parsed once per process (`loadEnv()`), **fail fast** on missing/invalid keys; values passed inward — no `process.env` reads in rings. `NEXT_PUBLIC_*` build-time values are the client-side exception and are never secrets. |
-| DB access | `db.ts` — the single `pg.Pool` and `withTransaction` (mechanics in `./db.md`) |
-| Request context | `request-context.ts` — a correlation id per request: React `cache(() => ({ correlationId: randomUUID() }))` within a render; a fresh id per action/route invocation. Passed inward as a plain value and stamped on every structured log line. |
-| Errors | `errors.ts` — **one** edge wrapper used by every query, action, and route handler, mapping domain errors (plain error helpers in `shared/utils/`) → the result envelope / HTTP envelope; inner rings never shape a response |
-| Auth | `auth.ts` — session read/verify helpers. **The data edge is the security boundary:** every query and action authorizes; a page/layout redirect is UX on top, never the only check. |
+| Configuration | Zod-parsed `env.ts`; pass values inward |
+| Database | one `pg.Pool` and `withTransaction` in `db.ts` |
+| Request context | per-render and per-action correlation ID in `request-context.ts` |
+| Errors | one wrapper for queries, actions, and route handlers |
+| Authentication | session helpers in `auth.ts`; every query and action checks them |
 
-## Sessions & edge concerns (serverless-shaped)
-
-- **Sessions are sealed HTTP-only cookies via `iron-session`** (`SESSION_SECRET` in the env schema) — stateless, no session store (pack decision — see the README).
-- **Same-origin by construction.** One app serves UI and data — no proxy, no CORS surface; the base same-origin-first rule is satisfied with zero configuration. Don't add cross-origin affordances speculatively.
-- **Rate limiting:** a per-instance in-memory limiter on sensitive edges is a soft limit only (serverless instances multiply); a limit that must be globally exact keeps its counters in Postgres — record that as a decision when the need appears.
-- **SSRF guard** (base *Security baseline*): one URL-guard helper in `shared/utils/`, called at config-save *and* immediately before the outbound `fetch`:
-  1. Allow public `https` URLs only.
-  2. Resolve the host; reject when the resolved IP is loopback, private, link-local, or a cloud-metadata address (a string-only re-check misses a host that resolves to a private IP).
-- **Write-only secrets** (base *Security baseline*): read DTOs mask each admin-managed secret and expose a `…Set` flag; the update path treats a blank field as "keep the stored secret".
-- **Serverless rules:** instances scale to zero and multiply — never rely on instance memory for correctness (durable state lives in Postgres or the session cookie; a module-level memo is a cache, nothing more). Finish all work inside the request — no fire-and-forget after the response is sent; the instance freezes.
+- Keep session redirects in the UI layer and authorisation at the data edge.
+- Use an in-memory limiter only for soft per-instance limits.
+- Keep correctness-bearing state outside serverless memory.
+- Finish all work before returning a response.
 
 ## Testing
 
-- **Runner: Vitest** (`tests/` mirrors `src/server/`). Pack decision — see the README.
-- Base per-ring kinds, bound: **domain** — plain units; **service** — use cases via `buildContainer({ overrides })` fakes; **repo** — integration against the real local Postgres (share it carefully across suites); **controller edge** — actions and queries are plain async functions, unit-test one directly when it accrues logic; the default edge coverage is the Playwright e2e suite (`./frontend.md` *Testing*) driving the real screens.
+- Test domain code as plain units.
+- Test services with container overrides.
+- Test repositories against local Postgres.
+- Test a query or action directly when its controller mapping has logic.
+- Use Playwright to prove the normal controller edge through the running application.
 
 ## Conflict register
 
-- **Base says:** the repo has two apps — `apps/backend` (the API server) and `apps/frontend` — with the onion contract at `apps/backend/CLAUDE.md` (root `CLAUDE.md` *Repo shape*). **In this stack:** one full-stack Next.js app; the onion lives under `apps/frontend/src/server/`, the contract file relocates there at Day-1, and `apps/backend/` is deleted (manifest → *Day-1 wiring*). **Because:** full-stack Next.js collapses delivery and UI into one deployable — a separate API app would fork the deploy unit for nothing. **Concretely:** DON'T create or resurrect `apps/backend/`; server code goes under `apps/frontend/src/server/`, where every ring rule of the relocated contract still applies.
-- **Base says:** the controller ring is REST handlers under an `/internal/v1` prefix, and the HTTP error envelope / status-code table shape every response. **In this stack:** the app's own UI is served by server-only queries and Server Actions — no internal HTTP API, no `/internal/v1`; the RESTful conventions govern only the genuinely external route handlers (`/health`, webhooks, a future `/external/v1`). **Because:** inside one app there is no internal network hop to version or shape; queries and actions are direct function edges. **Concretely:** DON'T build route handlers for the app's own screens; DO keep the base envelope fields (`code` / `message` / `correlationId`) in the action result envelope and the pagination envelope shape on list queries — the contract discipline survives the transport change.
-- **Base says:** verifying a backend change means exercising the actual endpoint over HTTP — the happy path plus at least one error path. **In this stack:** queries and actions have no URL to hit; verification is driving the touched flow in the running app (or invoking the action/query directly), happy path plus an error path, confirming the envelope `error.code` and correlation id; route handlers are still verified over HTTP. **Because:** the internal edge is a function boundary, not an HTTP one. **Concretely:** DO state which flow you drove and the envelope you observed; DON'T report a query/action change as verified from unit tests alone.
+- **Base says:** the repository has separate backend and frontend applications. **In this stack:** the backend onion lives under `apps/frontend/src/server/` and `apps/backend/` is removed during Day-1 setup. **Because:** one full-stack Next.js deployment does not need a second API application. **Concretely:** DON'T recreate `apps/backend`; keep all server rings under `src/server/`.
+- **Base says:** the controller ring is an internal REST API under `/internal/v1`. **In this stack:** the application's own UI uses queries and Server Actions; REST applies only to external route handlers. **Because:** internal calls stay inside one module graph. **Concretely:** DON'T create route handlers for the application's own screens; preserve the base error and pagination fields at the function edge.
+- **Base says:** verify backend work through its HTTP endpoint. **In this stack:** verify queries and actions through the running UI or direct invocation; route handlers still use HTTP. **Because:** internal controller edges do not have URLs. **Concretely:** state the flow and error envelope observed; DON'T claim a query or action is verified from unit tests alone.

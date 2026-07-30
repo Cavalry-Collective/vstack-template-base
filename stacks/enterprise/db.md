@@ -1,81 +1,100 @@
-# Postgres + Prisma — stack appendix
+# Postgres and Prisma: database appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds the base `db/CLAUDE.md` (+ the backend repo ring) to Postgres + Prisma. Read the base files first. **Language-neutral:** Prisma's generated client is identical at runtime in TS and plain JS — TS gets static types for free; in plain JS the same shapes are JSDoc `@typedef` ports (matching the backend file's duck-typed ports). Notes flagged **[JS]** need extra plain-JS setup.
+Bind the database layer to Postgres and Prisma. The generated client belongs to the backend repository ring only.
 
-## Scope
+## Prisma layout
 
-This file owns the *data* layer: `schema.prisma`, migrations, seed/reset, indexes/constraints, and the Prisma-row → domain mapper boundary. Ring wiring, the Nest module/provider structure, and the **`TransactionRunner` unit-of-work port** are defined in the sibling `backend.md`; this file only *binds* Prisma to them.
+- Keep one schema at `apps/backend/prisma/schema.prisma`.
+- Keep the Prisma config at the repository root.
+- Set `migrations.path = "db/migrations"` in that config.
+- Configure the seed through `migrations.seed`.
+- Run `prisma generate` for JavaScript and TypeScript backends.
 
-## Migrations — binding the base reversibility rule
+## Migrations
 
-Base `db/CLAUDE.md` requires reversibility (`up` paired with `down`, or an explicit irreversible justification — never neither). **Prisma Migrate is forward-only and generates no `down`.** Resolution (see the conflict register):
+Prisma migrations are forward-only:
 
-- **Location.** Set `migrations.path = "db/migrations"` in the project-root Prisma config file (`prisma.config.{ts,js,mjs,cjs,mts,cts}`) — the path resolves **relative to the config file's location**, and the config lives at the repo root, so the literal value is `db/migrations`. Config-file-only; no env override. Valid because the "migrations sit next to the datasource" constraint binds only multi-file (`prismaSchemaFolder`) schemas. `db/migrations/` then holds Prisma's `<timestamp>_<name>/migration.sql` folders + `migration_lock.toml`. **[JS]** plain `prisma.config.js`/`.mjs` — no TS required.
-- **Reversibility = forward-only + expand-and-contract.** Additive changes (add table/column/index): forward-only `migration.sql` is sufficient — the obvious inverse is the justification. **Destructive changes** (drop/rename column or table, narrowing a type): restructure as expand-and-contract below, or, if truly one-shot, put a one-line `-- IRREVERSIBLE:` header at the top of `migration.sql` stating why and the recovery path (restore-from-backup).
-- **No `down` to round-trip — the base's "prove the down path" becomes the CI gates.** Base `db/CLAUDE.md` requires an up→down→up scratch-DB round-trip before merge; Prisma generates no `down`, so that cycle is impossible. The standing verification is §Operations below — apply-from-zero on a scratch DB + the `migrate diff` drift gate, and for destructive changes proving the expand-and-contract path (or the `-- IRREVERSIBLE:` recovery path). State the evidence you observed, exactly as the base demands.
-- **Review the generated SQL before committing.** Generate with `prisma migrate dev --create-only`, then read the SQL: confirm **no unintended `DROP`**, **no unguarded `NOT NULL` on a populated table**, **no full-table rewrite or lock-heavy DDL on a hot table**, and the enum rule (see *Schema*). A migration is a reviewed artifact, not generated-and-forgotten.
-- **Never edit an applied migration.** Once committed/merged (assume applied somewhere) it is immutable — corrections go in a new migration. Editing applied SQL is a checksum mismatch Prisma rejects.
-- **Naming & apply path.** `prisma migrate dev --name <verb_noun>` in snake_case (`add_orders_status_index`, `drop_legacy_email_column`) — never `update`/`fix`; one logical schema change per migration. `prisma migrate deploy` in CI/release; `prisma migrate dev` is local-only (never outside local). Drift gates live in *Operations* below.
+- Create with `prisma migrate dev --create-only --name <verb_noun>`.
+- Review the generated SQL before applying or committing.
+- Reject unintended drops, unsafe `NOT NULL`, hot-table rewrites, and lock-heavy DDL.
+- Never edit an applied migration.
+- Use `prisma migrate dev` locally and `prisma migrate deploy` in CI and deployment.
+- Keep one logical schema change per migration.
 
-## Schema vs data changes
+For breaking changes:
 
-- **Structural DDL** lives in the Prisma migration SQL. **Backfills (data) are idempotent, re-runnable scripts under `db/backfills/`, invoked explicitly** — never inside a `migrate` SQL file, where they run under the schema lock and block on large tables.
-- **Breaking changes use expand→migrate→contract, never one destructive migration:** **expand** (add new column/table nullable or defaulted) → **backfill** (batched idempotent script that **asserts source-row count == migrated-row count and exits non-zero on mismatch**) → **switch** (deploy code reading/writing the new shape) → **contract** (drop the old shape in a *later* migration, once the switch is live and stable).
-- **Zero-downtime mindset.** Assume old and new code run concurrently during deploy; every migration must be safe against the previously-deployed code — no rename-in-place, no `NOT NULL` without a default or prior backfill, no lock-heavy DDL on a hot table without batching.
+1. add the new shape as nullable or defaulted;
+2. run a batched idempotent backfill from `db/backfills/`;
+3. deploy code that reads and writes the new shape;
+4. remove the old shape in a later migration.
 
-## Schema — `apps/backend/prisma/schema.prisma`
+Make the backfill assert source and migrated counts. If a destructive one-step change is unavoidable, start `migration.sql` with `-- IRREVERSIBLE:` and state the recovery path.
 
-- **One** `schema.prisma`, owned by the backend. The single declarative source; never hand-write `CREATE TABLE` except inside a generated migration's SQL.
-- **Models PascalCase singular** (`User`, `PaymentMethod`); **tables snake_case plural** via `@@map("payment_methods")`. **Fields camelCase**; **columns snake_case** via `@map("created_at")`. Apps read camelCase; the database stays idiomatic SQL.
-- **Name both sides of every relation** with `@relation(...)` and a named FK field; never rely on Prisma's implicit naming beyond a trivial 1-1. **Declare `onDelete` explicitly** — default is restrict; choose `Cascade` only with a stated reason that agrees with the soft-delete stance below.
-- **Use a Prisma `enum`** (→ native Postgres enum) for any fixed, known value set; never store such states as free text. Postgres enums append-only: add **one value per migration**, and **never use a freshly-added value as a column default in the same migration** (`ALTER TYPE … ADD VALUE` is non-transactional — the value must be committed before it is referenced).
-- **IDs — pack default, not a per-project choice.** Externally-exposed ids are `@id @default(uuid())` (opaque, non-enumerable, URL-safe). `@default(autoincrement())` only for internal-only join/audit tables never exposed in an API or URL, and only with a stated reason.
-- **Every model carries** `createdAt DateTime @default(now())` and `updatedAt DateTime @updatedAt` (→ `created_at`/`updated_at`, stored `timestamptz`) — the base schema conventions (`db/CLAUDE.md`), bound.
-- **Money/quantity is `Decimal` (`@db.Decimal(p, s)`), never `Float`.** The Prisma `Decimal` stops at the repo mapper (below); the domain holds its own money/number type. **Reach for `Json` only for genuinely schemaless payloads**, never for data you query or join on.
-- **Soft delete is opt-in.** Most tables hard-delete. Where history matters add `deletedAt DateTime?` and filter in the repo ring; never scatter "is it deleted?" checks into services/domain, and **no global Prisma soft-delete middleware** that silently rewrites every query. A uniqueness rule on a soft-deletable column is a **partial unique index** (`WHERE deleted_at IS NULL`) so a deleted row never blocks reusing its value (e.g. re-registering a deleted email).
+## Schema
 
-## Client boundaries
+- Map PascalCase singular models to snake_case plural tables with `@@map`.
+- Map camelCase fields to snake_case columns with `@map`.
+- Name relation fields and set `onDelete` explicitly.
+- Use Prisma enums for fixed values. Add one Postgres enum value per migration and do not use it as a default in that same migration.
+- Use UUID primary keys for externally visible records.
+- Use autoincrement only for internal records and state the reason.
+- Add `createdAt` and `updatedAt` to every model.
+- Use `Decimal` or integer minor units for money; do not expose Prisma `Decimal` beyond the repository mapper.
+- Use `Json` only for data that is genuinely schemaless and not queried relationally.
+- Add soft deletion only when history requires it.
+- Implement soft-delete uniqueness with a partial unique index on active rows.
+- Do not add global Prisma soft-delete middleware.
 
-- **Generated for the backend only.** `prisma generate` outputs the client as a backend dependency. **[JS]** plain-JS backends still run `prisma generate` and import it normally.
-- **Only the repo ring imports the Prisma client.** Domain and service rings never `import` it, name a Prisma type, or receive a `PrismaClient` — they depend on the **ports** the domain defines (per the base onion), implemented with Prisma in the repo ring.
-- **HARD RULE: the Next.js app never imports Prisma and never touches the database.** Even under server-first rendering, server components / route handlers / server actions fetch through the NestJS API over HTTP (per the frontend `services/`-owns-all-network-access rule), not the DB. A Prisma import anywhere under `apps/frontend/` is a violation — this closes the direct-DB-in-a-server-component loophole the App Router invites.
-- **Mapper discipline.** Prisma result objects — including `Decimal`, `Json`, and relation payloads — **stop at the repo boundary.** Each repo's mapper converts rows → domain objects inward and domain objects → Prisma args outward; nothing inner ever sees a Prisma-shaped object. The row/args shape is a TS `interface`, or a JSDoc `@typedef` on the mapper in plain JS.
+## Client boundary
 
-## Transactions — Prisma binding of `TransactionRunner`
+- Import Prisma only in backend repositories and `PrismaService`.
+- Keep Prisma types and result objects out of domain and service code.
+- Map every row and relation payload to a domain object.
+- Never import Prisma under `apps/frontend`.
+- Make the Next.js server call the Nest API rather than the database.
 
-- The service ring owns the transaction boundary (one transaction per use case) via the **`TransactionRunner` unit-of-work port defined in `backend.md`** (if `backend.md` is absent, define it there first — this file does not own it). This stack *binds* that port to Prisma's **interactive transaction** (`prisma.$transaction(async (tx) => …)`): the repo-ring implementation runs the use-case callback inside `$transaction` and binds the `tx` client so every repo call inside shares one transaction.
-- The service depends only on the port; it **never imports `$transaction`** (that leaks Prisma inward).
-- Keep transactions short — no network/LLM/external calls inside an open transaction (it holds a connection and locks). Set an explicit `timeout`/`maxWait`. Use the array form `$transaction([...])` only for independent writes with no read-then-write logic between them.
+## Transactions and queries
 
-## Query hygiene & correctness
+- Implement the domain's `TransactionRunner` port with Prisma interactive transactions.
+- Yield repositories already bound to the transaction.
+- Keep external calls outside a transaction.
+- Set explicit transaction wait and timeout limits.
+- Use the array transaction form only for independent writes.
+- Add `@@index` for every foreign key and frequent filter or sort.
+- Use `@@unique` for normal uniqueness and migration SQL for partial uniqueness.
+- Map Postgres unique violations to the domain conflict response.
+- Select or include relations in one query to avoid N+1.
+- Validate sort fields against one allow-list.
+- Use cursor pagination for large or frequently paged datasets.
 
-- **FK/filter indexes (base rule), bound:** Postgres does **not** auto-create an index on a FK and Prisma does not add one — declare `@@index([fkField])` for each relation FK and each `where`/`orderBy` column. An un-indexed FK is the default lock-contention and slow-join trap.
-- **Unique constraints (base rule), bound:** model "one active email per user" as `@@unique([...])` (a partial unique index where soft delete applies); map the Postgres unique-violation to the domain conflict → `409`.
-- **Avoid N+1.** Load relations with `include`/`select` in one query, never a per-row loop; `select` only the columns the use case needs.
-- **Pagination binds the base REST params.** The controller validates `page`/`recordsPerPage`/`sortBy`/`sortOrder` against an allow-list of sortable columns; the repo applies the matching `skip`/`take`/`orderBy` (never fetch-all-then-slice) and **whitelists the column against that same allow-list** before building a dynamic `orderBy`. For large or frequently-paged datasets prefer **keyset/cursor** pagination (Prisma `cursor` + `take`) over deep `skip` — the base's documented cursor variant (envelope minus `page`/`totalRecords`, plus `nextCursor`), decided per endpoint, never silently.
+## Local databases
 
-## Local dev — per-worktree database
+Run one fixed-name Postgres container and one database per worktree:
 
-- **One shared Postgres server, one database per worktree.** Per root `CLAUDE.md` the containerized Postgres is shared by a fixed name — reuse it, don't start a second. But two worktrees running `migrate dev` against *one shared database* corrupt each other's migration history, so **each worktree uses its own database on that shared server.** Never run `migrate`/`reset` against another worktree's (or a shared/staging) database.
-- **Per-worktree DB name** is derived deterministically: sanitize the branch name to `[a-z0-9_]`, truncate to Postgres's 63-byte identifier limit, prefix `app_` (`feature/x` → `app_feature_x`). Copy `.env` in first (per root `CLAUDE.md`), then re-point the db-name segment of `DATABASE_URL` at this worktree's database; it is created on first `prisma migrate dev`/`reset`. On worktree teardown, drop it so orphaned `app_<branch>` databases don't accumulate.
-- **Bound connections.** Set an explicit `connection_limit` on `DATABASE_URL`. Behind a pooler (PgBouncer), set `pgbouncer=true` and avoid features needing session-level prepared statements.
-- **Seed/reset bind the base scripts** — not a parallel mechanism. Seed runs via `prisma db seed`, configured at `migrations.seed` in the Prisma config file (`migrations: { seed: "node db/seed.<ext>" }`) — **not** the removed `package.json#prisma` block. The seed is **idempotent** (upsert by business key) and seeds **realistic minimal** data (enough to exercise every screen/flow, not bulk fixtures). Reset is `prisma migrate reset` (drops the worktree DB, replays all migrations, runs seed).
+1. derive `app_<sanitised-branch>`;
+2. update the copied `DATABASE_URL`;
+3. create it through local Prisma migration setup;
+4. drop it when removing the worktree.
 
-## Operations — CI checks
+Set an explicit connection limit. Configure PgBouncer when using a transaction pooler.
 
-Drop into `.github/workflows/ci.yml` when this stack lands; run against a scratch Postgres service container — the single home for the migration/seed gates referenced above:
+Keep the seed idempotent, realistic, and safe to run twice. Use `prisma migrate reset` only against the worktree database.
 
-- **Migrations apply from zero:** `prisma migrate deploy` on a clean scratch DB.
-- **Drift gate** (catches a schema edited without a migration, or an edited applied migration): `prisma migrate status` (all applied + checksums intact) **and** `prisma migrate diff --from-migrations ./db/migrations --to-schema ./apps/backend/prisma/schema.prisma --exit-code` — exit 2 (non-empty) fails the build. Use `--to-schema`, not the legacy `--to-schema-datamodel`. `--from-migrations` needs a shadow database, so also pass `--shadow-database-url $DATABASE_URL` (pre-v7) or read it from the datasource (`--from-config-datasource`/`--to-config-datasource`, v7+).
-- **Seed idempotency:** run the seed on the freshly-migrated scratch DB, then a **second time** — both must succeed.
+## Operations
+
+CI must:
+
+- run `prisma generate`;
+- apply migrations from zero with `prisma migrate deploy`;
+- run `prisma migrate status`;
+- run `prisma migrate diff --from-migrations ./db/migrations --to-schema ./apps/backend/prisma/schema.prisma --exit-code` with the required shadow database;
+- run the seed twice.
+
+Treat a non-empty drift result as failure.
 
 ## Conflict register
 
-- **Base says:** Migrations are reversible — `up` paired with `down`, or an explicit irreversible-change justification — and the down path is proven up→down→up on a scratch DB before merge, stating the evidence (`db/CLAUDE.md`). **In this stack:** Prisma Migrate is forward-only; there is no `down` to round-trip. Reversibility is met by expand-and-contract, the `-- IRREVERSIBLE:` header, and the §Operations gates as the merge-time verification (see *Migrations*) — still stating the evidence observed. **Because:** an auto-generated `down` cannot recover dropped data — expand-contract + backups serve reversibility better, and the header *is* the base's permitted "explicit justification". **Concretely:** never commit a destructive `migration.sql` without an expand-contract plan or an `-- IRREVERSIBLE:` header; record the forward-only override once here at the base authority, not in `db/migrations/README.md` (a bare pointer at the base rules).
-- **Base says:** Three surfaces reference the migration gate, whose base default is the up→down→up round-trip: the `ci.yml` "Migration gate" stub, root `README.md`'s Day-1 checklist, and the PR template's Database checkbox (which already defers to the active pack's bound gate). **In this stack:** that round-trip is impossible (no `down`), so the pack CI uses the forward-only drift gate instead. **Because:** leaving the default in place would tell an instantiating agent to wire a check this pack made impossible. **Concretely:** when pasting the pack CI block, fill the `ci.yml` "Migration gate" stub with the §Operations drift gate (`prisma migrate status` + `prisma migrate diff --from-migrations … --exit-code`); read the Day-1 "migration gate" as that drift gate, and tick the PR-template Database checkbox against it.
-- **Base says:** Migrations are kept in order under `db/migrations/`; the backend reads/runs them (`db/CLAUDE.md`). **In this stack:** Prisma defaults migrations to `apps/backend/prisma/migrations`; redirect them with `migrations.path = "db/migrations"` in the root `prisma.config.*`, keeping `schema.prisma` under `apps/backend/prisma/`. **Because:** there must be one migrations home satisfying the base, and `migrations.path` may point outside the schema directory (the next-to-datasource rule binds only multi-file schemas). **Concretely:** set `migrations.path = "db/migrations"` in the root config; `<timestamp>_<name>/migration.sql` folders + `migration_lock.toml` land under `db/migrations/`, never under `apps/backend/prisma/`.
-- **Base says:** Ports are wired by hand at the composition root `container.<ext>`; reach for a DI container only once the graph grows unwieldy (`apps/backend/CLAUDE.md`). **In this stack:** the NestJS module system *is* the composition root — there is no hand-written `container.<ext>`. **Because:** Nest ships its own DI and inverts that default; hand-rolling a container inside a Nest app fights the framework. **Concretely:** expose one `PrismaService` (`@Injectable()` wrapping `PrismaClient`, connect/disconnect in `onModuleInit`/`onModuleDestroy`) provided once at the root module; bind each port as a Nest provider (`{ provide: UserRepoPort, useClass: PrismaUserRepo }`) and inject by constructor — the full module/provider structure lives in `backend.md`.
-- **Base says:** The service ring owns the transaction boundary — one transaction per use case — via a port defined inside and implemented outside (`apps/backend/CLAUDE.md`). **In this stack:** binding, not override — the `TransactionRunner` unit-of-work port is *defined* in `backend.md`; this file only binds it to Prisma's interactive transaction (`prisma.$transaction`), implemented in the repo ring. **Because:** the cross-pack dependency direction must be explicit so the db pack degrades gracefully when read alone. **Concretely:** the service depends on `TransactionRunner`, never on `$transaction` directly; a `$transaction` call outside the repo-ring port implementation is a violation.
-- **Base says:** Shared local infrastructure (a containerized DB) is shared across worktrees by a fixed name — reuse it; a fresh worktree carries no gitignored runtime config (`.env`) (root `CLAUDE.md`). **In this stack:** keep the single shared Postgres server, but each worktree migrates its own database (`app_<sanitized-branch>`, created on first `migrate`, dropped on teardown). **Because:** two worktrees running `migrate dev` against one shared database corrupt each other's migration history — a Prisma-specific collision the base could not know about. **Concretely:** after copying `.env` in, re-point the db-name segment of `DATABASE_URL` at this worktree's DB; never run `migrate`/`reset` against the shared `app` database or another worktree's.
+- **Base says:** each migration has a down path and CI proves up, down, and up. **In this stack:** Prisma is forward-only; expand-contract, explicit irreversible headers, apply-from-zero, and drift checks provide the proof. **Because:** Prisma generates no down migration and a generated inverse cannot recover dropped data. **Concretely:** DON'T commit destructive SQL without an expand-contract plan or `-- IRREVERSIBLE:` recovery note; wire the Prisma drift gate into CI.
+- **Base says:** the fixed-name local database is shared and destructive checks need a throwaway database. **In this stack:** the Postgres server is shared but each worktree has its own database. **Because:** parallel Prisma migration histories cannot safely share one schema. **Concretely:** repoint `DATABASE_URL` after copying the environment file; DON'T migrate or reset another worktree's database.

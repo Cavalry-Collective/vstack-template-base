@@ -1,41 +1,60 @@
-# Add-on: otp-auth
+# Add-on: OTP authentication
 
-> Optional add-on. Adopt at Day-1 by keeping this directory (see `add-ons/README.md`); the active stack pack supplies the seams named under *Binds to a stack*.
+OTP authentication proves control of a phone number or email address with a one-time code. Use it for passwordless login, signup verification, and changes to a verified contact method.
 
-One-time-code auth: a user proves control of a phone or email by entering a code sent to it. Use it for passwordless login, signup verification, and adding or changing a contact method. Pick the challenge model first — it decides what you build and what you still own.
+## Prerequisites
 
-## Choose a model
+Adopt `test-mode` so the full issue and verify flow can run without a live email or SMS provider.
 
-| | A · self-managed | B · provider-owned |
+## Choose the challenge owner
+
+Choose one model in the requirement spec:
+
+| Model | The app stores | Use when |
 |---|---|---|
-| You store | a hashed code + short TTL + purpose | nothing — the provider owns the code |
-| Choose when | you need purpose-scoping, both channels, no per-code cost | you want minimal code + no code-at-rest and accept vendor cost/lock-in |
-| You still own | hashing, TTL, timing-safe verify, rate-limit, idempotency | rate-limit, idempotency, the test bypass, delivery-failure handling |
+| Self-managed | hashed code, expiry, purpose, attempts | the product needs control, several channels, or provider independence |
+| Provider-owned | provider challenge identifier | minimal local code matters more than provider cost and portability |
 
-## Approach
+In both models, the app owns rate limits, idempotency, test behaviour, account creation, and delivery-failure handling.
 
-- **One purpose-scoped flow.** Login, signup, and contact-change share a single challenge mechanism with a `purpose` discriminator; a code minted for one purpose never satisfies another. Add a purpose rather than fork a second flow.
-- **Phone and email are interchangeable proofs of one account** — model both from the start even if you launch with one.
-- **Canonicalise the target before storing or sending** (phone → E.164 via a library, never hand-rolled); reject unsupported regions with a clear error and store the canonical form.
-- **Issue a session only after a successful verify;** from there the session is the base auth concern.
+## Requirements
 
-## Make it robust
+- Use one purpose-scoped challenge flow for login, signup, and contact changes. A code must work only for the purpose that issued it.
+- Support phone and email as alternative proofs, even if the first release enables only one.
+- Canonicalise the destination before storage, lookup, or delivery. Use an established library for E.164 phone formatting.
+- Give each code a short expiry, cap failed attempts, and consume it after the first successful verification.
+- Compare self-managed codes with a timing-safe operation.
+- Issue a session only after verification succeeds.
+- Make send and verify idempotent. A retry must not create another account or apply a contact change twice.
+- Enforce account and contact uniqueness in the database.
+- Rate-limit sends by destination and verification by destination and challenge. Return `429` with a retry hint.
+- Use uniform errors where a difference would disclose whether an account exists.
+- Classify delivery failures as transient or permanent. Do not report provider acceptance as successful delivery.
+- Log purpose, masked destination, mode, provider status, and correlation ID. Never log the code or full destination.
 
-- **Idempotent verify.** A retry or double-submit must never create a second account or double-consume. Put a unique constraint on the natural key (target + purpose) so the race resolves to `409`, and have the client treat `409` as "already done, proceed".
-- **Codes are single-use, attempt-capped, and rate-limited.** A code is consumed on first successful verify and never verifies again. Cap failed attempts per challenge (a small fixed number), then invalidate the challenge — per-target rate limits alone don't stop brute-forcing one code. Rate-limit send and verify per target and per challenge; answer `429` with a retry hint.
-- **Log every send and verify, and surface delivery failures.** Log `{purpose, masked target, test-mode, provider status, correlation id}` — never the code or full contact. "Provider accepted" is not "user received": classify transient failures (resend) vs permanent (terminal error); never swallow a failed send.
-- **Offer an admin-issued fallback** — a per-account, hashed, short-lived, revocable code behind its own flag — for users who genuinely can't receive one.
+### Account recovery
+
+Provide an admin-issued recovery code for users who cannot receive an OTP.
+
+- Put recovery behind a separate default-off flag.
+- Scope the code to one account and store it hashed.
+- Make it short-lived, single-use, revocable, and audited.
 
 ## Verify
 
-Assert in the suite: a verified code never verifies again; the attempt cap invalidates the challenge; a double-submit resolves to `409` and the client proceeds; sends and verifies past the limit answer `429`; the knowable test code verifies only under the test-mode signal.
+Test purpose scope, expiry, single use, attempt caps, retries, rate limits, and safe logging. Test that a knowable code works only in test mode and production never exposes one.
 
 ## Binds to a stack
 
-The active pack names: model A or B and the concrete store/provider; the hashing + TTL utilities; the phone-canonicalisation library; the rate-limit store; and how the test-mode code is produced.
+The active stack pack identifies:
+
+- the challenge model and store or provider;
+- email and SMS delivery adapters;
+- hashing, expiry, canonicalisation, and rate-limit utilities;
+- the test-mode sink and knowable-code mechanism.
 
 ## Interactions
 
-- **test-mode** — adopt both: gate a knowable code behind the mode (a logged real code, or a fixed code valid *only* in test mode) so the flow is walkable without a live provider; the verify path still runs, only delivery is stubbed. Credentials follow the record's mode, not the caller's session (test-mode's rule); live credentials never fall back to a test default.
-- **Base default-off integration flag** — the real sender ships behind it, routed to a no-op sink until configured per environment.
-- **Base security-baseline + audit-trail** — this instantiates them (hashing, ownership, idempotency; record sensitive auth events).
+- **test-mode:** replace delivery only; keep normal issue and verify logic.
+- **Base integration flag:** keep real delivery behind the default-off environment flag.
+- **Base security and audit:** apply ownership, validation, safe logging, idempotency, and sensitive-auth-event auditing.

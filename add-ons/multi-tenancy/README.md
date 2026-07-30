@@ -1,52 +1,101 @@
 # Add-on: multi-tenancy
 
-> Optional add-on. Adopt at Day-1 by keeping this directory (see `add-ons/README.md`); the active stack pack supplies the seams named under *Binds to a stack*.
+Multi-tenancy lets several organisations share one deployment while keeping their data, members, settings, files, jobs, and billing isolated.
 
-First-class tenancy: several organisations (workspaces, teams, clients — pick **one** noun and keep it) share one deployment while their data, members, settings, files, jobs, and billing stay strictly isolated. Adopt it **before the first tenant-owned table exists** — retrofitting scoping across a live schema is the expensive path this add-on exists to avoid.
-
-## Approach
-### Core invariants
-- **One tenant noun, one foreign key, everywhere.** Choose the tenant noun once and use it consistently across schema, code, routes, and UI. Every tenant-owned table carries the tenant foreign key, indexed; a table without it is either genuinely instance-global (justified in its spec or migration) or a defect. Reviewers reject a new tenant-owned table missing the key.
-- **Resolve the tenant once, at the edge; check four things on every protected action.** One documented resolution strategy (path segment, subdomain, header, or session — the spec picks one; the pack binds it). A guard validates before the handler runs: the user is authenticated, is a member of the target tenant, holds a role permitting the action, **and the resource belongs to that same tenant**; the validated tenant id then travels inward as a request-context value. Fail closed: missing, unknown, archived, or unauthorized tenant context rejects the request, and client-sent tenant ids or slugs are claims to verify, not facts.
-- **Scoping is backend-enforced and structural, never per-call discipline.** Every query that reads, writes, lists, aggregates, exports, or imports tenant data is scoped by the tenant id from the server-resolved context — never by frontend filtering alone. Route every tenant-owned query through a repository/helper that *requires* the tenant id, so an unscoped query is hard to write, not merely forbidden; where the database offers it (e.g. row-level security), add it as defence-in-depth.
-- **Cross-tenant answers are `404`, never `403`.** A resource id from another tenant — or a tenant the caller isn't a member of — answers exactly like a nonexistent one, so existence never leaks. `403` is reserved for callers who *are* members but lack the role.
-- **Identity is global; membership and roles are per-tenant.** One user account (globally unique email) may hold memberships in many tenants; a role in one tenant grants nothing in another. Tenant-scoped uniqueness is a composite constraint with the tenant id (a slug or reference may repeat across tenants), never a global one.
-
-### Derived surfaces
-- **Everything derived is scoped too.** Files live under tenant-prefixed paths with authorised reads (signed URL or backend proxy — never a guessable public URL); background jobs carry the tenant id in the payload and revalidate the tenant's existence and status before executing; caches key by tenant; audit events, analytics, and search indexes carry and filter by the tenant id.
-- **Settings, branding, and plan hang off the tenant** — stored per-tenant as validated data, never in env config (base *Configuration* carries deployment values only). Feature and quota checks read the *active tenant's* plan, not the user's — through **saas-billing**'s entitlement resolver where that add-on is adopted.
-- **Switching tenants resets client state.** The UI always shows the current tenant; a switch drops every piece of tenant-scoped client state (stores, caches, drafts) before rendering the next tenant. A user can switch only to tenants they belong to — enforced server-side.
-
-### Operator surface
-- **Operator (super-admin) access is a separate, audited surface** — its own credential and routes, never a bypass of tenant scoping, and no silent impersonation. Where **enterprise-compliance** is adopted, its program owns this surface (the operator-scoped credential and platform-scope audit defined in its `rbac.md` and `trust-transparency.md`).
-
-## Verify
-Cross-tenant attempts are standing tests, not review notes; a tenant-owned endpoint without them is not done. Assert:
-- a member of tenant A reading, updating, deleting, or listing tenant B's resources gets `404`/empty, and a role in A grants nothing in B;
-- a per-tenant unique value can repeat across tenants;
-- a B-scoped file URL fails for A's member, and a job with a stale or archived tenant id refuses to run.
-
-## Binds to a stack
-
-- **Guard** — where the tenant guard lives, and the request-context mechanism.
-- **Data layer** — the scoped repository/query helper, any database-level enforcement (e.g. row-level security), and composite-unique + FK-index mechanics.
-- **Files & jobs** — the tenant-scoped storage layout with its authorised read path, and how jobs carry and revalidate tenant context.
-- **Frontend** — the active-tenant carrier and the switch-reset mechanism.
-
-## Interactions
-
-- **enterprise-compliance** — that program *assumes* this tenant model (its "Organisation — the tenant"); this add-on supplies it. Adopting both: its RBAC catalog and system roles supersede this add-on's minimal owner/admin/member model, its audit-event envelope carries the tenant id, and its program owns the operator surface (see its `rbac.md` / `trust-transparency.md`).
-- **saas-billing** — hangs subscriptions, seats, usage, and invoices off this add-on's organisation; adopt this (or another organisation model) before billing. Its derived entitlements supersede direct reads of the organisation's stored `plan` key.
-- **Base *Security baseline*, *Audit trail*, *Configuration*; `db/CLAUDE.md`** — this add-on instantiates the first two: tenant checks are authorization, and tenant lifecycle + membership changes are audited state changes. Per-tenant settings are data on the tenant, never env config. The tenant FK, composite uniques, and indexes follow the db schema conventions and reversible-migration rules.
-- **test-mode** — seed at least two tenants with members so cross-tenant assertions and the test-user picker are walkable; if a pack's *mode signal* happens to be named "tenant", it is a different concept — never resolve the organisation from it.
-- **llm-calls** — its per-tenant cost/usage monitoring keys on this add-on's tenant id.
+Adopt it before creating the first tenant-owned table. Choose one tenant noun and use it throughout the schema, code, routes, and UI. This document uses **organisation**.
 
 ## Implementation areas
 
-What a tenancy implementation must cover, with the opinionated call for each. When the project implements tenancy, write its requirement spec in the top-level `specs/` (per `specs/README.md`), covering these:
+### Organisation model
 
-- **Tenant model & lifecycle.** An organisation has a globally unique, URL-safe slug (renames are admin-only and audited) and a status: active, suspended, or archived. Any authenticated user can create one and becomes its owner; creation seeds the owner membership and a one-to-one settings row in one transaction. Suspended fails closed on every scoped surface with its own `403`; archived answers `404` everywhere except the owner's own membership list and the unarchive action.
-- **Membership & roles.** Ship the minimal ladder — owner ⊃ admin ⊃ member — and let enterprise-compliance's RBAC supersede it where adopted. Nobody grants a role above their own; only owners grant or revoke owner. The last active owner can never be removed, downgraded, or leave — enforce it race-safely in one transaction. A removed or departed user loses access on their next request. Membership lookups may cache per user+tenant with synchronous invalidation and a TTL backstop of 5 minutes or less.
-- **Invitations.** Invite by email with a role no higher than the inviter's. The token is single-use, expiring, stored hashed, compared timing-safely, and never logged raw. One pending invitation per organisation and email; inviting an existing member is a conflict. Pending invitations are listable and revocable.
-- **Resolution & switching.** Path-based resolution is the default: the organisation id rides the URL path and the guard validates, in order, authenticated → member → organisation active → role permits. Subdomain or custom-domain resolution waits for a product requirement. The caller's membership list drives the switcher; switching is navigation, revalidated server-side on every request (the client-state reset is in *Approach*).
-- **Screens.** Switcher, create-organisation, members, invitations, and organisation settings — each with the standard loading/error/empty states, and mockups before the initial build (`design/`).
+- Give each organisation a globally unique, URL-safe slug and a status of active, suspended, or archived.
+- Let any authenticated user create an organisation. Create its owner membership and settings in the same transaction.
+- Restrict slug changes to administrators and audit them.
+- Add an indexed organisation foreign key to every tenant-owned table. Justify any instance-global table in its spec or migration.
+- Scope tenant-specific uniqueness with the organisation ID.
+
+### Membership and roles
+
+- Keep user identity global and store membership and role per organisation.
+- Start with `owner`, `admin`, and `member`. Let `enterprise-compliance` replace this model when adopted.
+- Do not let a member grant a role above their own. Allow only owners to grant or revoke owner.
+- Prevent the last active owner from leaving, being removed, or being downgraded. Lock the relevant memberships before checking.
+- Remove access on the member's next request after departure or removal.
+- If membership is cached, key it by user and organisation. Invalidate it synchronously and use a fallback TTL of no more than five minutes.
+
+### Organisation resolution
+
+Use an organisation identifier in the URL path by default. Add subdomain or custom-domain resolution only for a product requirement.
+
+Run one guard before the handler:
+
+1. authenticate the user;
+2. confirm membership;
+3. confirm the organisation is active;
+4. confirm the role permits the action;
+5. confirm the resource belongs to the same organisation.
+
+- Treat client-supplied IDs and slugs as claims to verify.
+- Pass the validated organisation ID inward as request context.
+- Return `404` for unknown, archived, or cross-tenant resources.
+- Return `403` when a member lacks permission or the organisation is suspended.
+- Show an archived organisation only in the owner's membership list and unarchive flow.
+
+### Data isolation
+
+- Require the server-resolved organisation ID in every tenant-owned repository or query helper.
+- Scope backend reads, writes, lists, aggregates, imports, and exports. Frontend filtering is not isolation.
+- Add database row-level security as defence in depth when the chosen database supports it.
+- Prefix file paths with the organisation ID and authorise reads through signed URLs or a backend proxy.
+- Put the organisation ID in job payloads and revalidate the organisation when the job starts.
+- Include the organisation ID in cache keys, audit events, analytics, and search indexes.
+
+### Invitations and switching
+
+- Invite by canonical email and limit the offered role to the inviter's role or below.
+- Store invitation tokens hashed. Make them expiring, single-use, timing-safe to compare, and safe to log only by identifier.
+- Allow one pending invitation per organisation and email. Reject an invitation for an existing member.
+- Build the switcher from the caller's memberships and revalidate membership on every request.
+- Show the active organisation in the UI.
+- Clear tenant-scoped stores, caches, and drafts before rendering another organisation.
+
+### Settings and operator access
+
+- Store branding, policy, and plan settings on the organisation rather than in environment configuration.
+- Implement platform-operator access as a separate surface with separate credentials and routes.
+- Require an explicit reason for operator access or impersonation.
+- Audit the operator, organisation, reason, actions, and outcome.
+
+### Product screens
+
+Provide organisation creation, switching, members, invitations, and settings. Follow the frontend requirements for page states and approved `design/` references.
+
+## Verify
+
+Test that:
+
+- organisation A cannot read, change, delete, list, import, export, or fetch files from organisation B;
+- cross-tenant access returns `404` and a role in one organisation grants nothing in another;
+- tenant-scoped unique values can repeat across organisations;
+- concurrent requests cannot remove the last owner;
+- jobs refuse to run for a missing, suspended, or archived organisation;
+- switching organisations clears tenant-scoped client state.
+
+## Binds to a stack
+
+The active stack pack identifies:
+
+- the organisation guard and request-context mechanism;
+- scoped data access and any database-level enforcement;
+- tenant-scoped files and authorised reads;
+- job context and revalidation;
+- frontend organisation context and reset behaviour.
+
+## Interactions
+
+- **enterprise-compliance:** use its RBAC catalog, audit envelope, and operator rules.
+- **saas-billing:** attach billing state to the organisation and resolve access through billing entitlements.
+- **Base security, audit, and configuration:** treat tenant checks as authorisation, audit lifecycle changes, and keep tenant policy in organisation data.
+- **Database rules:** use reversible migrations, indexed foreign keys, and composite tenant constraints.
+- **test-mode:** seed at least two organisations and members for cross-tenant tests.
+- **llm-calls:** attach tenant-level AI cost and usage to the organisation ID.
