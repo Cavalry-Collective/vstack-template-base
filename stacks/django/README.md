@@ -59,7 +59,7 @@ make migrate     # python manage.py migrate (rollback: manage.py migrate <app> <
 - Lint (ruff + ESLint); typecheck (mypy + `tsc --noEmit`).
 - `pytest`; `vitest run`; `vite build`.
 - The frontend i18n key-parity check — the base gate stands unchanged.
-- The db appendix's CI checks (`db.md` → *Operations*): migrations apply from zero on the scratch DB; the `makemigrations --check --dry-run` drift gate, **replacing** the base `ci.yml` round-trip TODO per `db.md`'s register; the seed run twice (idempotency).
+- The db appendix's CI checks (`db.md` → *Operations*): migrations apply from zero on the scratch DB; the `makemigrations --check --dry-run` drift gate, this pack's `ci.yml` migration gate — `db.md`'s register replaces the base round-trip rule; the seed run twice (idempotency).
 
 ## Pack decisions
 

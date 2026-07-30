@@ -56,7 +56,7 @@ pnpm migrate     # node-pg-migrate up (rollback: pnpm migrate:down)
 - `pnpm install --frozen-lockfile`.
 - Lint; `tsc --noEmit`; `vitest run`; `next build`.
 - The frontend i18n key-parity check — the base gate stands unchanged.
-- Migration round-trip up → down → up on the scratch DB. node-pg-migrate has real downs, so keep the base `ci.yml` round-trip TODO's wording as written.
+- Migration round-trip up → down → up on the scratch DB. node-pg-migrate has real downs, so this fills the base `ci.yml` migration-gate stub as-is.
 - Run the seed twice (idempotency).
 - Playwright e2e is not part of this job. It runs against a Vercel preview deployment via `E2E_BASE_URL` (see *Deploy seam*).
 

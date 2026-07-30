@@ -6,7 +6,7 @@ This is the manifest — it wires the pack onto a project. Bindings and conflict
 
 ## Identity & naming
 
-Named for the product surface — a WeChat mini-program — because that is the identity an adopter picks it by. The underlying triple is `taro-fastify-mysql` on Tencent Cloud (per `../README.md`).
+Named for the market it targets — the WeChat ecosystem on Tencent Cloud. The shipped frontend is Taro 4's **H5 target only**; no Mini Program target is active (`frontend.md`), though Taro keeps that build within reach if a project enables it. The underlying triple is `taro-fastify-mysql` on Tencent Cloud (per `../README.md`).
 
 The Tencent-Cloud specifics (SCF bundling, CynosDB serverless, COS/VOD, EdgeOne, mainland ICP + public-net egress) run through every appendix. Lift the app to another cloud and the triple stays; the platform specifics are what change.
 
