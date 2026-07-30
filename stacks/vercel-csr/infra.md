@@ -24,6 +24,8 @@ Configure:
 
 Do not give the web project a runtime. Keep frontend routing in `apps/frontend/vercel.json`.
 
+Leave the API project's framework unset. Vercel detects Fastify from the entrypoint filename (`backend.md` → *Entrypoint*), so pinning a framework or a function runtime only creates drift.
+
 Let the Neon and Blob integrations inject their connection variables. Do not duplicate those variables in Terraform. Treat Terraform state as a credential.
 
 ## Context
@@ -34,7 +36,7 @@ Authenticate with a team API token. Run `vercel whoami`, confirm the team and bo
 
 - Connect both projects to the repository and use `main` as production.
 - Protect `main`; Vercel deploys every accepted push.
-- Delete the GitHub Actions deploy stub.
+- Do not copy the GitHub Actions deploy example.
 - Run database migrations before pushing code that reads the new schema.
 - Keep frontend and API changes backward-compatible while the two projects deploy.
 - Point Playwright at preview deployments with `E2E_BASE_URL`.
@@ -61,4 +63,4 @@ Do not declare an integration-owned log drain in Terraform. Manage its project a
 ## Conflict register
 
 - **Base says:** the infrastructure guide uses GCP networking as its worked example. **In this stack:** use Vercel and Neon, with no VPC, subnet, or firewall resources. **Because:** Vercel exposes no customer-managed network surface for this workload. **Concretely:** DO author `vercel_*` resources and verify context with `vercel whoami`; DON'T add GCP providers or network files.
-- **Base says:** deployment runs through `.github/workflows/deploy.yml`. **In this stack:** Vercel's Git integration is the deployment pipeline and the workflow stub is deleted. **Because:** a second token-driven deployment path would race the platform integration. **Concretely:** protect `main` and keep Vercel Git integration enabled; DON'T add `vercel deploy` to GitHub Actions.
+- **Base says:** deployment runs through `.github/workflows/deploy.yml`. **In this stack:** Vercel's Git integration is the deployment pipeline and no deploy workflow is created. **Because:** a second token-driven deployment path would race the platform integration. **Concretely:** protect `main` and keep Vercel Git integration enabled; DON'T add `vercel deploy` to GitHub Actions.

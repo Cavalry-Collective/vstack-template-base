@@ -25,7 +25,7 @@ Choose this pack when separate frontend and backend deployables, framework conve
 1. Keep this directory and delete the other stack packs.
 2. Complete the root checklist for a server-first frontend and remove SPA-only wording.
 3. Copy the command block below into root `CLAUDE.md`.
-4. Implement the CI checklist in `.github/workflows/ci.yml`.
+4. Copy `.github/workflows/examples/ci.yml.example` to `.github/workflows/ci.yml` and implement the CI checklist in it.
 5. Record `Stack: enterprise; appendices under stacks/enterprise/` in root `CLAUDE.md` **Learnings**.
 
 Use pnpm workspaces across both applications. Choose JavaScript or TypeScript once per app and keep one language within that app.

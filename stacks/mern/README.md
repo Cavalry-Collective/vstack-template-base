@@ -26,7 +26,7 @@ The frontend is a static SPA with no SSR or prerendering. Adopt `vercel-ssr` or 
 
 1. Keep this directory and delete the other stack packs.
 2. Copy the command block below into root `CLAUDE.md`.
-3. Implement the CI checklist in `.github/workflows/ci.yml`.
+3. Copy `.github/workflows/examples/ci.yml.example` to `.github/workflows/ci.yml` and implement the CI checklist in it.
 4. Keep the base SPA wording unchanged.
 5. Record `Stack: mern; appendices under stacks/mern/` in root `CLAUDE.md` **Learnings**.
 

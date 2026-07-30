@@ -1,0 +1,63 @@
+# EXAMPLE — not an active workflow.
+#
+# Copy to .github/workflows/ci.yml once a stack is chosen, then replace every
+# placeholder with your stack's command. A stack pack's README carries a CI block
+# that fills most of this in.
+#
+# Enforcement point for the Definition of Done (root CLAUDE.md). Every gate below is a
+# convention already stated in the CLAUDE.md files; CI is where it stops being prose.
+# RULE: a failing check FAILS the build — never mute it, never downgrade it to a warning.
+# Wire the gates in the order listed; cheapest first.
+#
+# Every step is commented out on purpose. A green run that checked nothing is worse than
+# no run at all, so this file must not become an active workflow until at least install,
+# lint, test, and build are real commands.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # - name: Install dependencies
+      #   run: <install command, e.g. pnpm install --frozen-lockfile>
+
+      # - name: Lint
+      #   run: <lint all apps — root CLAUDE.md "Coding standards">
+
+      # - name: Typecheck
+      #   run: <typecheck all apps; an explicit no-op in a plain-JS app — keep the step green>
+
+      # - name: Test
+      #   run: <run all test suites — root CLAUDE.md "Testing">
+      #   # Most coverage lives in the fast inner rings; this gate must be red on any failure.
+
+      # - name: Build
+      #   run: <production build of every app — root CLAUDE.md "Definition of Done">
+
+      # - name: i18n key parity
+      #   run: <fail on any key missing from a locale — apps/frontend/CLAUDE.md "Internationalisation">
+
+      # - name: Migration gate
+      #   run: <the gate named by the pack's db.md; base default is up, down, up on a scratch DB, failing on drift — db/CLAUDE.md>
+
+      # - name: Accessibility scan
+      #   run: <run the a11y scanner against built pages — apps/frontend/CLAUDE.md "Accessibility baseline">
+
+      # Optional structural checks — wire only if cheaply scriptable in your stack
+      # (closer to custom lint rules than CI one-liners; candidates, not mandates):
+      #   - no hardcoded colour/spacing literals outside the token source
+      #   - no network calls outside services/
+      #   - route-registry completeness (no page without a route entry)
+      #   - token-scale conformance (spacing/type values on the guide's scales)
+      #   - component duplication audit (apps/frontend/CLAUDE.md "Component structure")

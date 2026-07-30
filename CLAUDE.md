@@ -24,7 +24,7 @@ When instruction files disagree: the area file (`apps/*/CLAUDE.md`, `db/CLAUDE.m
 
 > ⚠️ **PLACEHOLDER — NOT YET FILLED IN.** No toolchain has been chosen. Replace `<pm>` (package manager) and every `TODO` below with real commands once it is, then delete this banner.
 
-**Agent: if these are still `<pm>`/TODO when you need to run one** — detect the real command from the repo (lockfile, manifest / `package.json` scripts, Makefile, CI workflow) and use that. If you cannot determine it, STOP and ask the user — never run the literal `<pm>` and never guess a package manager. Once you learn the real commands, offer to fill in this block and `.github/workflows/ci.yml` as part of your change.
+**Agent: if these are still `<pm>`/TODO when you need to run one** — detect the real command from the repo (lockfile, manifest / `package.json` scripts, Makefile, CI workflow) and use that. If you cannot determine it, STOP and ask the user — never run the literal `<pm>` and never guess a package manager. Once you learn the real commands, offer to fill in this block and the project's CI workflow as part of your change (scaffold: `.github/workflows/examples/ci.yml.example`).
 
 > Instantiating this template? Work through the **Day-1 checklist** in `README.md` before feature work — it enumerates every placeholder site.
 
@@ -104,7 +104,7 @@ Load-bearing engineering rules; honor them on every change. They are stack- and 
 
 ## Definition of Done
 
-The concrete bar for *Goal-driven execution*: do not report work as done until all of the following hold. If a step cannot be run (e.g. the toolchain TODOs in *Common commands* are still unfilled), say so explicitly rather than skipping it silently. This is a hard self-check the agent runs before claiming completion — while `ci.yml` is still a stub, the gate is not delegated.
+The concrete bar for *Goal-driven execution*: do not report work as done until all of the following hold. If a step cannot be run (e.g. the toolchain TODOs in *Common commands* are still unfilled), say so explicitly rather than skipping it silently. This is a hard self-check the agent runs before claiming completion — until a real `ci.yml` exists, the gate is not delegated.
 
 - `<pm> lint`, `<pm> typecheck`, `<pm> test`, and `<pm> build` all pass for the touched apps.
 - New or changed behaviour is covered by tests that assert behaviour, not implementation.
@@ -153,7 +153,7 @@ Worktrees are the **default** here — most work runs in parallel with Claude ac
 3. **Fast-forward merge** into the default branch (the rebase makes this a clean ff, preserving linear history).
 4. **Stop** any dev servers / test instances started for the work.
 5. **Delete** the worktree (`git worktree remove`) and its merged branch.
-6. **Push** the default branch only after confirming. By default this template's `.github/workflows/deploy.yml` runs after a green CI run on `main` (a `workflow_run` trigger), so once its deploy step is filled in a push to the default branch ships to the configured target — confirm with the user before pushing, and check `deploy.yml` if the trigger has been changed.
+6. **Push** the default branch only after confirming. Once `.github/workflows/deploy.yml` exists it runs after a green CI run on `main` (a `workflow_run` trigger), so a push to the default branch ships to the configured target — confirm with the user before pushing, and read `deploy.yml` to see what its trigger actually is.
 
 Where `main` is protected (Day-1 step 11) or the work is spec-backed (`specs/README.md`: open a PR that links the spec), steps 3 and 6 run through the platform instead: push the rebased branch, open or update the PR, let CI go green, and merge with a fast-forward/rebase merge — never a merge commit. The local ff-merge + push path applies only to an unprotected repo.
 

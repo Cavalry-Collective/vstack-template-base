@@ -53,13 +53,20 @@ Use Fastify encapsulation to scope aspects to the route subtree that needs them.
 
 ## Entrypoint
 
-Use `src/server.js` for Vercel and local development.
+Vercel detects Fastify and deploys it with no configuration, so the entrypoint is an ordinary Fastify server. Local and deployed runs execute the same file.
 
-- Build and memoise the Fastify app lazily without top-level await.
-- On Vercel, export the request handler, call `app.ready()`, and dispatch through `app.server.emit("request", req, res)`.
-- Never call `listen()` on Vercel.
-- Outside Vercel, call `listen(PORT)` so local verification exercises HTTP.
-- Configure `apps/backend/vercel.json` as one `@vercel/node` function with a catch-all rewrite to `src/server.js`.
+- Name the entrypoint `src/server.js` — one of the filenames Vercel detects.
+- Build the app in `buildApp()` and start it in the entrypoint with `app.listen(...)`, in every environment.
+- Take the port from the environment: `port: Number(process.env.PORT) || 3000`. Vercel supplies `PORT`.
+- Bind `host: "0.0.0.0"` so the platform can reach the server.
+- Avoid top-level await in the entrypoint; keep plugin registration inside `buildApp()`.
+- Do not hand-roll a serverless adapter. No `@vercel/node` handler export, no `app.ready()` bridge, no `app.server.emit("request", req, res)`.
+- Add `apps/backend/vercel.json` only when a setting genuinely differs from the defaults. A rewrite to the entrypoint is not one of them.
+- Run `vercel dev` to exercise the deployed request path locally; a plain `node src/server.js` is enough for unit-level verification.
+
+## Reference
+
+- [Fastify on Vercel](https://vercel.com/docs/frameworks/backend/fastify) — entrypoint detection and the supported filenames.
 
 ## Testing
 
