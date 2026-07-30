@@ -1,6 +1,10 @@
+<img src="docs/brand/vstack-lockup-tile-1120.png" alt="Visual Stack" width="420">
+
 # Visual Stack project template
 
 **An opinionated starting point for full-stack projects built by people and AI agents.**
+
+Project conventions and architecture contracts by [Cavalry Collective](https://cavalry.sg).
 
 Most templates give you generated code. This one gives you the decisions that should outlast it:
 where code belongs, how changes move from idea to production, what quality means, and what must be
