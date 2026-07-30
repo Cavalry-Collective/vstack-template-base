@@ -8,7 +8,7 @@ Subscription billing as an architecture layer: data-defined plans and prices, ch
 At Day-1 (or later adoption), beyond keeping this directory:
 1. Copy the active stack pack's entry from [`bindings.md`](bindings.md) into that pack's `backend.md`, then delete `bindings.md` — the pack appendix is the binding's only home from then on.
 2. Update this README's two `bindings.md` links (this step and the *Binds to a stack* closing bullet) to point at the pack appendix instead — the file is gone after step 1.
-3. Move the program's feature specs from this add-on's `specs/` into the top-level `specs/` (per `specs/README.md` — one spec home after adoption). The cross-references use bare sibling filenames and survive the move.
+3. The program under `specs/` stays here as reference. When the project implements an area, write its actual requirement spec in the top-level `specs/` (per `specs/README.md`), drawing on that area's program spec.
 
 ## Approach
 
