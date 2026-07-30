@@ -1,44 +1,51 @@
-# MySQL 8 (CynosDB) + Knex — db appendix
+# MySQL, CynosDB, and Knex: database appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **MySQL 8** — **CynosDB** (serverless) in production, a fixed-name Docker container locally — with **Knex** for both migrations and the query layer, over the **`mysql2`** driver. Read the base files first; base schema conventions apply unchanged (`db/CLAUDE.md` *Schema conventions*).
-
-## Scope
-
-This file owns migrations, seed, schema conventions, and the repo-ring query/transaction mechanics. The SCF entry and bundle live in `./backend.md`; provisioning and the migrate-function invocation live in `./infra.md`.
-
-## Tool picks
-
-- **Knex migrations** — real paired `up`/`down`, so the base reversibility and up→down→up round-trip rules apply **verbatim**. Create with `knex migrate:make <verb_noun>`; **keep Knex's default timestamp prefix** — do **not** override it with hand-numbered `0001_`/`0002_` sequences, which is exactly the parallel-branch collision the base warns about.
-- **Knex query builder, no ORM.** Repos are thin builders over explicit queries; values are bound by Knex (the base "never interpolate request data" rule holds by construction). Drop to `db.raw()` only for `INSERT ... ON DUPLICATE KEY UPDATE` / `INSERT IGNORE`.
+Use MySQL 8 locally, CynosDB serverless in production, Knex for migrations and queries, and the `mysql2` driver.
 
 ## Migrations
 
-- Live under `db/migrations/`, run via the root `migrate` verb (`knex migrate:latest`; rollback `migrate:rollback`). Each file exports `up(knex)` and `down(knex)`; every `up` ships its real `down`, and a genuinely irreversible change carries the base's justification comment. Most MySQL DDL auto-commits, so keep one logical change per migration so a failure is diagnosable.
-- **Separate schema from data;** backfills are batched, idempotent, resumable (base rule) — add a column nullable, backfill it in an idempotent data migration, then enforce/consume it in a later one.
+- Keep Knex migrations under `db/migrations/`.
+- Create them with `knex migrate:make <verb_noun>` and keep the generated timestamp.
+- Implement real `up(knex)` and `down(knex)` functions.
+- Keep one logical change per migration because MySQL DDL normally auto-commits.
+- Separate schema changes from batched, idempotent, resumable backfills.
+- Use expand, migrate, contract for breaking changes.
 
-## Repo ring binding (Knex)
+## Repository binding
 
-- **One Knex instance per process**, created at boot by `plugins/db.js`; repos receive it (or a transaction) as their **first arg** (`db`), then a named-args object — never construct their own connection.
-- **Mappers at the boundary:** repos translate rows (snake_case) ↔ DTOs (camelCase); a raw row never crosses inward. Prefer explicit column lists over `SELECT *`.
-- **Transactions:** a multi-write use case opens `knex.transaction(async (trx) => …)` in the **service** and passes `trx` as each repo's `db`; a single write relies on the statement's own atomicity.
+- Create one Knex instance in `plugins/db.js`.
+- Accept the Knex instance or transaction as the first repository argument.
+- Map snake_case rows to camelCase application objects inside repositories.
+- Select explicit columns rather than using `SELECT *`.
+- Open a transaction in the service for multi-write use cases and pass `trx` to every repository.
+- Rely on statement atomicity for one write.
+- Use Knex value binding; restrict `raw()` to SQL Knex cannot express safely.
 
-## Local dev, seed & the destructive test-DB ritual
+## Local and test databases
 
-- **Local MySQL is one fixed-name Docker container**, shared across worktrees per the base — reuse it, run `migrate`, never start a second copy. This stack does **not** use per-worktree databases.
-- **Seed** realistic, named accounts + content (base `db/CLAUDE.md`) so manual/e2e testing has lifelike data; idempotent, upsert by business key.
-- **The test suite is destructive** — it truncates tables. The runner **refuses to run unless `DB_NAME` ends in `_test`**, and `pnpm test` auto-suffixes it, so the dev schema is never touched. One-time setup creates and migrates the `*_test` schema (`pnpm --filter backend test:db:setup`, idempotent). This `*_test`-schema guard *is* this stack's binding of the base "destructive checks go to a throwaway DB" rule.
+- Run one fixed-name MySQL container shared across worktrees.
+- Keep one development database rather than per-worktree databases.
+- Keep development seed data realistic, named, idempotent, and keyed by business identifiers.
+- Treat the test suite as destructive.
+- Refuse to run tests unless `DB_NAME` ends in `_test`.
+- Make `pnpm test` select the test database automatically.
+- Create and migrate it through the idempotent `test:db:setup` command.
 
-## Operations
+## Production operations
 
-- **Production migrations run in a dedicated SCF event function, never inline in the deploy.** The pipeline invokes `<project>-migrate` **after** `terraform apply` (`scripts/invoke-migrate.js` → SCF Invoke, options passed via `ClientContext`: `resetSchema`, `forceReseedTestUsers`). Because the function code and schema ship in the same pipeline run, keep every migration **backward-compatible** (expand → migrate → contract, base rule) so the brief window where old code meets new schema never breaks. Full pipeline order → `./infra.md`. **CI checks** live in the pack README's CI checklist: the `*_test` schema setup, the vitest run against it, the migration up→down→up round-trip, and the OpenAPI drift guards.
+- Run migrations through the private SCF event function after Terraform and function-code deployment.
+- Pass reset and forced-reseed options only through explicit invocation input.
+- Keep every migration backward-compatible with the previous function version.
+- Keep production bootstrap seeds idempotent and non-fatal.
+- Never allow schema reset to run against production by default or unattended.
 
-## Gotchas (MySQL 8)
+## MySQL details
 
-- **A `CHECK` constraint validates against *existing* rows on MySQL 8** — you cannot add one to a table whose legacy rows already violate it. Enforce such invariants **in the service**, not with a late `CHECK`, when legacy or imported data may violate them.
-- **Fixed value sets: a native MySQL `ENUM` is acceptable** — widening it (`ALTER TABLE ... MODIFY ... ENUM(...)`) is a plain reversible migration. A new challenge `purpose` is added this way.
+- Check existing rows before adding a late `CHECK` constraint. Keep the rule in the service when legacy data cannot satisfy it.
+- Native MySQL `ENUM` is allowed for fixed values when every widening is a reversible migration.
 
 ## Conflict register
 
-- **Base says:** seed/reset scripts are **non-production only** — idempotent and run only against local/throwaway databases, never a shared or production database. **In this stack:** controlled **data** seeds *do* run against production — admin bootstrap and one-off imports execute inside the migrate function, and the destructive **reset** path exists there too. **Because:** the migrate function is the one authenticated write path to the production DB (CynosDB is VPC-locked), so idempotent data bootstrapping rides it rather than a second mechanism. **Concretely:** DO keep any prod-run seed idempotent + upsert-by-business-key + non-fatal (a failed seed logs, it doesn't fail the deploy); DON'T let `resetSchema` reach production — it is an explicit opt-in `ClientContext`/`workflow_dispatch` flag, never the default, and never wired to run unattended against prod.
+- **Base says:** seed and reset operations never run against production. **In this stack:** controlled bootstrap seeds and imports may run through the private migration function, and the reset capability exists there. **Because:** CynosDB is VPC-locked and the migration function is the authenticated production write path. **Concretely:** keep production seeds idempotent and non-fatal; DON'T expose or default `resetSchema`, and never invoke it unattended against production.

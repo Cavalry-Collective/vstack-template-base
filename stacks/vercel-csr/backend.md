@@ -1,69 +1,74 @@
-# Fastify on Vercel — backend appendix
+# Fastify on Vercel: backend appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `apps/backend/CLAUDE.md` (the onion) and the root `CLAUDE.md` to **Fastify, plain JavaScript (ESM), deployed as a Vercel serverless function**. Read those first; this file does not restate them.
+Bind the backend onion to Fastify 5, plain JavaScript ESM, and one Vercel serverless function.
 
-## Scope
+## Bindings
 
-This file owns the Fastify bindings: composition root, controller ring, aspects, sessions and edge concerns, the Vercel entrypoint, and backend testing. Data layer → `./db.md`; provisioning and deploys → `./infra.md`.
-
-## Stack binding at a glance
-
-- **HTTP layer: Fastify 5, used directly** — no framework on top. The base's illustrative "Express/Fastify-style" layer is bound to real Fastify: plugins, hooks, and decorators are the aspect mechanism.
-- **Language: plain JavaScript, ESM** (`"type": "module"`), with **no build or typecheck step** — the `build`/`typecheck` scripts are explicit no-ops (pack decision — see the conflict register).
-- **Folder layout: the base shape verbatim** — `modules/<feature>/{domain,service,repo,controller,dtos}`, `shared/{aspects,utils}`, `container.js`; this stack is the layout the base illustrates.
-- **Validation: Zod** — `dtos/` are Zod schemas at the controller edge; one Zod schema parses env at boot.
-
-## Composition root — `container.js` is an Awilix container
-
-- `container.js` stays the single composition root, implemented with **Awilix**: every repo, gateway, and use case registered as a factory (`asFunction`/`asValue`), resolved **once at boot** when routes are registered (pack decision — see the conflict register).
-- **Rings never import `awilix`.** Services and repos are plain factory functions — `makeCreateOrder({ orderRepo, withTransaction })` — receiving dependencies as one argument; the container is glue only.
-- `buildContainer({ env, overrides })`: tests replace any registration by name via `overrides` (an in-memory gateway fake, a stub repo) without touching a ring.
-
-## Controller ring — one Fastify plugin per module
-
-- Each module exposes `controller/routes.js` — a Fastify plugin receiving the container's cradle. `app.js` registers every module plugin inside **one `/internal/v1` prefix scope**, plus a `/health` route. This realizes the base visibility/versioning rule as a Fastify prefix; add an `/external/v1` scope only when a genuinely third-party consumer exists.
-- A handler validates with the module's Zod DTO, invokes **one** use case from the cradle, and maps the result to a response DTO — base rules, bound to Fastify handler signatures.
-
-## Aspects — `shared/aspects/` as Fastify plugins/hooks
-
-| Base concern | Binding |
+| Concern | Binding |
 |---|---|
-| Config | `env.js` — one Zod schema, parsed once at boot (`loadEnv()`), **fail fast** on missing/invalid keys; values passed inward — no `process.env` reads in rings |
-| DB access | `db.js` — creates the single `pg.Pool` and exports `withTransaction` (mechanics in `./db.md`) |
-| Request context | `request-context.js` — correlation id seeded per request at the edge, passed inward as a plain value |
-| Errors | `errors.js` — **one** `setErrorHandler` mapping domain errors (plain error helpers in `shared/utils/`) → the base *Error responses* envelope (`error.code` / `error.message` / `error.correlationId` + the `x-correlation-id` header); inner rings never shape an HTTP response |
-| Auth | `auth.js` — cookie-session guards as `preHandler` hooks on the route scopes that need them |
+| HTTP | Fastify plugins, hooks, and decorators |
+| Language | plain JavaScript ESM; build and typecheck are explicit no-ops |
+| Layout | base feature-first ring folders unchanged |
+| Validation | Zod DTOs and one boot-time environment schema |
+| Composition | Awilix in `container.js` |
+| Tests | `node:test`, Fastify `app.inject()`, real Postgres for repos |
 
-**Scope-to-subtree = Fastify plugin encapsulation.** Register an aspect on the route scope that needs it; only the error handler, request context, cookie plugin, and DB pool register app-wide at bootstrap.
+## Composition
 
-## Sessions & edge concerns (serverless-shaped)
+- Register every repository, gateway, and use case in `container.js` with `asFunction` or `asValue`.
+- Resolve registrations once while registering routes.
+- Keep Awilix out of every ring.
+- Expose `buildContainer({ env, overrides })` so tests can replace registrations by name.
 
-- **Sessions are signed HTTP-only cookies** (`@fastify/cookie` with `SESSION_SECRET`) — stateless by construction, so scale-to-zero costs nothing and there is no session store to manage.
-- **`TRUST_PROXY=true` in deployed env** (Fastify `trustProxy`): requests arrive through Vercel and the SPA's `vercel.json` `/api` rewrite, so without it rate limiting and logging key on the proxy IP, not the client.
-- `@fastify/rate-limit`'s default in-memory store is **per-instance** on serverless — acceptable as a soft limit; reach for a shared store only when a limit must be globally exact.
-- **Security headers via `@fastify/helmet`**, registered once at bootstrap — binds the base *Security baseline* header rule. The API's `*.vercel.app` URL is directly reachable, so it sets its own headers rather than trusting the web app's. Helmet's default `Content-Security-Policy` (`default-src 'self'`) is fine for a JSON API; only tune or relax it if the API serves HTML.
-- **SSRF guard** (base *Security baseline*): one URL-guard helper in `shared/utils` (or domain), called at config-save *and* immediately before the outbound `fetch`:
-  1. Allow public `https` URLs only.
-  2. Resolve the host; reject when the resolved IP is loopback, private, link-local, or a cloud-metadata address (a string-only re-check misses a host that resolves to a private IP).
-- **Write-only secrets** (base *Security baseline*): for admin-managed secrets, the read DTO **masks** each secret and adds a `…Set` flag, and the update handler **preserves** a blank field over the stored value — a secret never round-trips to the client.
+## HTTP edge
 
-## Vercel entrypoint — `src/server.js`
+- Give each feature one `controller/routes.js` Fastify plugin.
+- Register feature plugins under `/internal/v1` and keep `/health` unversioned.
+- Add `/external/v1` only for a real third-party consumer.
+- Parse the request with the feature's Zod DTO, invoke one use case, and map the response DTO.
 
-One file is both entrypoints:
+## Aspects
 
-- **Vercel path:** default-export an async `handler(req, res)` that lazily builds the app once (`appPromise ??= buildApp(...)` — **no top-level await**: the module must evaluate to a plain handler), `await app.ready()`, then dispatch with `app.server.emit("request", req, res)`. **Never call `listen()` on Vercel.**
-- **Local path:** when `!process.env.VERCEL`, start a real listener on `PORT` (dev: `node --watch --env-file=../../.env src/server.js`) — so the base "exercise the actual endpoint over HTTP" verification gate works unchanged.
-- `apps/backend/vercel.json`: an `@vercel/node` build of `src/server.js` with a catch-all rewrite to it — the whole Fastify app is **one function**, keeping Fastify's router (not Vercel's filesystem routing) in charge.
-- **Serverless rules:** instances scale to zero and multiply — never rely on instance memory for correctness (durable state lives in Postgres or the signed cookie; a module-level memo is a cache, nothing more). Finish all work inside the request — no fire-and-forget after the response is sent; the instance freezes.
+| Base concern | Fastify binding |
+|---|---|
+| Configuration | `env.js`; parse once and pass values inward |
+| Database | `db.js`; create one `pg.Pool` and expose `withTransaction` |
+| Request context | `request-context.js`; seed and return the correlation ID |
+| Errors | one `setErrorHandler` producing the base error envelope |
+| Authentication | cookie-session `preHandler` hooks |
+| Security headers | `@fastify/helmet` at bootstrap |
+| Rate limiting | `@fastify/rate-limit`; in-memory limits are soft per instance |
+
+Use Fastify encapsulation to scope aspects to the route subtree that needs them. Register only request context, errors, cookies, and the database pool application-wide.
+
+## Sessions and serverless behaviour
+
+- Sign HTTP-only session cookies with `@fastify/cookie` and `SESSION_SECRET`.
+- Set validated `TRUST_PROXY=true` in Vercel so source IPs survive the proxy.
+- Use a shared store when a rate limit must be globally exact.
+- Keep correctness-bearing state in Postgres or the signed cookie.
+- Complete background work before returning the response.
+
+## Entrypoint
+
+Use `src/server.js` for Vercel and local development.
+
+- Build and memoise the Fastify app lazily without top-level await.
+- On Vercel, export the request handler, call `app.ready()`, and dispatch through `app.server.emit("request", req, res)`.
+- Never call `listen()` on Vercel.
+- Outside Vercel, call `listen(PORT)` so local verification exercises HTTP.
+- Configure `apps/backend/vercel.json` as one `@vercel/node` function with a catch-all rewrite to `src/server.js`.
 
 ## Testing
 
-- **Runner: `node:test`** (`node --test tests/`; `tests/` mirrors `src/`). Pack decision (rejected: Jest/Vitest — plain ESM JavaScript needs no transform; the built-in runner is zero-dependency).
-- Base per-ring kinds, bound: **domain** — plain units; **service** — build the app/container with `overrides` fakes; **controller** — Fastify `app.inject()` (no listener needed); **repo** — integration against the real local Postgres (use `--test-concurrency=1` where suites share it).
+- Test domain rules as plain units.
+- Test services through container overrides.
+- Test controllers with `app.inject()`.
+- Test repositories against local Postgres and serialise suites that share state.
 
 ## Conflict register
 
-- **Base says:** The stack is unchosen; the JS-style filenames and Express/Fastify-style HTTP layer are illustrative, not mandates. **In this stack:** bound for real — Fastify 5, plain JavaScript ESM, and no build/typecheck step. **Because:** the deploy target is a Vercel Node function running source directly; with duck-typed ports (base default), Zod-guarded edges, and JSDoc `@typedef`s, a transpile step adds weight without payoff here. **Concretely:** DON'T add a `tsconfig`/transpiler under `apps/backend/`; keep `build`/`typecheck` as explicit no-op scripts so workspace-wide commands stay green.
-- **Base says:** Wiring lives in `container.js` as manual constructor wiring; reach for a DI container (e.g. Awilix) only once the graph grows unwieldy. **In this stack:** `container.js` is an Awilix container from day one. **Because:** registrations resolve at boot — a typo'd name throws at startup, never at request time — and `overrides` swaps any dependency for a test fake without touching rings; hand-rolling those two properties is exactly the unwieldiness the base defers. **Concretely:** DO register every port in `container.js` via `asFunction`/`asValue`; DON'T `import` awilix anywhere outside `container.js`.
+- **Base says:** the JavaScript filenames and Express/Fastify HTTP layer are illustrative. **In this stack:** Fastify 5 and plain JavaScript ESM are mandatory, with no backend build or typecheck. **Because:** Vercel runs the source directly and Zod guards the edges. **Concretely:** DON'T add TypeScript or a transpiler under `apps/backend`; keep build and typecheck as explicit no-op scripts.
+- **Base says:** use manual constructor wiring until a DI container is justified. **In this stack:** `container.js` uses Awilix from Day 1. **Because:** boot-time resolution and named test overrides are part of this pack's wiring contract. **Concretely:** DO bind every port in `container.js`; DON'T import Awilix anywhere else.

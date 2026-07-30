@@ -1,87 +1,72 @@
 # Stack pack: django
 
-Frontend: **React SPA** (Vite, TypeScript), client-rendered, no SSR. Backend: **Django 5 + Django REST Framework** (Python 3.12, managed with **uv**). DB: **Postgres 16** via the **Django ORM** (Django migrations). Platform-neutral: the product deploys through whatever the base `infra/` contract stands up — this pack ships no `infra.md`.
+Use this pack for a client-rendered React application with a Django REST API and Postgres.
 
-This is the manifest — it wires the pack onto a project. Bindings and conflict registers live in the appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
+| Area | Choice |
+|---|---|
+| Identity | `react-django-postgres` |
+| Frontend | React, TypeScript, Vite, React Router |
+| Backend | Django 5, Django REST Framework, Python 3.12, uv |
+| Database | Postgres 16, Django ORM and migrations |
+| Platform | Platform-neutral; no `infra.md` |
 
-## Identity & naming
+## Constraint
 
-Named for its backend framework — the dominant Python full-stack combo: a Django + DRF API behind a React SPA. The underlying triple is `react-django-postgres` (per `../README.md`).
+The frontend is a static SPA with no SSR or prerendering. Use a server-rendered pack or a separate public origin when routes must return complete HTML. The `seo` add-on is incompatible with this pack.
 
-Like `enterprise`, this pack is platform-neutral — it ships no `infra.md`. Unlike it, the frontend is a client-rendered SPA with a separate API — the same frontend shape as `vercel-csr`, minus the platform.
+## Appendices
 
-## Defining constraint — no SSR
+| File | Covers |
+|---|---|
+| `frontend.md` | SPA rendering, OpenAPI client, `/api` proxy, styling, testing |
+| `backend.md` | Django apps, services and selectors, DRF, config, testing |
+| `db.md` | Django models, migrations, transactions, local database |
 
-The frontend is a single-page app: one static `index.html`, rendered entirely in the browser. There is no server-side rendering, and none may be added — not per request, not at build time. The enforceable rules and the greppable forbidden list are in `frontend.md` → *Rendering model*.
+## Day-1 setup
 
-A requirement that genuinely needs server-rendered HTML (public search indexability above all) is a pack change — adopt a server-rendered pack, or serve the crawlable surface outside this app. For the same reason the `seo` add-on cannot bind to this pack: its rendering seam needs routes served complete without client-side scripts, and a client-only SPA has none.
+1. Keep this directory and delete the other stack packs.
+2. Copy the command block below into root `CLAUDE.md`.
+3. Implement the CI checklist in `.github/workflows/ci.yml`.
+4. Keep the base SPA wording unchanged.
+5. Record `Stack: django; appendices under stacks/django/` in root `CLAUDE.md` **Learnings**.
 
-## Appendix → base mapping
-
-| Appendix | Binds onto | Scope |
-|---|---|---|
-| `frontend.md` | `apps/frontend/CLAUDE.md` | client-only rendering (no SSR), Vite + React Router, same-origin `/api` proxy + SPA fallback, Tailwind 4 + Radix, Zod at the edge |
-| `backend.md` | `apps/backend/CLAUDE.md` | Django apps as feature modules, `services.py`/`selectors.py` discipline, DRF edge, the `settings.py` config seam, middleware aspects, uv/ruff/mypy/pytest |
-| `db.md` | `db/CLAUDE.md` + data access | Django migrations (per-app home, `sqlmigrate` review, drift gate), ORM schema conventions, the fixed-name local Postgres |
-
-Each appendix opens with the verbatim precedence line and ends with its conflict register (see `../README.md`). Conflicts live in the appendices, not here.
-
-## Day-1 wiring
-
-Run as part of the root `README.md` `## Day-1 checklist`:
-
-1. Delete every other `stacks/*` directory. The one pack left is the adopted one; each area's `CLAUDE.md` then points agents at the matching appendix here (mechanism: `../README.md` *Activation*).
-2. Copy the **dev block** below over the root `CLAUDE.md` "Common commands" placeholder. Delete the banner.
-3. Apply the **CI checklist** below to `.github/workflows/ci.yml`. Never paste the same block in both places.
-4. Skip the root `README.md`'s "soften the SPA framing" step. That instruction targets the server-first packs; this pack is a SPA, so the base framing in root `CLAUDE.md`, `apps/frontend/CLAUDE.md`, and the **What's included** "Frontend SPA" row is already correct — leave all of them as shipped.
-5. Record in root `CLAUDE.md` **Learnings**: `Stack: django; appendices under stacks/django/`.
-
-## Commands
-
-Two ecosystems, one verb set: **uv** manages `apps/backend` (`pyproject.toml` + committed `uv.lock`), **pnpm** manages `apps/frontend`. Each root command verb exists **once**, in a root **Makefile**, and fans out to both apps.
-
-**Dev block → root `CLAUDE.md` "Common commands":**
+Use uv for `apps/backend`, pnpm for `apps/frontend`, and one root Makefile to expose the standard verbs.
 
 ```bash
-make bootstrap   # uv sync + pnpm install + start local Postgres (fixed-name docker container, shared across worktrees) + migrate
-make dev         # both dev servers: Django runserver (:8000) + Vite dev (:5173, proxying /api → :8000)
-make lint        # ruff check + ruff format --check (backend); ESLint (frontend)
-make typecheck   # mypy with django-stubs (backend); tsc --noEmit (frontend)
-make test        # pytest (backend); vitest run (frontend; Playwright e2e separate: make test-e2e)
-make build       # vite build → apps/frontend/dist (Django has no build step — explicit no-op; collectstatic is a deploy concern)
-make migrate     # python manage.py migrate (rollback: manage.py migrate <app> <previous>)
+make bootstrap   # uv sync + pnpm install + shared Postgres + migrate
+make dev         # Django :8000 + Vite :5173 with /api proxy
+make lint        # ruff check/format + ESLint
+make typecheck   # mypy with django-stubs + tsc --noEmit
+make test        # pytest + Vitest; Playwright is test-e2e
+make build       # Vite build; Django explicit no-op
+make migrate     # manage.py migrate; rollback to an app migration
 ```
 
-**CI checklist → `.github/workflows/ci.yml`** (non-interactive):
+## CI
 
-- A `postgres:16` service container.
-- `uv sync --frozen` + `pnpm install --frozen-lockfile`.
-- Lint (ruff + ESLint); typecheck (mypy + `tsc --noEmit`).
-- `pytest`; `vitest run`; `vite build`.
-- The frontend i18n key-parity check — the base gate stands unchanged.
-- The db appendix's CI checks (`db.md` → *Operations*): migrations apply from zero on the scratch DB; the `makemigrations --check --dry-run` drift gate, this pack's `ci.yml` migration gate — `db.md`'s register replaces the base round-trip rule; the seed run twice (idempotency).
+- Start a `postgres:16` service.
+- Run `uv sync --frozen` and `pnpm install --frozen-lockfile`.
+- Run ruff, ESLint, mypy, and TypeScript.
+- Run pytest, Vitest, and Vite build.
+- Run the i18n parity and accessibility gates from the base workflow.
+- Apply migrations from zero.
+- Run `makemigrations --check --dry-run`.
+- Run the seed twice.
+- Prove each new migration's reverse locally as required by `db.md`.
 
-## Pack decisions
+## Decisions
 
-- **DRF** as the API layer (rejected: Django Ninja, a FastAPI sidecar — DRF is the ecosystem default with the deepest auth/permission/throttle integration).
-- **uv** for Python dependencies (rejected: Poetry, pip-tools).
-- **mypy + django-stubs** — the `typecheck` verb is real for both apps (rejected: pyright, whose Django support lacks the mypy plugin; rejected: skipping backend typecheck).
-- **`services.py`/`selectors.py`** as the use-case convention (rejected: a hexagonal ports-and-adapters layer over the ORM — `backend.md`'s conflict register records the override).
-- **Makefile fan-out** — one root verb set over both ecosystems (rejected: a root `package.json` shelling into uv — it makes Node a hard dependency of backend-only work, and `make` is language-neutral and already on every dev/CI image).
-- **Django session auth** — cookie-based, CSRF on (rejected: JWT held by the SPA).
-- **DRF serializers + Zod** at the two edges; the shared contract is the OpenAPI schema DRF emits via **drf-spectacular**, and frontend types are generated from it (rejected: hand-copying shapes between the apps). Details in `backend.md` / `frontend.md`.
-- **django-environ** as the `settings.py` config seam (rejected: pydantic-settings — a second config object beside `settings` buys nothing).
-- **pytest + pytest-django** as the backend runner (rejected: Django's unittest runner — pytest fixtures/parametrize are the ecosystem default).
-- **uuid primary keys** (rejected: the default `BigAutoField` — enumerable in URLs).
-- **`TextChoices` + `CheckConstraint`** for fixed value sets (rejected: native Postgres enums — `ALTER TYPE … ADD VALUE` is non-transactional and effectively one-way).
-- **Plain `fetch` + React Context on the frontend** (rejected: react-query/SWR, Redux/Zustand — add a cache library only when client-side invalidation genuinely appears).
-- Further decisions and their rejected alternatives are recorded in each appendix's conflict register.
+- Use DRF for the API and Django session authentication with CSRF enabled.
+- Use Django apps with `services.py` and `selectors.py` rather than a parallel repository layer.
+- Use django-environ through `settings.py`.
+- Use drf-spectacular as the contract and generate frontend types with openapi-typescript.
+- Use pytest with pytest-django and mypy with Django stubs.
+- Use UUID primary keys and `TextChoices` with database checks.
+- Use React Context and plain `fetch` on the frontend by default.
 
-## Deploy seam
+## Deployment
 
-Platform-neutral, like `enterprise` — this pack ships no `infra.md` (infra is cloud-shaped, not app-stack-shaped):
-
-- The SPA's `dist/`, the Django app (ASGI/WSGI behind its process server), and `manage.py migrate` deploy through the pipeline the base `infra/CLAUDE.md` contract stands up.
-- Serve `dist/` and the API from **one origin** with the SPA fallback (`frontend.md`).
-- Run `manage.py migrate` before the code that reads the new schema goes live, keeping each migration backward-compatible (expand → migrate → contract, `db.md`).
-- `deploy.yml` stays the base stub until the infra work fills it in.
+- Deploy Django behind its application server and serve the SPA and `/api` from one origin.
+- Run `manage.py migrate` before code that reads the new schema.
+- Keep migrations backward-compatible through expand, migrate, contract.
+- Use the deployment workflow supplied by the project's infrastructure.

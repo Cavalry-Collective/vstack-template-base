@@ -1,61 +1,64 @@
-# Vercel platform — infra appendix
+# Vercel two-project platform: infrastructure appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `infra/CLAUDE.md` to the **Vercel Terraform provider** (`vercel/vercel`): the product runs entirely on Vercel — two projects (a **static** web project + an api project), Vercel Blob, and marketplace Postgres (Neon). Read the base first; its workflow, risk-review format, and approval guardrails apply unchanged.
+Bind infrastructure to the `vercel/vercel` Terraform provider, two Vercel projects, Neon, and Blob.
 
-## Scope
+## Workload
 
-This file owns the Terraform workload shape, the deploy seam, staging, and observability. App-level routing and headers live in `./frontend.md`; migration runbooks live in `./db.md`.
+Keep one root module under `infra/<workload>/` with:
 
-## Workload shape
+- `versions.tf` and `providers.tf`;
+- `web.tf` for the Vite project;
+- `api.tf` for the Fastify project;
+- `storage.tf` when Blob is needed;
+- one explicit environment-variable resource per value.
 
-- One self-contained workload directory per product under `infra/<workload>/` (base layout stands): `versions.tf` (provider `vercel/vercel`), `providers.tf` (`api_token` from `TF_VAR_vercel_api_token` — never committed), `variables.tf`, plus concern files — `web.tf` (frontend project + its env vars), `api.tf` (backend project + its env vars), `storage.tf` (Blob store + project connection).
-- **Two `vercel_project` resources:** web (`framework = "vite"`, `root_directory = "apps/frontend"`, `output_directory = "dist"`) and api (`root_directory = "apps/backend"`). Pin `node_version` (keep in sync with the workspace `engines`); the function region setting applies to the **api** project only.
-- **The web project is static — it must never gain a runtime.** `framework = "vite"` makes the build a pure asset upload served from the CDN; the SPA has no SSR and no functions (`frontend.md` → *Rendering model*). Setting `framework = "nextjs"`, or letting an `api/` directory appear under `apps/frontend/`, silently gives the web project a serverless runtime — that is the drift to catch in review. Routing (`/api` proxy + SPA fallback) lives in `apps/frontend/vercel.json`, not Terraform.
-- **One explicit resource block per environment variable** (`vercel_project_environment_variable`), `sensitive = true` for secrets — the base explicit-over-DRY authoring style, bound.
-- **The web project's variables are `VITE_`-prefixed, build-time, and baked into a publicly readable bundle.** Never mark one `sensitive` and assume it stays secret; secrets belong on the api project only.
-- Store connections inject their own variables — the Neon marketplace integration injects `DATABASE_URL`, the Blob store connection injects `BLOB_READ_WRITE_TOKEN` — don't duplicate those as Terraform-managed variables.
-- **The state file holds the secret env-var values — treat it like a credential.** Use a remote, access-controlled backend from day 1; a laptop-only local state file is unencrypted, unbacked-up, and one `git add` away from a leak. Never commit state.
+Configure:
 
-## Auth / context
+- the web project with `framework = "vite"`, `root_directory = "apps/frontend"`, and `output_directory = "dist"`;
+- the API project with `root_directory = "apps/backend"`;
+- the Node version in both Terraform and workspace `engines`;
+- secrets only on the API project;
+- a remote access-controlled Terraform backend.
 
-The base's start-of-session context check, bound: the provider authenticates with a team API token. Verify identity and team with `vercel whoami` (CLI authenticated via `VERCEL_TOKEN`) and confirm the target team/project with the user before any plan or apply — the base "don't assume the previous context" rule stands.
+Do not give the web project a runtime. Keep frontend routing in `apps/frontend/vercel.json`.
 
-## Deploy seam
+Let the Neon and Blob integrations inject their connection variables. Do not duplicate those variables in Terraform. Treat Terraform state as a credential.
 
-- **Deploys are Vercel's GitHub integration — "CI/CD" is merging code.** Both `vercel_project` resources declare `git_repository` (`type = "github"`, the repo, `production_branch = "main"`); Vercel listens to the repo and runs its own build-and-deploy pipeline: every PR gets a preview deployment, every push to `main` deploys production. Day-1: grant the Vercel GitHub App access to the repo before enabling.
-- **`ci.yml` is the merge gate, not the deploy pipeline.** Vercel ships whatever lands on `main`, so protect `main`: PRs merge only on green CI. The trunk-stays-releasable rule and the root merge-back gate carry the deploy weight.
-- **`deploy.yml` is never filled in** — see the conflict register. A push to `main` still ships (via Vercel, not a workflow), so the root "confirm before pushing the default branch" rule applies with full force.
-- **A push deploys the API and frontend together — so releases must be backward-compatible.** A single push can't stage "API first, then frontend", and the config contract between them is strict (Zod). Ship schema/config changes expand-first: run the Neon migration manually **before** the push (`db.md` → *Production & staging migrations*), and never introduce a field whose absence breaks the other side during the seconds the two deploy out of step.
-- Point Playwright at a PR's preview deployment URL via `E2E_BASE_URL`.
-- **`.vercelignore`** keeps non-deploy material out of uploads: `.env*`, `infra/`, `design/`, `docs/`, `.claude/`.
-- A local token `vercel deploy` (`VERCEL_TOKEN`) is the emergency path the root contract permits — not normal work.
+## Context
 
-## Staging environment (`develop`)
+Authenticate with a team API token. Run `vercel whoami`, confirm the team and both projects, then confirm the target environment before planning or applying.
 
-Stand up a persistent staging environment on day 1 — a shipped project wants a stable URL to demo and to smoke-test a release before it reaches `main`:
+## Deployment
 
-- **Both `vercel_project` resources get a `develop`-branch preview environment** (branch-scoped env vars); pushing `develop` deploys both as Preview at the stable branch alias, while `main` stays production.
-- **Give the `develop` API a stable custom domain.** The web app reaches it through a host-conditioned rewrite in `apps/frontend/vercel.json` (`frontend.md` → *`vercel.json`*), and a static rewrite cannot target a per-deployment URL.
-- **A dedicated long-lived Neon branch** — a copy-on-write fork of prod, on its own endpoint — backs the develop API, Terraform-authored alongside the projects. Preview reads/writes never touch prod data.
-- **Migrations for `develop` are manual too**, run before the push, with its own connection string — see `db.md` → *Production & staging migrations* and its Gotchas.
-- Pushing `develop` is a safe staging release; pushing `main` is the production release. Per-PR previews (the git integration's default) still exist for isolated review — `develop` is the shared, always-on one.
+- Connect both projects to the repository and use `main` as production.
+- Protect `main`; Vercel deploys every accepted push.
+- Delete the GitHub Actions deploy stub.
+- Run database migrations before pushing code that reads the new schema.
+- Keep frontend and API changes backward-compatible while the two projects deploy.
+- Point Playwright at preview deployments with `E2E_BASE_URL`.
+- Exclude `.env*`, `infra/`, `design/`, `docs/`, and `.claude/` in `.vercelignore`.
+- Use token-driven local deployment only for emergencies.
+
+## Staging
+
+- Create stable `develop` previews for both projects.
+- Give the staging API a stable domain for the frontend rewrite.
+- Back staging with a dedicated long-lived Neon branch.
+- Apply staging migrations before pushing `develop`.
+- Keep per-PR previews for isolated review.
 
 ## Observability
 
-Bringing a project online includes its observability — treat it as part of go-live, not an afterthought (base `infra/CLAUDE.md`):
+- Enable Vercel Observability on both projects.
+- Send API runtime logs to an external log drain through one marketplace integration.
+- Configure frontend Analytics and Speed Insights through `frontend.md`.
+- Use request-log search for historical production incidents; the CLI live tail is not durable evidence.
 
-- **Enable Vercel Observability** on both projects (requests, function invocations, and runtime logs retained and queryable in the dashboard).
-- **Ship runtime logs off-platform via a log drain**, so the backend's structured log lines (correlation id, handled errors, integration/webhook results) stay searchable beyond Vercel's short retention. Wire the drain through a marketplace integration (e.g. Sentry) that owns it on the api project — see *Gotchas*.
-- **Frontend product analytics** — Vercel Web Analytics + Speed Insights — are wired in `frontend.md`.
-- **When prod misbehaves**, outcomes that are *log-only* (e.g. webhook deliveries — not persisted) are still recoverable from the request logs: query the project's request-logs filtered by `environment=production`, path, status, and a content substring, rather than `vercel logs`, which only live-tails the last ~2 minutes.
-
-## Gotchas
-
-- **The log drain is integration-owned — never author it in Terraform.** The Vercel Terraform provider cannot import an integration-owned drain, so authoring a `vercel_log_drain` / `observability.tf` resource makes `terraform apply` create a second, duplicate drain. The integration keeps the drain live; widen coverage (frontend logs, preview/`develop` logs) in the integration's settings, not Terraform.
+Do not declare an integration-owned log drain in Terraform. Manage its project and environment coverage in the integration.
 
 ## Conflict register
 
-- **Base says:** the base infra contract uses GCP as its worked example — the **(GCP)** sections (gcloud context commands, bulk export) and the networking convention (custom-mode VPC, explicit subnets/firewalls) apply, with AWS/Azure equivalents. **In this stack:** the cloud is Vercel (+ Neon via the marketplace). The context check maps to `vercel whoami` + the API token; the VPC/networking convention has no binding — Vercel is a managed platform exposing no VPC, subnet, or firewall surface to author. **Because:** this pack runs entirely on Vercel. **Concretely:** DO author `vercel_*` resources per the workload shape above; DON'T scaffold a GCP provider, network `.tf` files, or gcloud-based context checks in this stack's workloads.
-- **Base says:** deployment goes through CI/CD with workflows under `.github/workflows/`; `deploy.yml` runs after a green CI run on `main` (a `workflow_run` trigger), and once its deploy step is filled in, a push to `main` ships to the configured target (root `CLAUDE.md`). **In this stack:** the deploy pipeline is Vercel's GitHub integration, declared in Terraform (`git_repository` on each project) — `deploy.yml`'s deploy step is never filled in; on day 1 delete the stub (or reduce it to a one-line pointer at this appendix) so no second deploy path exists. **Because:** Vercel's native git pipeline *is* the CI/CD for this platform; a token-driven workflow would duplicate it, and two deploy mechanisms race. **Concretely:** DO enable `git_repository` and protect `main` so PRs merge only on green `ci.yml`; DON'T add a `vercel deploy` step to GitHub Actions. A push to `main` still deploys production — the root confirm-before-push rule stands unchanged.
+- **Base says:** the infrastructure guide uses GCP networking as its worked example. **In this stack:** use Vercel and Neon, with no VPC, subnet, or firewall resources. **Because:** Vercel exposes no customer-managed network surface for this workload. **Concretely:** DO author `vercel_*` resources and verify context with `vercel whoami`; DON'T add GCP providers or network files.
+- **Base says:** deployment runs through `.github/workflows/deploy.yml`. **In this stack:** Vercel's Git integration is the deployment pipeline and the workflow stub is deleted. **Because:** a second token-driven deployment path would race the platform integration. **Concretely:** protect `main` and keep Vercel Git integration enabled; DON'T add `vercel deploy` to GitHub Actions.

@@ -1,101 +1,127 @@
-# Add-on: seo
+# Add-on: SEO
 
-> Optional add-on. Adopt at Day-1 by keeping this directory (see `add-ons/README.md`); the adopted stack pack supplies the seams named under *Binds to a stack*.
+This add-on covers the product structure required for public pages to be crawled, indexed, shared, and measured correctly. It includes route classification, canonical URLs, server-rendered content, metadata, structured data, search intent, internal links, landing-page behaviour, and loading experience.
 
-Search discoverability for the app's public pages — being crawled, indexed, and previewed correctly when shared — plus the structural work of keyword strategy, paid search, rank tracking, and page-speed ranking factors. The ongoing practice of each stays out of scope: keyword research and selection, campaign purchase and management, running or reading rank reports, hands-on performance tuning, and analytics/conversion measurement.
+It does not cover ongoing keyword research, advertising campaign management, rank-report analysis, performance tuning, or conversion analytics.
 
 ## Prerequisites
 
-A server-rendered stack. Indexable routes must arrive complete without client-side scripts (S1), and a client-rendered SPA cannot provide that. Of the shipped packs, `vercel-ssr` and `enterprise` qualify; `vercel-csr`, `mern`, `django`, and `wechat` do not. On a CSR stack, either serve the crawlable surface from its own server-rendered origin and apply this add-on there, or don't adopt — a publicly reachable origin still serves a refuse-indexing response (R10).
+Indexable routes must return their complete primary content without client-side JavaScript.
 
-## Adoption
+Of the current stack packs, `vercel-ssr` and `enterprise` meet this requirement. The `vercel-csr`, `mern`, `django`, and `wechat` packs do not.
 
-| Your surface | Do this |
+For a client-rendered application, either:
+
+- serve the public search surface from a separate server-rendered origin and apply this add-on there; or
+- do not adopt this add-on and make every reachable route non-indexable.
+
+## When to adopt
+
+| Public surface | Decision |
 |---|---|
-| Public content is the product (marketing, listings, articles, profiles) | Adopt; classify routes from day 1 |
-| Mostly private app with a small public shell | Adopt; classify every private route non-indexable |
-| Fully login-walled — no indexable surface | Delete this add-on; a publicly reachable origin still serves a refuse-indexing response (R10's posture) |
+| Marketing pages, listings, articles, or profiles are part of the product | Adopt and classify routes from Day 1 |
+| The product is mostly private but has a public shell | Adopt and classify every private route as non-indexable |
+| The product is entirely login-walled | Do not adopt; still return a no-index response from every publicly reachable origin |
 
-## Approach
+## Implementation areas
 
-Every rule states behaviour observable from outside the running app; *Verify* mirrors them one-to-one.
+Rule identifiers are stable references for requirement specs, stack bindings, and tests.
 
 ### Routes and URLs
-- **R1 — Classify every route.** Each route/URL space carries an indexable-or-not classification, recorded at the route registry (or the pack's registry equivalent). An unclassified route is a defect (gate G1).
-- **R2 — No crawl traps.** Parameter, filter, and pagination variants of a page are non-indexable and canonical to their base page unless deliberately classified — a URL space never multiplies open-endedly.
-- **R4 — One canonical URL per page.** Variants (trailing slash, casing, host aliases, tracking params) permanently redirect to it; each indexable page declares its canonical absolutely; the canonical origin comes from validated config, never from the incoming request.
-- **R5 — URLs are commitments.** Indexable slugs are stable; a rename keeps a permanent redirect from every previously published URL, so inbound links never die silently.
-- **R6 — Honest status codes.** A missing entity answers not-found (or gone), never a success status wrapping an error screen; moved pages answer permanent redirects from the server, not a client-side bounce.
+
+- **R1: Classify every route.** Record whether each route or URL space is indexable in the route registry. Reject an unclassified route.
+- **R2: Bound URL variants.** Make parameter, filter, sorting, and pagination variants non-indexable and canonical to the base page unless the registry explicitly classifies them.
+- **R4: Publish one canonical URL.** Permanently redirect casing, trailing-slash, and host variants. Put one absolute, parameter-free canonical on every indexable page.
+- **R5: Preserve published URLs.** Keep indexable slugs stable. When a slug changes, retain a permanent redirect from every previously published URL.
+- **R6: Return honest status codes.** Return not-found or gone for a missing entity. Return server-side permanent redirects for moved pages.
+
+Build canonical URLs from a validated production-origin setting. Do not derive the origin from the incoming request.
 
 ### Rendering and metadata
-- **R3 — Complete without scripts.** An indexable page's full content is present in the raw response, before any client-side script runs; the pack names the rendering mechanism (S1).
-- **R7 — One metadata helper.** Unique title, description, share-preview tags **and share image** per indexable page, set through one shared helper only; the copy lives in the central copy home (base *Microcopy & content*).
-- **R8 — Structured data mirrors the page.** Machine-readable entity markup only for entity types the product actually has, generated from the data the page shows; markup describing unshown content is cloaking.
-- **R9 — Sitemap and robots are derived.** Generated from the route registry (plus entity data for parameterized routes), never hand-maintained; the sitemap lists exactly the indexable routes; robots disallows the non-indexable surface (gate G2).
-- **R10 — Non-production never indexes.** Staging and preview origins answer a noindex directive, failing closed: only the configured production origin is ever indexable (gate G3).
-- **R11 — No cloaking.** Crawlers see what users see; never branch content on the requester's user agent — the fix for an unindexable page is rendering.
-- **R17 — Ownership verification is configuration.** Search-engine console ownership verification is served from validated config and survives redeploys — never a hand-placed artifact; absent config, absent response.
+
+- **R3: Return complete content.** Include the page's primary content in the raw response before client-side JavaScript runs.
+- **R7: Use one metadata helper.** Set a unique title, description, canonical, share tags, and share image for every indexable page through one shared helper.
+- **R8: Match structured data to visible content.** Generate structured data from the same entity data rendered on the page. Do not describe content the page does not show.
+- **R9: Derive sitemap and robots output.** Generate both from the route registry and entity data. List exactly the indexable URLs in the sitemap and exclude non-indexable spaces through robots policy.
+- **R10: Prevent non-production indexing.** Return a no-index directive unless the configured origin is the production origin.
+- **R11: Serve the same content to crawlers and users.** Do not branch page content on the user agent.
+- **R17: Configure ownership verification.** Serve search-console verification from validated configuration. Return no verification response when the setting is absent.
+
+Keep titles and descriptions in the frontend's central copy location.
 
 ### Search intent and internal links
-- **R12 — Every indexable page records its intent.** Each indexable route carries a target search intent — the query the page answers — recorded at the route registry beside its classification, one per locale; copy iteration updates the record in the same change. A missing record fails gate G4; a same-locale duplicate fails G5 — merge or re-target.
-- **R13 — Pages are written against their recorded intent.** Title, description, slug, and the single top-level heading reflect the record; exactly one top-level heading per indexable page, heading levels descending without skipping.
-- **R14 — No orphan pages.** Every indexable page is reachable through at least one crawlable link with descriptive anchor text from another indexable page — sitemap presence is not linkage.
-- **R18 — The tracking inventory is derived.** The page↔intent inventory — each indexable URL paired with its recorded intent — is generated from the route registry, machine-readable, never hand-kept; renames keep tracking continuity through R5's permanent redirects.
+
+- **R12: Record one search intent per locale.** Store the target query beside each indexable route's classification. Reject missing and duplicate same-locale intents.
+- **R13: Write the page for its intent.** Align the title, description, slug, and single top-level heading with the recorded intent. Do not skip heading levels.
+- **R14: Link every indexable page.** Make each indexable page reachable from another indexable page through a crawlable link with descriptive anchor text.
+- **R18: Derive the tracking inventory.** Generate a machine-readable URL-to-intent inventory from the route registry. Preserve tracking continuity through the redirects required by R5.
+
+Update the intent record in the same change as copy or positioning that changes the query a page targets.
 
 ### Paid landing pages
-- **R15 — Ad parameters never fork the page.** Content is identical with arbitrary advertising click parameters appended; those parameters never appear in canonicals or the sitemap (R2/R4's variant discipline, applied to the ad case); dedicated landing URL spaces are classified like any route (R1).
-- **R16 — Landing URLs answer directly.** An ad destination answers success with no redirect chain; a vanity alias is at most one permanent redirect.
+
+- **R15: Ignore advertising parameters when rendering.** Keep page content unchanged when click-tracking parameters are present. Exclude those parameters from canonical URLs and the sitemap.
+- **R16: Avoid redirect chains.** Make an advertising destination return success directly. Allow a vanity alias at most one permanent redirect.
+
+Classify dedicated landing-page routes through R1 like any other route.
 
 ### Loading experience
-- **R19 — Meet the published loading-experience bar.** Indexable pages meet the search engines' currently published loading-experience thresholds — main-content loading, responsiveness to input, visual stability. The published values are the bar; this document freezes no numbers.
-- **R20 — Rule out the structural causes of slowness.** Media and embeds reserve their space before arrival (no layout shift); primary content is never deferred behind client-side scripting or user interaction; each indexable route respects the project's declared payload budget (gate G6).
+
+- **R19: Meet current published search thresholds.** Measure primary-content loading, interaction responsiveness, and visual stability on the running page. Use the search engines' current published thresholds rather than values copied into this document.
+- **R20: Prevent structural performance failures.** Reserve space for media and embeds. Keep primary content out of interaction-gated or client-only loading. Enforce the project's payload budget for every indexable route.
 
 ## Verify
 
-In the spirit of the base i18n key-parity check, the adopting project's suite asserts from day 1:
-- **G1** — no route/URL space is unclassified (R1).
-- **G2** — the sitemap derives from the registry: regeneration produces no diff (R9).
-- **G3** — every non-production environment configuration answers noindex (R10).
-- **G4** — every indexable route has an intent record (R12).
-- **G5** — no two same-locale indexable routes record the same intent (R12).
-- **G6** — no indexable route exceeds the declared payload budget (R20).
+Add these automated gates when the add-on is adopted:
 
-Correctness is observed, not inferred (base *Goal-driven execution*). Per rule, fetch and see:
-- **R3/R4/R7** — fetch an indexable page raw → full content, unique title and description, one absolute canonical, share tags + image.
-- **R2/R4** — fetch a variant URL → permanent redirect to, or canonical pointing at, the base page.
-- **R5/R6** — fetch a pre-rename URL → permanent redirect to the new slug; fetch a nonexistent entity → not-found status.
-- **R8** — entity markup content is a subset of the visible page content.
-- **R9** — fetch the sitemap and robots → exactly the indexable set, nothing more.
-- **R10/R11** — fetch any non-production page → noindex present (G3 asserts it in the suite); fetch as a bot and as a browser → same content.
-- **R12** — review the route registry → every indexable route carries one intent per locale (G4/G5 assert it in the suite).
-- **R13** — fetch an indexable page raw → exactly one top-level heading, no skipped levels; title, slug, and heading match the recorded intent.
-- **R14** — follow links from the indexable entry pages → every indexable page is reached; a sitemap-only page is an orphan.
-- **R15/R16** — fetch a page with arbitrary ad click parameters → identical content, parameter-free canonical, no such variant in the sitemap; fetch an ad destination → direct success, its alias → one permanent hop.
-- **R17/R18** — fetch the ownership-verification response, redeploy, fetch again → present both times; regenerate the inventory → exactly the indexable routes with their intents, no diff.
-- **R19/R20** — measure a running indexable page on the three axes → meets the engines' published thresholds; no visible layout shift, and the primary content is already in the raw response (G6 asserts the budget in the suite).
+| Gate | Assertion |
+|---|---|
+| G1 | Every route or URL space has an indexability classification |
+| G2 | Regenerating sitemap and robots output produces no diff |
+| G3 | Every non-production configuration returns a no-index directive |
+| G4 | Every indexable route has an intent for each supported locale |
+| G5 | No two indexable routes in one locale target the same intent |
+| G6 | No indexable route exceeds the declared payload budget |
 
-Once live, register the production origin with the search engines' index-coverage tooling and watch it — deindexing shows up there first.
+Also verify the running application:
+
+- Fetch an indexable page without running scripts. Confirm full content, unique metadata, share image, and one absolute canonical.
+- Fetch URL variants. Confirm a permanent redirect or canonical to the base page.
+- Fetch an old slug and a missing entity. Confirm a permanent redirect and a not-found or gone response.
+- Compare structured data with visible content. Confirm it describes only content on the page.
+- Fetch the sitemap and robots output. Confirm they match the route registry.
+- Fetch a non-production page. Confirm the no-index directive.
+- Fetch as a crawler and a normal browser. Confirm the content is the same.
+- Inspect an indexable page's headings and metadata. Confirm they match its recorded intent.
+- Crawl links from the public entry pages. Confirm every indexable page is reachable.
+- Add arbitrary advertising parameters. Confirm unchanged content, a clean canonical, and no parameterized sitemap entry.
+- Fetch an advertising destination. Confirm direct success or one permanent redirect from its alias.
+- Fetch ownership verification before and after a deployment. Confirm the configured response persists.
+- Regenerate the URL-to-intent inventory. Confirm it matches the registry.
+- Measure loading, responsiveness, and visual stability. Confirm the page meets current published thresholds.
+
+After release, register the production origin with the relevant search-console products and monitor index coverage.
 
 ## Binds to a stack
 
-The adopting project derives the answer to each seam item from the active pack's appendices and records it, keyed by id, in the requirement spec that implements this add-on (top-level `specs/`).
+Record each binding in the requirement spec:
 
-- **S1** — the rendering mechanism that makes indexable routes complete without client-side scripts (R3).
-- **S2** — the metadata helper and its home: title/description/canonical/share tags + share image (R7).
-- **S3** — the canonical-origin validated-config key home, and the server/edge permanent-redirect mechanism (R4/R5).
-- **S4** — how sitemap and robots are generated from the route registry and served (R9).
-- **S5** — how a missing entity becomes a real not-found status (R6).
-- **S6** — the structured-data helper home (R8).
-- **S7** — the locale-alternates home (multilingual projects only; an explicit "n/a" otherwise, never silence).
-- **S8** — where the intent record lives on the pack's route-registry binding, and how the page↔intent inventory is derived and served from it (R12, R18).
-- **S9** — how the ownership-verification response is served from the validated-config home (R17).
-- **S10** — the payload-budget home and its suite assertion (G6), and the mechanism used to measure the three loading-experience axes on the running page (R19/R20).
+- **S1:** server-rendering mechanism used by R3;
+- **S2:** metadata helper and its location;
+- **S3:** canonical-origin configuration and permanent-redirect mechanism;
+- **S4:** sitemap and robots generation and serving;
+- **S5:** not-found response mechanism;
+- **S6:** structured-data helper and its location;
+- **S7:** locale-alternate mechanism, or an explicit not-applicable decision;
+- **S8:** route-intent storage and URL-to-intent inventory generation;
+- **S9:** ownership-verification response mechanism;
+- **S10:** payload-budget assertion and loading-experience measurement.
 
 ## Interactions
 
-- **Base *URL routing*** — the route registry gains the classification (R1) and feeds sitemap/robots (R9); registry-built URLs keep canonicals consistent (R4).
-- **Base *Configuration*** — the canonical origin (S3) is a validated config value.
-- **Base *Internationalisation*** — locale alternates (S7) derive from the same locale set the dictionaries define; per-locale intent uniqueness (R12/G5) rides the same set.
-- **Base *Microcopy & content*** — titles and descriptions (R7) live with the rest of the copy.
-- **Base *Interaction feedback & perceived performance*** — general performance stays owned by the base; this add-on owns only the indexable-page ranking-factor slice (R19/R20), duplicating nothing.
-- **test-mode** — same fail-closed posture, different axis: test-mode stubs side effects per request; this add-on denies indexing per environment (R10).
+- **Frontend URL routing:** extend the route registry with indexability and intent. Use registry-built URLs for canonicals, sitemap entries, and internal links.
+- **Base configuration:** keep the production origin and ownership-verification value in validated configuration.
+- **Frontend internationalisation:** derive locale alternates and per-locale intent checks from the supported locale set.
+- **Frontend copy:** keep titles and descriptions in the central copy location.
+- **Frontend performance:** use the base performance rules for the application as a whole. This add-on adds the ranking-related requirements for indexable pages.
+- **test-mode:** keep the two fail-closed rules separate. Test mode controls side effects per request; SEO indexing is controlled per environment.

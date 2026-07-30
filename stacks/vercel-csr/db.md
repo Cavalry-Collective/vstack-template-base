@@ -1,73 +1,73 @@
-# Postgres (Neon) + node-pg-migrate + pg — db appendix
+# Postgres and Neon: database appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds the base `db/CLAUDE.md` (+ the backend repo ring) to **Postgres** — **Neon** (serverless, via the Vercel marketplace) in production, a fixed-name Docker container locally — with **node-pg-migrate** for migrations and **`pg`** (node-postgres) as the query layer. Read the base files first.
+Use Postgres 16 locally, Neon in deployed environments, node-pg-migrate for migrations, and `pg` for queries.
 
-## Scope
+## Tools
 
-This file owns migrations, seed, schema conventions, and the repo-ring query/pool/transaction mechanics. Container wiring and the Vercel entrypoint live in `./backend.md`; provisioning lives in `./infra.md`.
-
-## Tool picks
-
-- **node-pg-migrate** — migrations with real paired `up`/`down`, so the base reversibility and up→down→up round-trip rules apply verbatim, with no override.
-- **`pg` directly — no ORM** (rejected: Prisma/Drizzle): repos are thin mappers over explicit SQL, there is no codegen step or client weight on a cold-starting function, and the SQL is reviewed as SQL.
+- Keep migrations under `db/migrations/`.
+- Use CommonJS `.cjs` migration files with `up(pgm)` and `down(pgm)`.
+- Use `pg` directly in repositories; do not add an ORM.
+- Use Neon's pooled endpoint for application traffic and its direct endpoint for migrations.
 
 ## Migrations
 
-- Live under `db/migrations/`, run via the root `migrate` verb (node-pg-migrate `up`, pointed at `db/migrations`; rollback via `migrate:down`). Create with `node-pg-migrate create <verb_noun>` — the generated epoch-ms prefix satisfies the base timestamp rule.
-- **Migrations are CommonJS `.cjs` files**, each exporting `up(pgm)` and `down(pgm)`. node-pg-migrate loads them via `require()` and the workspace is `"type": "module"`, so a `.js` ESM migration fails to load.
-- **Reversibility, bound:** every `up` ships its real `down`. A genuinely irreversible change sets `exports.down = false` *and* carries the base's justification comment — never silently.
-- Each migration runs **in a transaction by default** (base rule satisfied). Disable per migration only for DDL that demands it (e.g. `CREATE INDEX CONCURRENTLY`), with a comment saying so.
-- Prefer the `pgm` builders (`createTable`, `addColumns`, `createIndex`); drop to `pgm.sql` for anything they don't express.
-- **Run migrations against the direct (non-pooled) connection string.** The app runs on the pooled endpoint (see *Repo ring binding*); DDL and migration locks through a transaction pooler misbehave.
+- Create migrations with `node-pg-migrate create <verb_noun>`.
+- Keep the generated timestamp prefix.
+- Implement a real `down` for every `up`. Use `exports.down = false` only with the base irreversible-change justification.
+- Keep the default transaction. Disable it only for DDL that requires it and explain why in the migration.
+- Prefer node-pg-migrate builders and use `pgm.sql` only when needed.
+- Run migration DDL through the direct, non-pooled connection.
 
-## Schema conventions
+## Schema
 
-- Base schema conventions apply unchanged (`db/CLAUDE.md` *Schema conventions*) — bound here: `created_at`/`updated_at` as `timestamptz` defaulted `now()`; FK/filter indexes declared explicitly (Postgres does not auto-index FKs); money as integer minor units or `numeric(p,s)`; unique-violation → domain conflict → `409`.
-- **uuid primary keys** via `gen_random_uuid()` (opaque, non-enumerable).
-- **Fixed value sets are `text` + a `CHECK` constraint, not native enums** (rejected: Postgres enum types — `ALTER TYPE … ADD VALUE` is non-transactional and effectively one-way; widening a `CHECK` is a plain reversible migration).
+- Use `uuid` primary keys from `gen_random_uuid()`.
+- Use `timestamptz` with `now()` for timestamps.
+- Add indexes for every foreign key and frequent filter or sort.
+- Use integer minor units or `numeric(p,s)` for money.
+- Represent fixed value sets as `text` with a `CHECK`, not native Postgres enums.
+- Map unique violations to the domain conflict response.
 
-## Repo ring binding (`pg`)
+## Repository binding
 
-- **One `pg.Pool` per process**, created at boot by the backend's db aspect with `max: DB_POOL_MAX`; repos receive it via the container — never construct their own client.
-- **Serverless pooling:** every function instance has its own pool and instances multiply under load. Keep `DB_POOL_MAX` **small in production** (single digits) and point the runtime `DATABASE_URL` at **Neon's pooled (PgBouncer) endpoint**, so many instances share one Postgres safely; locally the defaults are fine.
-- **Parameterized queries only** (`$1` placeholders) — the base "never interpolate request data" rule, bound; string-built SQL is the greppable violation.
-- **Mappers at the boundary:** each repo translates rows ↔ domain objects; a raw row (snake_case fields) never crosses inward. Select explicit column lists where a subset suffices — no reflexive `SELECT *`.
-- **Transactions:** the db aspect exports `withTransaction(work)` — the callback receives a client, and repos accept an optional client argument so a multi-write use case shares one transaction. Services receive `withTransaction` from the container and never import `pg`. A single-write use case relies on the statement's own atomicity — don't open a transaction for one `INSERT`.
+- Create one `pg.Pool` per process with an explicit `DB_POOL_MAX`.
+- Keep the production pool small and point it at Neon's pooled endpoint.
+- Use parameterised `$1` queries only.
+- Map snake_case rows to domain objects inside the repository.
+- Select explicit columns where a subset is sufficient.
+- Expose `withTransaction(work)` from the database aspect. Pass its client to every repository participating in the use case.
+- Do not open a transaction for one atomic statement.
 
-## Local dev & seed
+## Local databases
 
-- **Local Postgres is one fixed-name Docker container** (`postgres:16`), started by the root `db:up`/`bootstrap` script with start-or-run semantics, shared across worktrees per the root `CLAUDE.md` — reuse it, never start a second copy.
-- **Seed:** `db/seed-dev.<ext>`, idempotent (upsert by business key), run explicitly via a root script with `--env-file` — non-production only (base rule stands).
-- **One shared container, one database per worktree.** Round-trip and destructive checks run against your own worktree database — scratch by construction; never run `migrate`/`migrate:down`/reset against another worktree's. Set a worktree up like this:
-  1. Derive the database name from the branch: sanitize to `[a-z0-9_]`, truncate to Postgres's 63-byte identifier limit, prefix `app_` (`feature/x` → `app_feature_x`).
-  2. After copying `.env` in, re-point the db-name segment of `DATABASE_URL` at that database.
-  3. Let `bootstrap`/`db:up` create the database if missing (`CREATE DATABASE` — node-pg-migrate does not auto-create it).
-  4. Drop the database on worktree teardown.
+Run one fixed-name `postgres:16` container and one database per worktree:
+
+1. derive `app_<sanitised-branch>` using lowercase letters, digits, and underscores;
+2. truncate within Postgres's identifier limit;
+3. update the copied `DATABASE_URL`;
+4. create the database during bootstrap;
+5. drop it when removing the worktree.
+
+Keep the development seed idempotent and non-production only.
 
 ## Operations
 
-CI runs the db gate from `../README.md`'s CI checklist, against a scratch `postgres:16` service container: migrations apply from zero, the round-trip `up → down → up` passes (this fills the base `ci.yml` migration-gate stub), and the seed runs twice.
+CI must apply migrations from zero, run up, down, and up, then run the seed twice.
 
-### Production & staging migrations (Neon)
+Vercel does not run migrations during deployment:
 
-**Deploys do not run migrations.** Vercel builds and ships the deployment; nothing runs `migrate`. Run each migration manually, before the push that needs it, against the target Neon branch:
+1. confirm the target Neon branch;
+2. run `pnpm migrate` with its direct connection string;
+3. verify the migration table and affected schema;
+4. push the code that reads the new schema.
 
-```bash
-DATABASE_URL="<neon-prod-direct-connection-string>" pnpm migrate
-```
+Use the same order for the persistent `develop` environment. Keep every migration backward-compatible.
 
-- Use the **direct** (non-pooled) connection string (per *Migrations*); a shell-set `DATABASE_URL` wins over `--env-file`, so this overrides the local `.env` without editing it.
-- Confirm the target first — this writes the live DB — then verify the `pgmigrations` table and the affected tables.
-- **Migrate before you push the code that reads the new schema.** A push deploys on Vercel's pipeline without waiting for any migration (`./infra.md` → *Deploy seam*).
-- Keep each migration **backward-compatible** (expand → migrate → contract, base `db/CLAUDE.md`) so the brief window where the previous deployment meets the new schema — or the new deployment meets the old — never breaks.
-- **Staging (`develop`) is the same runbook against its own Neon branch** — migrate it before pushing `develop`; pull its connection string per *Gotchas*.
+## Gotcha
 
-## Gotchas
-
-- **`vercel env pull --git-branch=develop` does not export the branch-scoped `DATABASE_URL`** — it comes back empty. Take the develop branch's connection string from Terraform state or the Neon console, and never migrate through the Neon-injected `POSTGRES_URL` — it points at the **production** branch.
+`vercel env pull --git-branch=develop` may omit the branch-scoped `DATABASE_URL`. Read it from Terraform state or the Neon console. Do not use an injected production `POSTGRES_URL` for staging.
 
 ## Conflict register
 
-- **Base says:** Shared local infrastructure (a containerized DB) is shared across worktrees by a fixed name, and the shared DB's schema is **global state** across worktrees — destructive checks go to a throwaway DB (root `CLAUDE.md`; `db/CLAUDE.md`). **In this stack:** the *server* stays shared by its fixed name, but each worktree migrates its own `app_<sanitized-branch>` database, created on bootstrap and dropped on teardown. **Because:** parallel worktrees applying different branches' migrations to one schema break each other; per-worktree databases remove the hazard and make the up→down→up round-trip safe by construction, with no second container. **Concretely:** after copying `.env` in, re-point the db-name segment of `DATABASE_URL` at this worktree's database; DON'T run `migrate`/`migrate:down`/reset against the shared default database or another worktree's.
+- **Base says:** the fixed-name local database is shared and destructive checks need a throwaway database. **In this stack:** the Postgres server is shared but each worktree has its own database. **Because:** parallel migration histories cannot safely share one schema. **Concretely:** repoint `DATABASE_URL` after copying the environment file; DON'T migrate, reset, or roll back another worktree's database.

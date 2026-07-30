@@ -1,59 +1,78 @@
-# Tencent Cloud — infra appendix
+# Tencent Cloud: infrastructure appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `infra/CLAUDE.md` to the **`tencentcloud` Terraform provider**: the product runs on Tencent Cloud — **SCF** (a Web Function serving API + the H5 bundle, plus a separate migrate function), **CynosDB** (MySQL, serverless), **COS** (private media), **VOD** (video), **EdgeOne** (CDN/WAF edge). Read the base first; its workflow, risk-review format, and approval guardrails apply unchanged.
+Bind infrastructure to the Tencent Cloud Terraform provider, SCF, CynosDB, COS, VOD, and EdgeOne.
 
-## Scope
+## Layout and context
 
-This file owns provisioning and the deploy pipeline: the Terraform layout and each Tencent service's shape. The function code and bundle live in `./backend.md`; migration execution lives in `./db.md`.
+- Keep environment roots under `infra/terraform/envs/<env>/`.
+- Keep shared `network`, `compute`, `database`, `storage`, and `edgeone` modules under `infra/terraform/modules/`.
+- Preserve explicit resource blocks inside modules.
+- Authenticate through `TENCENTCLOUD_SECRET_ID` and `TENCENTCLOUD_SECRET_KEY`.
+- Verify account and region with `tccli`, then confirm the target environment before planning or applying.
 
-## Workload shape
+## Network and edge
 
-- `infra/terraform/` with per-environment root modules (`envs/<env>/`) calling shared `modules/` (`network`, `compute`, `database`, `storage`, `edgeone`). The base prefers a flat per-workload layout, but two-or-more environments sharing the same shape is exactly when the base permits a `modules/` directory — keep each module focused, and keep the explicit-resource / no-`for_each` authoring style inside them.
-- **Auth / context** (base start-of-session check, bound): the provider authenticates with `TENCENTCLOUD_SECRET_ID`/`KEY`; verify the active account + region with `tccli` before any plan or apply, and confirm the target environment with the user. Don't assume the previous context.
-- **Networking — a VPC for the DB, public-net for egress.** Author a VPC with one private subnet: CynosDB serverless is VPC-locked, so the SCF functions and the DB cluster attach to the same subnet (a DB security group admits it) and the app reaches the DB privately. Outbound internet uses public-net egress (`enable_public_net = true` on the function), **not a NAT gateway** — don't scaffold a NAT/EIP for egress.
-- **Edge — an EdgeOne (TEO) zone** (partial/CNAME) fronts the SCF Web Function origin for both the app and `api.` acceleration domains; WAF + rate limiting live here, and the direct SCF URL is unadvertised.
+- Create one VPC and private subnet for CynosDB and both functions.
+- Allow database access only from the function security group.
+- Enable SCF public-network egress instead of adding a NAT gateway.
+- Put an EdgeOne partial or CNAME zone in front of the Web Function.
+- Configure WAF and rate limiting at EdgeOne.
+- Keep the direct SCF URL unadvertised.
 
-## Compute — SCF
+## Compute
 
-- **One SCF Web Function** (`type = "HTTP"`) runs the Fastify app; `scf_bootstrap` (`exec node handler.js`) is the entry, and the process **`listen()`s** on the platform port — SCF proxies HTTP to it (no request-adapter wrapper; `./backend.md`). It serves both `/api/*` and the bundled H5 (`@fastify/static`) — one function is the whole app.
-- **A separate SCF *event* function** (`<project>-migrate`, handler `migrate.main_handler`, ~900 s timeout, **no HTTP trigger**, CAM-authenticated) runs migrations + seeds — invoked by the pipeline, never public.
-- **Terraform owns function config, env vars, the CAM role, and triggers — not the code zip.** The pipeline pushes code **out-of-band** via `UpdateFunctionCode` after `apply`, because the provider's `zip_file` drift detection fights a CI that rebuilds the artifact each run. One explicit `resource` per object (base style); env vars set per function.
+- Run the application as one SCF HTTP Web Function.
+- Start it through `scf_bootstrap` and let Fastify listen on the platform port.
+- Serve both `/api/*` and the H5 bundle.
+- Run migrations and controlled seeds in a separate CAM-authenticated event function with no HTTP trigger.
+- Let Terraform own function configuration, environment, roles, and triggers.
+- Upload function code out of band after Terraform to avoid zip drift.
 
-## Database — CynosDB serverless
+## Database
 
-- **CynosDB MySQL in `SERVERLESS` mode** (min/max CCU, postpaid), which **auto-pauses after idle** (~2 h). The deploy pipeline **resumes a paused cluster before `terraform apply`** (`tccli ... ResumeServerless`, then poll `serverless_status` until `running`) — and a cold request path may still hit a resuming DB, so tolerate first-hit latency.
-- **Backups are two-tier:** the serverless tier's physical snapshots / PITR are **hard-capped at 7 days** — any longer retention is rejected. For a longer compliance window, run an **automatic logical backup** (mysqldump → COS) at the retention you need, alongside the 7-day physical.
-- DB credentials come from env (`DB_PASSWORD`, injected via Terraform / pipeline secrets, never committed) — pack decision, see the README. Migration execution → `./db.md`.
+- Run CynosDB MySQL in serverless mode with explicit minimum and maximum capacity.
+- Resume an auto-paused cluster before Terraform and poll until it is running.
+- Accept first-request resume latency in application behaviour.
+- Keep physical snapshots and point-in-time recovery within the platform's seven-day limit.
+- Add scheduled logical backups to COS when compliance requires longer retention.
+- Inject database credentials through deployment secrets.
 
-## Storage — COS + VOD
+## Storage and video
 
-- **Media COS bucket is private** (AES256 + versioning); the app never serves a public object URL — it mints **signed GET** URLs and **presigned PUT** URLs server-side (`lib/cos`). The SCF role is scoped to the app's media prefixes only, never the whole bucket; a lifecycle rule expires orphaned uploads. **Cross-region DR replication is configured** — the media bucket replicates to a bucket in a second region (objects written after enablement; no automatic backfill).
-- **VOD (video):** upload signatures are HMAC-signed with a **permanent CAM key** (`TENCENT_SECRET_ID`/`KEY` of a dedicated VOD-scoped sub-user) — **VOD upload signing does not accept STS temporary creds**, so this key is long-lived by necessity, injected via Terraform. A VOD **procedure** transcodes to adaptive-HLS + a cover on upload; the completion **callback is unsigned** and validated by FileId ownership + an authoritative VOD read.
+- Keep the media COS bucket private, encrypted, versioned, and replicated to another region.
+- Issue signed reads and presigned writes from the backend.
+- Limit the SCF role to the application's prefixes.
+- Expire orphaned uploads.
+- Use a dedicated VOD-scoped permanent CAM key for upload signing.
+- Transcode uploads to adaptive HLS and generate a cover through a VOD procedure.
+- Validate unsigned completion callbacks by FileId ownership and an authoritative VOD read.
 
-## Deploy pipeline — GitHub Actions (`.github/workflows/deploy.yml`)
+## Deployment
 
-This stack **fills `deploy.yml` in**. Protect the default branch so CI is green before merge — that green-CI gate is the release gate (base root rule), and a push then both merges and deploys. On a push to the default branch (or `workflow_dispatch` with `reset_schema` / `force_reseed_test_users` inputs), the ordered job:
+The protected default-branch pipeline must:
 
-1. builds the frontend same-origin (`TARO_APP_API_BASE=/api`);
-2. esbuild-bundles `handler.js` + `migrate.js` and composes **one SCF zip** — bootstrap + `node_modules` (`mysql2` only) + `db/migrations/` + the H5 `public/`;
-3. **resumes CynosDB** if auto-paused;
-4. `terraform apply` (state in a COS backend);
-5. pushes function code out-of-band (`UpdateFunctionCode`);
-6. **invokes the migrate function** (`./db.md`);
-7. **smoke-tests** the live URL (a few fetches under an SLO).
+1. build H5 with `TARO_APP_API_BASE=/api`;
+2. build the SCF application and migration bundles;
+3. resume CynosDB;
+4. apply Terraform using the COS state backend;
+5. upload function code;
+6. invoke the migration function;
+7. smoke-test the live URL.
 
-## Observability
+Keep reset and forced reseed behind manual workflow inputs.
 
-Bringing the workload online includes its observability (base *infra* go-live rule): **SCF logs drain to CLS (Cloud Log Service)** — set the topic retention **explicitly** (the platform default is short) so the backend's structured lines (correlation id, handled errors, integration/webhook results) stay queryable. COS media has versioning (+ the DR replica); CynosDB has the two-tier backup (see *Database*).
+## Observability and domain setup
 
-## Gotchas
-
-- **Mainland ICP:** a mainland-region deployment (e.g. `ap-guangzhou`) requires an **ICP filing** for the domain. Un-ICP'd domains get a `Content-Disposition: attachment` header injected by Tencent — an EdgeOne response-header rule strips it until the filing lands. Budget for ICP lead time when standing up a new domain.
+- Send SCF logs to CLS with explicit retention.
+- Keep structured correlation, error, integration, and webhook fields queryable.
+- Use COS versioning and replication for media recovery.
+- Account for ICP filing lead time for mainland domains.
+- Remove Tencent's temporary download header through EdgeOne only until the ICP filing is active.
 
 ## Conflict register
 
-- **Base says:** the base infra contract uses GCP as its worked example — the **(GCP)** context commands / bulk-export and the networking convention (custom-mode VPC, explicit subnets/firewalls/NAT) apply, with AWS/Azure equivalents. **In this stack:** the cloud is **Tencent Cloud**. The context check maps to `tccli` + `TENCENTCLOUD_SECRET_ID/KEY`; the VPC/subnet convention **partly binds** — author a VPC + private subnet for the VPC-locked CynosDB, but **no NAT gateway** (SCF uses public-net egress). **Because:** this pack's identity is Tencent-Cloud-serverless. **Concretely:** DO author `tencentcloud_*` resources per the workload shape (VPC/subnet included) and verify context with `tccli`; DON'T scaffold a GCP provider, a NAT gateway for egress, or gcloud-based context checks.
-- **Base says (root `CLAUDE.md`):** `deploy.yml` runs after a green CI run on the default branch (a `workflow_run` trigger), shipping once its deploy step is filled in. **In this stack:** `deploy.yml` triggers **on push to the default branch** (+ `workflow_dispatch`) and is a first-class ordered pipeline (build → zip → resume DB → `terraform apply` → out-of-band code push → migrate-invoke → smoke). **Because:** the SCF release must run Terraform, push code, and migrate as one ordered unit, gated by branch protection rather than chained after a separate CI run. **Concretely:** DO protect the default branch so push-equals-deploy is safe, and put `reset_schema` / reseed behind `workflow_dispatch` inputs; DON'T add a second deploy path (a local `pnpm deploy` exists for emergencies only, per the root contract).
-- **Base says:** `infra/` is organised per workload — each subdirectory a self-contained root module, environments as separate root modules under the workload (`infra/<workload>/<env>/`). **In this stack:** the single workload lives at `infra/terraform/`, with per-environment roots under `envs/<env>/` calling shared `modules/`. **Because:** one product with several environments sharing one shape — the extra `envs/` level keeps the environment roots and the shared modules side by side. **Concretely:** DO add a new environment as `envs/<env>/` calling the same modules; DON'T create a second top-level workload directory for an environment.
+- **Base says:** the infrastructure guide uses GCP networking as its worked example. **In this stack:** use Tencent Cloud, a private VPC for CynosDB, and SCF public-network egress without NAT. **Because:** CynosDB is VPC-locked while SCF provides managed outbound access. **Concretely:** DO author `tencentcloud_*` resources and verify context with `tccli`; DON'T add GCP resources or a NAT gateway.
+- **Base says:** `deploy.yml` runs after CI through a workflow-run trigger. **In this stack:** the protected default-branch push runs one ordered build, infrastructure, code, migration, and smoke pipeline. **Because:** the SCF release must coordinate all five states as one unit. **Concretely:** protect the branch and keep one deploy workflow; DON'T add a second deployment path.
+- **Base says:** use `infra/<workload>/<env>/` for environment roots. **In this stack:** roots live at `infra/terraform/envs/<env>/` and share focused modules. **Because:** all environments are one workload with the same Tencent shape. **Concretely:** add environments under `envs/` and reuse the modules; DON'T create one top-level workload directory per environment.

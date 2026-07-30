@@ -1,70 +1,68 @@
 # Stack pack: enterprise
 
-Frontend: **Next.js** (App Router, server-first). Backend: **NestJS**. DB: **Postgres via Prisma**. Language-neutral: TypeScript or plain JavaScript, with JS-path notes in each appendix.
+Use this pack for a server-first Next.js frontend with a separate NestJS API and Prisma/Postgres.
 
-This is the manifest — it wires the pack onto a project. Bindings and conflict registers live in the three appendices. For what a pack is and the invariants every appendix follows, see `../README.md`.
+| Area | Choice |
+|---|---|
+| Identity | `nextjs-nestjs-postgres` |
+| Frontend | Next.js App Router, server-first, JavaScript or TypeScript |
+| Backend | NestJS on Fastify, JavaScript or TypeScript |
+| Database | Postgres, Prisma |
+| Platform | Platform-neutral; no `infra.md` |
 
-## Identity & naming
+Choose this pack when separate frontend and backend deployables, framework conventions, and team-scale dependency injection are useful.
 
-Named for its architectural character — the structured, batteries-included stack (NestJS modules + DI, Prisma, App Router) an adopter picks for team-scale, convention-heavy work. The underlying triple is `nextjs-nestjs-postgres` (per `../README.md`).
+## Appendices
 
-Unlike the platform-named siblings (`vercel-csr`, `vercel-ssr`, `wechat`), this pack is platform-neutral — it deploys through whatever the base `infra/` contract stands up.
+| File | Covers |
+|---|---|
+| `frontend.md` | App Router, Nest API access, client/server state, testing |
+| `backend.md` | Nest modules, onion rings, DI, aspects, testing |
+| `db.md` | Prisma schema, forward-only migrations, transactions, local database |
 
-## Appendix → base mapping
+## Day-1 setup
 
-| Appendix | Binds onto | Scope |
-|---|---|---|
-| `frontend.md` | `apps/frontend/CLAUDE.md` | App Router, server-first rendering, four-states mapping, form-factor rule |
-| `backend.md` | `apps/backend/CLAUDE.md` | NestJS module/provider → onion mapping, Zod validation, JS Babel decorator setup |
-| `db.md` | `db/CLAUDE.md` + repo ring | Prisma schema, migrations (`migrations.path → db/migrations`, root-config-relative), client wiring |
+1. Keep this directory and delete the other stack packs.
+2. Complete the root checklist for a server-first frontend and remove SPA-only wording.
+3. Copy the command block below into root `CLAUDE.md`.
+4. Implement the CI checklist in `.github/workflows/ci.yml`.
+5. Record `Stack: enterprise; appendices under stacks/enterprise/` in root `CLAUDE.md` **Learnings**.
 
-This pack ships no `infra.md` (infra is cloud-shaped, not app-stack-shaped). Each appendix opens with the verbatim precedence line and ends with its conflict register (see `../README.md`). Conflicts live in the appendices, not here.
-
-## Day-1 wiring
-
-Run as part of the root `README.md` `## Day-1 checklist`:
-
-1. Delete every other `stacks/*` directory. The one pack left is the adopted one; each area's `CLAUDE.md` then points agents at the matching appendix here (mechanism: `../README.md` *Activation*). Nothing to generate or rerun; the appendices are read in place.
-2. Copy the **dev block** below over the root `CLAUDE.md` "Common commands" placeholder. Delete the banner.
-3. Apply the **CI checklist** below to `.github/workflows/ci.yml`. Never paste the same block in both places.
-4. Record in root `CLAUDE.md` **Learnings**: `Stack: enterprise; appendices under stacks/enterprise/`.
-
-## Commands
-
-pnpm workspaces over `apps/*`. Suggested defaults — keep one verb per base placeholder if you swap tools (turbo, etc.).
-
-**Dev block → root `CLAUDE.md` "Common commands":**
+Use pnpm workspaces across both applications. Choose JavaScript or TypeScript once per app and keep one language within that app.
 
 ```bash
-pnpm bootstrap   # install; start local Postgres (fixed-name docker container, shared across worktrees); prisma generate; prisma migrate dev; run both dev servers
-pnpm dev         # Nest watch + Next dev server
-pnpm lint        # workspace lint, both apps
-pnpm typecheck   # tsc --noEmit per app (explicit no-op in a plain-JS app)
-pnpm test        # both suites
-pnpm build       # prisma generate, then next build + nest build
-pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
+pnpm bootstrap   # install + shared Postgres + prisma generate + migrate + dev
+pnpm dev         # Nest watch + Next dev
+pnpm lint        # lint both apps
+pnpm typecheck   # tsc per TS app; explicit no-op per JS app
+pnpm test        # both unit suites; Playwright is test:e2e
+pnpm build       # prisma generate + Next build + Nest build
+pnpm migrate     # prisma migrate dev; local only
 ```
 
-**CI checklist → `.github/workflows/ci.yml`** (non-interactive):
+## CI
 
-- A Postgres service container.
-- `pnpm install --frozen-lockfile`.
-- `prisma generate`, then `prisma migrate deploy` — never `prisma migrate dev` in CI (it can reset the DB or prompt).
-- `pnpm lint`; `pnpm typecheck`.
-- `next build` + `nest build`.
-- Non-watch `pnpm test`.
-- The frontend i18n key-parity check — the base gate stands unchanged.
-- The db appendix's §Operations gates: apply-from-zero on a scratch DB, the `migrate diff` drift gate (this pack's `ci.yml` migration gate; `db.md`'s register replaces the base round-trip rule), and the seed run twice.
+- Start a Postgres service.
+- Run `pnpm install --frozen-lockfile`.
+- Run `prisma generate` and `prisma migrate deploy`.
+- Run lint, typecheck, non-watch tests, `next build`, and `nest build`.
+- Run the i18n parity and accessibility gates from the base workflow.
+- Apply migrations from zero and run the Prisma drift checks from `db.md`.
+- Run the seed twice.
+- Run Playwright separately against the running stack through `E2E_BASE_URL`.
 
-## Pack decisions
+## Decisions
 
-- **NestJS on the Fastify adapter** (`@nestjs/platform-fastify`), for throughput and the Fastify plugin ecosystem (rejected: the default Express adapter — acceptable with a concrete reason; record the swap here).
-- **Zod** for validation — at the NestJS controller edge and for Next form/response schemas; a shape shared across the two apps is defined once and reused. Decorator-free, so it works identically in JS and TS (rejected: class-validator + `ValidationPipe`, whose DTOs need Babel-fragile decorator metadata). Details in `backend.md` / `frontend.md`.
-- **`AsyncLocalStorage`** via `nestjs-cls` for request context (rejected: request-scoped providers, which rebuild the DI subtree per request).
-- **The pack's own `PrismaService`** (rejected: the third-party `nestjs-prisma` package).
-- **Build orchestrator: the Nest CLI and `next build` per app** under pnpm workspaces — no Nx/Turbo by default.
-- Further decisions and their rejected alternatives are recorded in each appendix's conflict register.
+- Use NestJS on the Fastify adapter.
+- Use Zod for Nest DTOs, Next forms, API responses, and environment validation.
+- Use `nestjs-cls` over request-scoped providers for request context.
+- Use the pack's `PrismaService` rather than `nestjs-prisma`.
+- Use Nest modules as composition roots and preserve the onion ring folders within them.
+- Use the Nest CLI and `next build`; do not add Nx or Turbo by default.
 
-## Deploy seam
+## Deployment
 
-- `prisma migrate deploy` and the Next build output deploy and run through the cloud pipeline — see `infra/CLAUDE.md` (Terraform) for where migrate-on-deploy runs.
+- Deploy Next.js and NestJS as separate workloads through the infrastructure contract.
+- Run `prisma migrate deploy` before code that requires the new schema.
+- Keep the browser on the Next.js origin; Next server services call Nest's `/internal/v1` API.
+- Keep Prisma out of `apps/frontend`.

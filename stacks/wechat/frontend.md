@@ -1,66 +1,64 @@
-# Taro 4 H5 — frontend appendix
+# Taro H5: frontend appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Binds `apps/frontend/CLAUDE.md` to **Taro 4 (H5 target, React 18, plain JavaScript)**, built to static assets and **served by the backend** (`@fastify/static`) so the browser talks to one origin. Read the base file first; Taro H5 *is* the client-rendered SPA the base assumes, so most of the base binds unchanged — this file adds only the Taro-specific bindings and the marked overrides.
+Bind the frontend to Taro 4's H5 target, React 18, and plain JavaScript.
 
-## Scope
+## Bindings
 
-This file owns the Taro H5 bindings: components, routing, tokens/styling, responsive layout, video, versioning, and i18n. It consumes the Fastify backend (`./backend.md`) over REST.
+| Concern | Binding |
+|---|---|
+| Rendering | client-only H5 SPA |
+| State | Zustand slices under `src/store/` |
+| Data | `src/services/api.js` and relative `/api` |
+| Components | base atomic tiers with Taro pages |
+| Styling | CSS-variable tokens and Taro pixel transform |
+| Tests | Playwright mobile-first with `x-tenant: test` |
 
-## Stack binding at a glance
+- Keep Mini Program targets disabled.
+- Inject session credentials and the `x-tenant` mode signal through the shared API wrapper.
+- Map backend failures to the base error state.
 
-- **Taro 4, H5 target only** — no Mini Program targets active. React 18 function components, plain JS/JSX (no TypeScript; `typecheck` is a no-op).
-- **State: Zustand** — one store slice per domain under `src/store/` (the base *Layering* store rule; Zustand is the mechanism). Slices may call services; never import a page or render.
-- **Data flow: REST-only through `src/services/`** — each module mirrors a backend route group over a shared `services/api.js` fetch wrapper that injects the `x-tenant` header + session credentials and maps the backend error envelope to a typed error feeding the base *error* state. **Same-origin:** built with `TARO_APP_API_BASE=/api`, so cookies stay first-party and CORS never enters.
+## Routing
 
-## Component tiers (base *Component structure — atomic design*)
+Every page needs two entries:
 
-Use the base atomic folders — `components/{atoms,molecules,organisms,templates}/` with `pages/<name>/index.jsx` as the pages tier — unchanged; Taro imposes nothing here. The DRY gate and "never hand-roll a primitive" apply as-is (e.g. use the shared `<PageHeader>` for every nav bar).
+1. `src/app.config.js` registers the internal Taro page path;
+2. `config/index.js` `h5.router.customRoutes` maps it to the browser URL.
 
-## Routing — two Taro surfaces, kept in sync (base one-registry rule)
+Treat those files as one routing surface. Do not maintain a third route table or expose `/pages/...` paths in browser links.
 
-The base's single route registry binds to **two** Taro files that must change together; there is no `routes.<ext>` (see the conflict register). Add both entries the moment a page is created (the base "never ship a page without its route entry"); reading the two files together is how you audit routing — keep no third route→URL list.
+## Tokens and layout
 
-- **`src/app.config.js`** registers every page path (`pages/<name>/index`); a page not listed **does not exist**.
-- **`config/index.js` → `h5.router.customRoutes`** maps each internal path to its clean browser URL (`/pages/login/index` → `/login`) — the base "URLs never expose internal build paths" rule.
+- Keep the confirmed design tokens in `src/styles/tokens.css`.
+- Convert unsupported `oklch()` colours to hex.
+- Let components consume semantic tokens rather than primitive values.
+- Author mobile-first CSS.
+- Let `postcss-pxtransform` convert lowercase `px`; use capital `Px` only to opt out.
+- Apply safe-area insets in the shared layout.
+- Use `100dvh` with a `100vh` fallback for true app-shell surfaces.
+- Use `min-height` for normal scrollable pages.
+- Keep wide content in its own horizontal scroller.
 
-## Tokens & styling (base *Page layout & design tokens*)
+## Video, version, and i18n
 
-- **`src/styles/tokens.css` mirrors the confirmed design guide.** The base ships `design/design-guide.html` + `design/tokens.css` (base *Design guide*); confirm the guide first, then carry its token values into `src/styles/tokens.css`, converting oklch→hex on the way (next bullet).
-- **One token source: `src/styles/tokens.css`** (CSS variables), three tiers per the base (primitive → semantic → component). Pages/components consume semantic tokens only.
-- **Author colours as hex, not oklch.** Some in-app WebViews / older Android Chromium the H5 build must run on don't render `oklch()`, so an oklch token silently drops the colour.
+- Upload video directly through `vod-js-sdk-v6` using a short-lived signature from the backend.
+- Play adaptive HLS through `hls.js`.
+- Emit `version.json` with `no-store`, poll it on launch or foreground, and show a dismissible refresh prompt.
+- Render the package version.
+- Keep English and Chinese dictionaries under `src/i18n/` and enforce bidirectional key parity.
 
-## Responsive layout (Taro H5)
+## Taro H5 gotchas
 
-- **Mobile-first is the native posture** — H5 ships to phones first; author base styles at the narrowest width and scale up with `min-width` media queries. The viewport meta and `env(safe-area-inset-*)` insets are the shared layout's job (base *One shared layout*), not a per-page concern.
-- **Taro rewrites `px`→`rem` via `postcss-pxtransform` for scaling** — author in `px` and let it convert. Use capital **`Px`** to opt a value out (e.g. matching Taro's prebuilt-component sizes); lowercase `px` is rem-rescaled and drifts against Taro's built-ins.
-- **Full-height surfaces use `100dvh` with a `100vh` fallback; scrollable input pages use `min-height`.** iOS Safari's `100vh` measures the chrome-hidden viewport, so `100vh` / `inset:0` sheets clip when the toolbar shows and overflow when it hides.
-- **Wide content scrolls in its own `overflow-x:auto` box** so the page never scrolls sideways; atomic values (phone numbers, codes) are `white-space: nowrap`.
-- **Test at a phone viewport.** Run the `e2e/` Playwright workspace mobile-first with `x-tenant: test`; keep a phone-device project so the four-state specs also exercise narrow width (base *Testing*).
-
-## Video — VOD upload + HLS playback
-
-Video is an addition (no base rule): upload with **`vod-js-sdk-v6`**, fetching a short-lived upload signature from the backend `/vod/*` route (the backend holds the permanent signer key — `./infra.md`); play HLS with **`hls.js`**. Compress/transcode is VOD's job server-side; the client uploads directly to VOD, not through the backend.
-
-## Versioning / build identity
-
-This stack keeps the base's version.json approach. Emit a build-stamped `version.json`, served `no-store`. Poll it cache-busted on launch/foreground, and show a dismissible "Refresh" banner when the running build differs. Render the visible `v<version>` tag from `apps/frontend/package.json`. The app is also a PWA (install banner).
-
-## Internationalisation
-
-En/zh dictionaries live under `src/i18n/` (base *Internationalisation*); the CI **`i18n:check`** enforces key parity both directions. Name keys by meaning.
-
-## Gotchas — the Taro H5 router
-
-- **Compare a route against its customRoute *alias* (`/home`), never the internal `/pages/home/index`.** Taro's H5 runtime stores router state under the clean URL, so active-tab highlighting and nav-visibility checks must match on the alias — otherwise the check silently never matches.
-- **Portal anything that must survive navigation to `document.body`** — keep-alive tab views, the global bottom nav, overlays/sheets. Taro's H5 router stylesheet hides any `.taro_page` that isn't `:last-child` of `.taro_router`, so a persistent sibling shell otherwise blanks the deep pages; this makes the base "portal fixed chrome out of transform/stacking contexts" rule mandatory here.
-- **`Taro.redirectTo` collapses the stack and *skips* the enter transition** (it stamps `taro_page_show` + `taro_page_stationed` synchronously); tab switches use `redirectTo` to keep a 1-deep stack.
-- **A hand-driven switch animation keeps all `position: fixed` chrome outside the transformed subtree** (portalled, per the base rule) — `redirectTo` gives no transition, so any switch animation is your own keyframes.
-- **Taro H5 `pushState` fires no navigation event.** Patch `history.pushState` / `replaceState` once to emit a custom event, and drive all chrome (nav visibility, active tab, keep-alive pane selection) off a single reactive `usePathname` subscribing to that event + `popstate`.
-- **Re-implement a Taro built-in behaviour (e.g. pull-to-refresh) when the real scroll container is a body-portalled shell.** Taro attaches such behaviours to its own page scroller and can't detect a portalled container — the built-in silently does nothing there.
+- Compare routes against their clean custom-route aliases.
+- Portal persistent navigation, overlays, and fixed chrome to `document.body`.
+- Use `redirectTo` for tab switches and provide any switch animation yourself.
+- Keep fixed chrome outside transformed animation subtrees.
+- Patch `history.pushState` and `replaceState` once to emit a navigation event.
+- Drive chrome from one reactive pathname hook.
+- Reimplement page behaviour when Taro attached it to a hidden page scroller rather than the portalled shell.
 
 ## Conflict register
 
-- **Base says:** every route lives in one central registry `routes.<ext>`, and URLs are built through it. **In this stack:** Taro splits it across **two** files — `app.config.js` (page registration) and `config/index.js` `customRoutes` (internal-path → clean-URL) — with no single `routes.<ext>`. **Because:** Taro owns page registration in its own config and maps H5 URLs separately, so there is no single place to collapse them into one registry. **Concretely:** DO add both entries when creating a page and treat the pair as the routing surface to audit; DON'T maintain a third route→URL table (the base already forbids a second one), and DON'T hand-concatenate `/pages/...` paths into a browser URL.
-- **Base says:** size full-bleed sections to content, never `100vh`; where something must truly fill the viewport prefer `svh` over `vh`, and `dvh` only to deliberately track the browser chrome (base *Responsive layout*). **In this stack:** full-height surfaces use **`100dvh` with a `100vh` fallback** (see *Responsive layout* above). **Because:** these app-shell surfaces should track the visible viewport, and the older in-app WebViews this H5 build targets need the `100vh` fallback where dynamic units are unsupported. **Concretely:** DO declare `height: 100vh` then override with `height: 100dvh`; DON'T ship a bare `100vh`/`inset: 0` sheet (it clips or overflows as the iOS toolbar toggles), and DON'T use `100dvh` on ordinary scrollable pages — those use `min-height`.
+- **Base says:** routes live in one central registry. **In this stack:** Taro requires page registration and H5 URL mapping in two files. **Because:** Taro owns the two routing concerns separately. **Concretely:** add both entries for every page and audit them together; DON'T create a third route list.
+- **Base says:** prefer `svh` over `vh` for a true viewport-filling surface. **In this stack:** app-shell surfaces use `100dvh` with a preceding `100vh` fallback. **Because:** the shell must track browser chrome while older embedded WebViews need the fallback. **Concretely:** declare fallback then dynamic height for shells; DON'T use bare `100vh` or dynamic height on ordinary pages.

@@ -1,35 +1,43 @@
-# Add-on: test-mode
+# Add-on: test mode
 
-> Optional add-on. Adopt at Day-1 by keeping this directory (see `add-ons/README.md`); the active stack pack supplies the seams named under *Binds to a stack*.
+Test mode lets the complete application run without contacting real external providers. Use it for side effects that cannot be exercised freely, such as SMS, email, payments, push notifications, and third-party APIs.
 
-A first-class runtime mode that stubs external side effects so the whole app runs end to end — locally, in CI/e2e, on staging — without hitting real providers. Adopt it when the app has side effects you can't fire freely: one-time codes, SMS/email, payments, push, third-party calls. Distinct from a feature flag (which gates *whether* an integration runs) and from seed data (which supplies *content*).
+It replaces external side effects. It does not skip application flows or replace an environment-level integration flag.
 
-## Approach
+## Requirements
 
-- **Select the mode per request from an inbound signal, and fail closed to production.** The client presents the signal (a header, a signed cookie, a tenant); a request with no or unknown signal is production. Never infer test mode from a hostname or build flag, and never store it where a live request can pick it up.
-- **Stub the side effect, don't skip the flow.** The code path still runs — the code is still issued and verified, the order still records — only the external step (send, charge) is replaced by a sink, and any value the user would need is made knowable (fixed or logged). Don't branch business logic on the mode past that boundary, or test mode stops testing the real path.
-- **Select credentials by the record being acted on, not the caller's session.** When test and live data coexist, a test-flagged record uses the stub path even under a live session, and vice-versa.
-- **Every test-only affordance is gated on the mode and fails closed** — unreachable and empty/denied in production. Test mode is never a way for a real client to skip verification or payment.
-- **Test data stays out of production surfaces.** Where test and live records coexist, production lists, reports, dashboards, and analytics exclude test-flagged records by default; a production surface shows them only through an explicit, gated filter.
+- Resolve test mode once at the request boundary from a trusted signal. Treat a missing, invalid, or unknown signal as production.
+- Pass the resolved mode inward as request context. Do not infer it from a hostname or build flag, or keep it in global state.
+- Run the same business flow in both modes. Replace only the adapter that performs the external side effect.
+- Make values needed by a tester available through the test sink. For example, log an OTP code or return a fixed test value.
+- Do not branch domain logic on test mode.
+- When test and production records coexist, select the adapter from the record being acted on rather than the caller's session.
+- Gate every test-only endpoint and UI control on the resolved mode. Return no test data when the mode is absent or invalid.
+- Never let test mode bypass verification, authorisation, or payment rules.
+- Exclude test records from production lists, reports, dashboards, and analytics by default.
 
-## Test-user picker
+### Test-user picker
 
-A one-tap login picker of seeded accounts so a tester or e2e run signs in as any role instantly.
+Provide a one-action login picker when testers need to exercise several roles.
 
-- Feed it from a **test-mode-gated, unauthenticated** read that returns empty in production.
-- Render it only on the login screen and only under the mode signal.
-- Back it with realistic, named seed accounts, stable across runs (base `db/CLAUDE.md`).
+- Show it only on the login screen in test mode.
+- Read accounts from a test-mode-gated endpoint that returns an empty result in production.
+- Back it with realistic named seed accounts that remain stable across runs.
 
 ## Verify
 
-"Returns empty in production" and "unreachable in production" are assertions in the test suite, not hopes — a test-only endpoint that succeeds in prod is the exact failure this add-on prevents.
+Test that production cannot reach test-only endpoints or UI. Test that test mode executes the normal business flow through the sink and that production surfaces exclude test records.
 
 ## Binds to a stack
 
-The active pack names: the mode signal and where it's resolved; the sink each integration falls back to in test mode; and the picker endpoint and its gate.
+The active stack pack identifies:
+
+- the mode signal and where it is resolved;
+- the sink for each integration;
+- the test-user endpoint, gate, and seed mechanism.
 
 ## Interactions
 
-- **otp-auth** — test mode makes OTP walkable without a live provider; adopt both together.
-- **Base default-off integration flag** — related but different: the flag turns an integration off for a whole environment; test mode stubs it per-request where it's otherwise on.
-- **Base configuration** — the mode signal and any test credentials are validated config.
+- **otp-auth:** expose a knowable code through the delivery sink while retaining normal issue and verify logic.
+- **Base integration flag:** keep the default-off environment flag. It controls whether the real integration is enabled; test mode selects the adapter for a request or record.
+- **Base configuration:** validate test-mode settings and credentials through the normal configuration path.
