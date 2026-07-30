@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Email **security@cavalry.sg** with the affected file or rule, the risk, and a reproduction if there is one. Do not open a public issue for a security report.
+Email **adam@cavalry.sg** with the affected file or rule, the risk, and a reproduction if there is one. Do not open a public issue for a security report.
 
 Expect an acknowledgement within five working days.
 
