@@ -49,7 +49,7 @@ Bringing a project online includes its observability — treat it as part of go-
 - **Enable Vercel Observability** on both projects (requests, function invocations, and runtime logs retained and queryable in the dashboard).
 - **Ship runtime logs off-platform via a log drain**, so the backend's structured log lines (correlation id, handled errors, integration/webhook results) stay searchable beyond Vercel's short retention. Wire the drain through a marketplace integration (e.g. Sentry) that owns it on the api project — see *Gotchas*.
 - **Frontend product analytics** — Vercel Web Analytics + Speed Insights — are wired in `frontend.md`.
-- **When prod misbehaves**, outcomes that are *log-only* (e.g. OTP attempts, webhook deliveries — not persisted) are still recoverable from the request logs: query the project's request-logs filtered by `environment=production`, path, status, and a content substring, rather than `vercel logs`, which only live-tails the last ~2 minutes.
+- **When prod misbehaves**, outcomes that are *log-only* (e.g. webhook deliveries — not persisted) are still recoverable from the request logs: query the project's request-logs filtered by `environment=production`, path, status, and a content substring, rather than `vercel logs`, which only live-tails the last ~2 minutes.
 
 ## Gotchas
 

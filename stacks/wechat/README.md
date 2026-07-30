@@ -10,12 +10,14 @@ Named for the market it targets — the WeChat ecosystem on Tencent Cloud. The s
 
 The Tencent-Cloud specifics (SCF bundling, CynosDB serverless, COS/VOD, EdgeOne, mainland ICP + public-net egress) run through every appendix. Lift the app to another cloud and the triple stays; the platform specifics are what change.
 
+The `seo` add-on cannot bind to this pack: client-only H5 rendering cannot meet its rendering seam. Its residual robots posture still applies.
+
 ## Appendix → base mapping
 
 | Appendix | Binds onto | Scope |
 |---|---|---|
-| `frontend.md` | `apps/frontend/CLAUDE.md` | Taro 4 H5, Zustand, same-origin `/api`, the two-file route registry, oklch→hex tokens, VOD/HLS video, the test-user picker |
-| `backend.md` | `apps/backend/CLAUDE.md` | Fastify 4 CommonJS, the layer-first layout, plugins as aspects, `HttpError` + one error site, the SCF Web-Function entry, test-mode / OTP / audit bindings |
+| `frontend.md` | `apps/frontend/CLAUDE.md` | Taro 4 H5, Zustand, same-origin `/api`, the two-file route registry, oklch→hex tokens, VOD/HLS video |
+| `backend.md` | `apps/backend/CLAUDE.md` | Fastify 4 CommonJS, the layer-first layout, plugins as aspects, `HttpError` + one error site, the SCF Web-Function entry |
 | `db.md` | `db/CLAUDE.md` + repo ring | Knex + MySQL 8, the `*_test` destructive test-DB ritual, MySQL-8 schema gotchas, the migrate-in-a-function prod path |
 | `infra.md` | `infra/CLAUDE.md` | `tencentcloud` provider, SCF (Web + migrate) shape, CynosDB serverless, COS/VOD/EdgeOne, the GitHub Actions deploy seam |
 
@@ -63,13 +65,6 @@ pnpm migrate     # knex migrate:latest (rollback: pnpm --filter backend migrate:
 - **Fastify JSON Schema** on every route (request and response), all schemas under `schemas/<domain>.js`, with **OpenAPI as the source of truth** (`lint:openapi` + `lint:schemas` guard drift). Details in `backend.md`.
 - **DB credentials from env** — `DB_PASSWORD` injected via Terraform / pipeline secrets, never committed (rejected: `DB_SECRET_NAME` + SSM/KMS, on cost for this stack). Details in `infra.md`.
 - Further decisions and their rejected alternatives are recorded in each appendix's conflict register.
-
-## Add-ons
-
-- **test-mode**, **otp-auth** — bound in `backend.md` (picker in `frontend.md`).
-- **saas-billing** — bound section for this pack in `add-ons/saas-billing/bindings.md`; the provider is market-dependent there.
-- **seo** — recorded **unbound** in `add-ons/seo/bindings.md`: client-only H5 rendering can't meet its rendering seam. The residual robots posture still applies.
-- **llm-calls**, **premium-design**, **enterprise-compliance**, **multi-tenancy** — left unbound. Adopting one means supplying its *Binds to a stack* answers in the matching appendix as part of adoption.
 
 ## Deploy seam
 

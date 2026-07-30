@@ -4,6 +4,10 @@
 
 Search discoverability for the app's public pages — being crawled, indexed, and previewed correctly when shared — plus the structural work of keyword strategy, paid search, rank tracking, and page-speed ranking factors. The ongoing practice of each stays out of scope: keyword research and selection, campaign purchase and management, running or reading rank reports, hands-on performance tuning, and analytics/conversion measurement.
 
+## Prerequisites
+
+A server-rendered stack. Indexable routes must arrive complete without client-side scripts (S1), and a client-rendered SPA cannot provide that. Of the shipped packs, `vercel-ssr` and `enterprise` qualify; `vercel-csr`, `mern`, `django`, and `wechat` do not. On a CSR stack, either serve the crawlable surface from its own server-rendered origin and apply this add-on there, or don't adopt — a publicly reachable origin still serves a refuse-indexing response (R10).
+
 ## Adoption
 
 | Your surface | Do this |
@@ -74,7 +78,7 @@ Once live, register the production origin with the search engines' index-coverag
 
 ## Binds to a stack
 
-The adopted pack answers each seam item, keyed by id, one line each — in [`bindings.md`](bindings.md) beside this file, read in place and kept. A pack that cannot meet S1 is recorded there as **unbound** instead — stating why, the workable alternative, and that R10's refuse-indexing posture still applies to any publicly reachable origin.
+The adopting project derives the answer to each seam item from the active pack's appendices and records it, keyed by id, in the requirement spec that implements this add-on (top-level `specs/`).
 
 - **S1** — the rendering mechanism that makes indexable routes complete without client-side scripts (R3).
 - **S2** — the metadata helper and its home: title/description/canonical/share tags + share image (R7).

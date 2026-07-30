@@ -15,7 +15,7 @@ Sibling: `vercel-csr` (triple `react-fastify-postgres`) is the client-rendered S
 | Appendix | Binds onto | Scope |
 |---|---|---|
 | `frontend.md` | `apps/frontend/CLAUDE.md` | App Router UI, queries/actions data flow, Tailwind 4 + Radix, four-states mapping |
-| `backend.md` | `apps/backend/CLAUDE.md` (relocated at Day-1 — see *Day-1 wiring*) | the onion under `src/server/`, the queries/actions controller edge, composition root, aspects, test-mode / otp-auth / llm-calls bindings |
+| `backend.md` | `apps/backend/CLAUDE.md` (relocated at Day-1 — see *Day-1 wiring*) | the onion under `src/server/`, the queries/actions controller edge, composition root, aspects |
 | `db.md` | `db/CLAUDE.md` + repo ring | node-pg-migrate (real up/down pairs), `pg` query layer, serverless pooling against Neon |
 | `infra.md` | `infra/CLAUDE.md` | Vercel Terraform provider, single-project workload shape, deploy seam |
 
@@ -67,12 +67,6 @@ pnpm migrate     # node-pg-migrate up (rollback: pnpm migrate:down)
 - **Test runner: Vitest** (rejected: `node:test` — no first-class TypeScript story without loader flags; Jest — transform-heavy on ESM + TS).
 - **Client state: React Context providers** seeded from Server Components (rejected: an external store library, Redux/Zustand — context + props cover this architecture's client-state needs). Details in `frontend.md`.
 - Further decisions and their rejected alternatives are recorded in each appendix's conflict register.
-
-## Add-ons
-
-- **test-mode**, **otp-auth**, **llm-calls** — bound in `backend.md`.
-- **saas-billing**, **seo** — bound sections for this pack in `add-ons/<name>/bindings.md`.
-- **premium-design**, **enterprise-compliance**, **multi-tenancy** — left unbound. Adopting one means supplying its *Binds to a stack* answers in the matching appendix as part of adoption.
 
 ## Deploy seam
 

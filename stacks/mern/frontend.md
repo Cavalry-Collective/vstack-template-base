@@ -34,7 +34,7 @@ This file owns the SPA build, routing, data flow, styling, and the `dist/` servi
 | `vike`, `vite-plugin-ssr`, any prerender/SSG plugin | build-time HTML generation |
 | `*.server.ts(x)`, an `api/` directory under `apps/frontend/` | a server tier on the web project |
 
-**A requirement that genuinely needs server-rendered HTML — public search indexability above all — is a pack change, not a patch.** Adopt a server-rendered pack, or serve the crawlable surface outside this app; do not bolt a render step onto this one. See `add-ons/seo/bindings.md`, where this pack is recorded **unbound** for exactly that reason.
+**A requirement that genuinely needs server-rendered HTML — public search indexability above all — is a pack change, not a patch.** Adopt a server-rendered pack, or serve the crawlable surface outside this app; do not bolt a render step onto this one. See `../README.md` → *Defining constraint*.
 
 ## Folder mapping (base `src/` shape)
 

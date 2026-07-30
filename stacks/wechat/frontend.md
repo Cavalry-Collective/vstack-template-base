@@ -6,7 +6,7 @@ Binds `apps/frontend/CLAUDE.md` to **Taro 4 (H5 target, React 18, plain JavaScri
 
 ## Scope
 
-This file owns the Taro H5 bindings: components, routing, tokens/styling, responsive layout, video, versioning, i18n, and the test-user picker. It consumes the Fastify backend (`./backend.md`) over REST.
+This file owns the Taro H5 bindings: components, routing, tokens/styling, responsive layout, video, versioning, and i18n. It consumes the Fastify backend (`./backend.md`) over REST.
 
 ## Stack binding at a glance
 
@@ -50,10 +50,6 @@ This stack keeps the base's version.json approach. Emit a build-stamped `version
 ## Internationalisation
 
 En/zh dictionaries live under `src/i18n/` (base *Internationalisation*); the CI **`i18n:check`** enforces key parity both directions. Name keys by meaning.
-
-## Add-on bindings (if adopted)
-
-- **test-mode** (`add-ons/test-mode/`) — the test-user picker: the login screen offers a one-tap account picker fed by a `test`-tenant-gated unauthenticated endpoint that returns empty in `production`. Keep it on the login screen, gated on the same `x-tenant: test` signal the backend uses.
 
 ## Gotchas — the Taro H5 router
 

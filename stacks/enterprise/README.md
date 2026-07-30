@@ -65,12 +65,6 @@ pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
 - **Build orchestrator: the Nest CLI and `next build` per app** under pnpm workspaces — no Nx/Turbo by default.
 - Further decisions and their rejected alternatives are recorded in each appendix's conflict register.
 
-## Add-ons
-
-- **test-mode**, **otp-auth** — bound in `backend.md`.
-- **saas-billing**, **seo** — each carries its own bindings file inside the add-on (`add-ons/<name>/bindings.md`), with a section for this pack.
-- **llm-calls**, **premium-design**, **enterprise-compliance**, **multi-tenancy** — left unbound. Adopting one means supplying its *Binds to a stack* answers in the matching appendix as part of adoption.
-
 ## Deploy seam
 
 - `prisma migrate deploy` and the Next build output deploy and run through the cloud pipeline — see `infra/CLAUDE.md` (GCP/Terraform) for where migrate-on-deploy runs.

@@ -4,11 +4,12 @@
 
 Subscription billing as an architecture layer: data-defined plans and prices, checkout and payment, renewal on monthly or yearly intervals, invoices, trials, and failed-payment handling — built so pricing changes are data changes, not rewrites. Seat and usage limits are the supporting enforcement areas that keep plan access honest. The payment provider moves the money and hosts the card data; the app owns the billing model and every access decision.
 
+## Prerequisites
+
+An organisation (tenant) model — the **multi-tenancy** add-on or an equivalent — adopted first: every billing row hangs off the organisation, and without one there is no tenant to bill.
+
 ## Adoption
-At Day-1 (or later adoption), beyond keeping this directory:
-1. Copy the active stack pack's entry from [`bindings.md`](bindings.md) into that pack's `backend.md`, then delete `bindings.md` — the pack appendix is the binding's only home from then on.
-2. Update this README's two `bindings.md` links (this step and the *Binds to a stack* closing bullet) to point at the pack appendix instead — the file is gone after step 1.
-3. When the project implements an area, write its requirement spec in the top-level `specs/` (per `specs/README.md`), covering that area's bullets under *Implementation areas* below.
+Keep this directory. When the project implements an area, write its requirement spec in the top-level `specs/` (per `specs/README.md`), covering that area's bullets under *Implementation areas* below and deriving the stack wiring from the seams named under *Binds to a stack*.
 
 ## Approach
 
@@ -29,7 +30,6 @@ At Day-1 (or later adoption), beyond keeping this directory:
 - **Stub gateway** — the sink the flag routes to.
 - **Jobs** — the background-job runner for the reconciliation sweep, usage-period rollover, and trial-expiry handling.
 - **Config** — the validated-config home for the provider secret key and webhook signing secret.
-- Per-pack answers are pre-written in [`bindings.md`](bindings.md); adoption copies the active pack's entry into its appendix and deletes the file (*Adoption*, step 1).
 
 ## Interactions
 
