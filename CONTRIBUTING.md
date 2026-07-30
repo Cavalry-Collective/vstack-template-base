@@ -37,4 +37,5 @@ Any pin — a framework major, a Node LTS, a managed runtime, a database engine 
 ## Reporting problems
 
 - A wrong, unclear, or contradictory rule: open an issue.
+- A question you would rather not open an issue for: email **adam@cavalry.sg**.
 - A security concern: follow [`SECURITY.md`](SECURITY.md) instead.

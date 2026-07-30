@@ -121,6 +121,7 @@ Run this once, top to bottom, the first time you instantiate the template. Each 
 
 - A rule that is wrong, unclear, or contradictory: open an issue.
 - A change you want to make: read [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Anything else — questions about adopting the template, or using it on a commercial project: email **adam@cavalry.sg**.
 - A security concern: email **security@cavalry.sg**. See [`SECURITY.md`](SECURITY.md) — do not open a public issue.
 - Conduct in this project's spaces is governed by [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
