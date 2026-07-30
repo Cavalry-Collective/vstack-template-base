@@ -88,7 +88,7 @@ Applies to every Markdown document in this repo: specs, READMEs, stack packs, ad
 - State a rule once, in the document that owns it. Link to it from everywhere else.
 - Exception: verbatim contract strings (precedence lines, conflict-register field formats, copy-paste command blocks) are never reworded for style.
 
-Reference examples: `add-ons/saas-billing/specs/seats.md` (spec) and `stacks/vercel-csr/README.md` (pack manifest).
+Reference examples: `add-ons/saas-billing/README.md` (add-on with implementation areas) and `stacks/vercel-csr/README.md` (pack manifest).
 
 ## Principles (must follow)
 
