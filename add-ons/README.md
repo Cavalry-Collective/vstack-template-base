@@ -6,7 +6,7 @@ Sibling to `stacks/`, on a different axis: a **stack pack** binds the base to on
 
 ## What an add-on is
 
-A directory `add-ons/<name>/` with a `README.md` of agnostic guidance — the capability's durable SOP. `<name>` is lowercase, hyphenated, capability-named (`test-mode`, `otp-auth`). Docs only — no dependencies, lockfiles, or scaffolding, consistent with `stacks/`. A larger add-on may also ship, in the same directory, a **spec program** (`specs/` with a program index, or a single `SPEC.md`) holding its buildable feature specs, and a **`bindings.md`** pre-writing its stack-pack bindings. Everything an add-on ships lives inside its directory, so keeping or deleting the directory carries the add-on's whole footprint.
+A directory `add-ons/<name>/` with a `README.md` of agnostic guidance — the capability's durable SOP. `<name>` is lowercase, hyphenated, capability-named (`test-mode`, `otp-auth`). Docs only — no dependencies, lockfiles, or scaffolding, consistent with `stacks/`. A larger add-on may also ship, in the same directory, a **spec program** (`specs/` with a program index, or a single `SPEC.md`) holding its buildable feature specs, and a **`bindings.md`** pre-writing its stack-pack bindings. Everything an add-on ships lives inside its directory, so keeping or deleting the directory carries the add-on's whole footprint. The bundled program is a proposal, not an adopted plan: on adoption it moves into the top-level `specs/` (see `specs/README.md`), so the project keeps one spec home.
 
 ## Opt in — adoption is keeping the directory
 

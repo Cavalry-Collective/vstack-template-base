@@ -35,7 +35,7 @@ Enterprise controls that make the product **compliance-ready** for customers pur
 - **`db/CLAUDE.md`** — retention, erasure, and legal-hold schema changes follow its reversible-migration and expand→migrate→contract rules.
 
 ## Specs
-The program index — shared conventions (event envelope, permission naming, org-policy model) and phasing — is `specs/program-index.md`. When a project implements an area, that file is its feature spec: follow the repo's spec-first workflow against it, copying it into the top-level `specs/` first if the project keeps one spec home. The specs use a CRM product (contacts, companies, deals) as the **worked example** for record classes, permission catalogs, and blast-radius tables; the controls are product-agnostic — substitute your product's record classes on adoption. Per-area specs:
+The program index — shared conventions (event envelope, permission naming, org-policy model) and phasing — is `specs/program-index.md`. On adoption, move the program (`specs/program-index.md` plus the area specs) into the top-level `specs/` — one spec home after adoption, per `specs/README.md` — and follow the repo's spec-first workflow against each area file as its feature spec. The specs use a CRM product (contacts, companies, deals) as the **worked example** for record classes, permission catalogs, and blast-radius tables; the controls are product-agnostic — substitute your product's record classes on adoption. Per-area specs:
 
 | Area | Spec |
 |---|---|
