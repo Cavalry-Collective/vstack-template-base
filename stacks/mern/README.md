@@ -58,7 +58,7 @@ pnpm migrate     # migrate-mongo up (rollback: pnpm migrate:down)
 - `pnpm install --frozen-lockfile`.
 - Lint; frontend `tsc --noEmit`; backend `node --test`; `vite build`.
 - The frontend i18n key-parity check — the base gate stands unchanged.
-- Migration round-trip up → down → up on the scratch database. migrate-mongo has real downs, so keep the base `ci.yml` round-trip TODO's wording as written, with drift asserted the document-store way per `db.md` → *Operations*.
+- Migration round-trip up → down → up on the scratch database. migrate-mongo has real downs, so this fills the base `ci.yml` migration-gate stub as-is, with drift asserted the document-store way per `db.md` → *Operations*.
 - Run the seed twice (idempotency).
 - Playwright e2e is not part of this job. It runs against a deployed or locally served stack via `E2E_BASE_URL`.
 

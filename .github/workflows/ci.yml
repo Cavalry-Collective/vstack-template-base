@@ -35,8 +35,8 @@ jobs:
       # - name: i18n key parity
       #   run: # TODO: replace — fail on any key missing from a locale — apps/frontend/CLAUDE.md "Internationalisation"
 
-      # - name: Migration round-trip
-      #   run: # TODO: replace — apply up → down → up on a scratch DB, fail on drift — db/CLAUDE.md
+      # - name: Migration gate
+      #   run: # TODO: replace — the pack's db.md names the gate (base default: up → down → up on a scratch DB, fail on drift) — db/CLAUDE.md
 
       # - name: Accessibility scan
       #   run: # TODO: replace — run the a11y scanner against built pages — apps/frontend/CLAUDE.md "Accessibility baseline"

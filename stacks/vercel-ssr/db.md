@@ -48,7 +48,7 @@ This file owns migrations, seed, schema conventions, and the repo-ring query/poo
 
 ## Operations
 
-CI runs the db gate from `../README.md`'s CI checklist, against a scratch `postgres:16` service container: migrations apply from zero, the round-trip `up → down → up` passes (keep the base `ci.yml` round-trip TODO's wording), and the seed runs twice.
+CI runs the db gate from `../README.md`'s CI checklist, against a scratch `postgres:16` service container: migrations apply from zero, the round-trip `up → down → up` passes (this fills the base `ci.yml` migration-gate stub), and the seed runs twice.
 
 ### Production & staging migrations (Neon)
 

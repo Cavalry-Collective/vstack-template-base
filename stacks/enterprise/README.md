@@ -36,7 +36,7 @@ pnpm workspaces over `apps/*`. Suggested defaults — keep one verb per base pla
 **Dev block → root `CLAUDE.md` "Common commands":**
 
 ```bash
-pnpm bootstrap   # install; start local Postgres (TODO: name the docker-compose Postgres service — reuse the shared container across worktrees); prisma generate; prisma migrate dev; run both dev servers
+pnpm bootstrap   # install; start local Postgres (fixed-name docker container, shared across worktrees); prisma generate; prisma migrate dev; run both dev servers
 pnpm dev         # Nest watch + Next dev server
 pnpm lint        # workspace lint, both apps
 pnpm typecheck   # tsc --noEmit per app (explicit no-op in a plain-JS app)
@@ -54,7 +54,7 @@ pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
 - `next build` + `nest build`.
 - Non-watch `pnpm test`.
 - The frontend i18n key-parity check — the base gate stands unchanged.
-- The db appendix's §Operations gates: apply-from-zero on a scratch DB, the `migrate diff` drift gate (replacing the base round-trip TODO, per `db.md`'s register), and the seed run twice.
+- The db appendix's §Operations gates: apply-from-zero on a scratch DB, the `migrate diff` drift gate (this pack's `ci.yml` migration gate; `db.md`'s register replaces the base round-trip rule), and the seed run twice.
 
 ## Pack decisions
 

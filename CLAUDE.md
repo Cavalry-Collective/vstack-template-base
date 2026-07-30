@@ -161,4 +161,4 @@ Where `main` is protected (Day-1 step 11) or the work is spec-backed (`specs/REA
 
 Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it. At instantiation the usual first entry is the stack-pack choice (see the Day-1 checklist in `README.md`).
 
-- Spec tool: **none by default** — Spec Kit was removed 2026-07-29 (`.specify/` + `.claude/skills/speckit-*` deleted); adopt one per `specs/README.md` if wanted. Feature numbers 001–004 remain consumed from its era: 001 (design guide) retired after completion; 002 (repo-guidance audit) retired without its directory ever landing; 003/004 (seo) retired and their artifacts deleted with the Spec Kit removal. Don't reuse them.
+- Spec tool: none by default. Spec Kit was removed on 2026-07-29; adopt a tool per `specs/README.md` if wanted. Feature numbers 001–004 are consumed and must not be reused: 001 design guide (retired), 002 repo-guidance audit (retired, no directory), 003–004 seo (retired, artifacts deleted).
