@@ -6,7 +6,7 @@ Binds `apps/backend/CLAUDE.md` and the root `CLAUDE.md` to **Fastify 4, plain Ja
 
 ## Scope
 
-This file owns the HTTP layer, the layer-first layout, the aspects, the SCF entry, and the add-on bindings. Data layer → `./db.md`; provisioning and deploys → `./infra.md`.
+This file owns the HTTP layer, the layer-first layout, the aspects, and the SCF entry. Data layer → `./db.md`; provisioning and deploys → `./infra.md`.
 
 ## Stack binding at a glance
 
@@ -30,9 +30,9 @@ This file owns the HTTP layer, the layer-first layout, the aspects, the SCF entr
 | Request context | `plugins/ctx.js` packs `{ requestId, sourceIp, userAgent, logger }` into `request.ctx`, passed inward as a value (the base correlation-id rule: honour an inbound `x-request-id`/`x-correlation-id`, and return the id as the base's `x-correlation-id` response header on every response) |
 | Errors | one global handler in `app.js` maps `HttpError` (from `utils/httpError`) → the base *Error responses* envelope; rings never shape an HTTP response. A rate-limit sets `retryAfterSeconds` for the handler to surface |
 | Auth | `plugins/auth.js` — `fastify.requireAuth` plus one `fastify.require<Role>` decorator per role the app defines, as `preHandler`s on the scopes that need them |
-| Mode signal | `plugins/tenant.js` — resolves the `x-tenant` header to `request.tenant`, selecting test vs `production` (missing/unknown ⇒ `production`, fail-closed), cached in memory; backs the optional **test-mode** add-on |
+| Mode signal | `plugins/tenant.js` — resolves the `x-tenant` header to `request.tenant`, selecting test vs `production` (missing/unknown ⇒ `production`, fail-closed), cached in memory |
 | Audit trail | services call `services/audit.record(ctx, { eventType, ... })` — one durable append per state change, never `lib/audit` directly (base *Cross-cutting → Audit trail*) |
-| Integration gating | `DEV_OTP_SINK` and `EMAIL_SENDING_ENABLED` are the default-off booleans that route SMS/email to a stdout sink until flipped per-environment (base *Integrations*) |
+| Integration gating | default-off booleans (e.g. `EMAIL_SENDING_ENABLED`) route SMS/email to a stdout sink until flipped per-environment (base *Integrations*) |
 | Scope-to-subtree | Fastify plugin encapsulation — register a guard on the route scope that needs it; only db, cookie, ctx, tenant, and the error handler register app-wide |
 
 ## SCF entrypoint — `handler.js` (SCF) vs `server.js` (local)
@@ -43,14 +43,7 @@ This file owns the HTTP layer, the layer-first layout, the aspects, the SCF entr
 
 ## Testing
 
-- **Runner: Vitest** (`pnpm test`). Base per-ring kinds, bound: **service** — drive the use case with the real Knex against the `*_test` schema (this stack keeps rules in services, not a pure domain ring, so most coverage sits here); **route** — Fastify `app.inject()`; **repo** — integration against the `*_test` MySQL schema. The suite is **destructive** and guarded — `./db.md` owns the `*_test` ritual. If `otp-auth` is adopted, unset `DEV_OTP_SINK` in the test env so tests read codes from the challenge store instead of stdout — the sink gates delivery only; verify runs real either way.
-
-## Add-on bindings (if adopted)
-
-- **test-mode** (`add-ons/test-mode/`): `x-tenant: test` is the mode signal (resolved by `plugins/tenant.js`, fail-closed to `production`); `skipOtpChecks()` swaps OTP *delivery* for a sink on a test-mode request — the challenge is still issued/verified, the tester reads the real code from the stdout sink line, and verify is never stubbed; every test-only read (e.g. the picker) returns empty for `production`.
-- **otp-auth** (`add-ons/otp-auth/`): this stack is **model A** (self-managed store) — `utils/otp.js` does code gen + **HMAC-SHA256** hash + short TTL + timing-safe verify.
-  - **Challenge store:** one `otp_challenge` table with a **`purpose`** column (signup / login / contact-change) drives the recent-challenge rate limit.
-  - **Delivery & identity:** `lib/sms.js` (Tencent SMS) / `lib/email.js` (Tencent SES); phone numbers canonicalised to E.164 with `libphonenumber-js`; phone and email are two identity records (`repos/phoneIdentity`, `repos/emailIdentity`) against one account. On a test-mode request delivery is sinked (see **test-mode** above).
+- **Runner: Vitest** (`pnpm test`). Base per-ring kinds, bound: **service** — drive the use case with the real Knex against the `*_test` schema (this stack keeps rules in services, not a pure domain ring, so most coverage sits here); **route** — Fastify `app.inject()`; **repo** — integration against the `*_test` MySQL schema. The suite is **destructive** and guarded — `./db.md` owns the `*_test` ritual.
 
 ## Conflict register
 

@@ -14,7 +14,7 @@ Like `enterprise`, this pack is platform-neutral — it binds no deployment plat
 
 The frontend is a single-page app: one static `index.html`, rendered entirely in the browser. There is no server-side rendering, and none may be added — not per request, not at build time. The enforceable rules and the greppable forbidden list are in `frontend.md` → *Rendering model*.
 
-A requirement that genuinely needs server-rendered HTML (public search indexability above all) is a pack change — adopt a server-rendered pack (`vercel-ssr`, `enterprise`) instead.
+A requirement that genuinely needs server-rendered HTML (public search indexability above all) is a pack change — adopt a server-rendered pack (`vercel-ssr`, `enterprise`) instead. For the same reason the `seo` add-on cannot bind to this pack: its rendering seam needs routes served complete without client-side scripts, and a client-only SPA has none.
 
 ## Appendix → base mapping
 
@@ -74,13 +74,6 @@ pnpm migrate     # migrate-mongo up (rollback: pnpm migrate:down)
 - **Plain `fetch` through the services layer** (rejected: react-query/SWR — add one only when client-side cache invalidation genuinely appears; don't pre-install).
 - **React Context providers for state** (rejected: Redux/Zustand — context + props cover this architecture's needs).
 - Further decisions and their rejected alternatives are recorded in each appendix's conflict register.
-
-## Add-ons
-
-- **test-mode**, **otp-auth** — bound in `backend.md`.
-- **saas-billing** — bound section for this pack in `add-ons/saas-billing/bindings.md`.
-- **seo** — recorded **unbound** in `add-ons/seo/bindings.md`: its S1 seam needs routes served complete without client-side scripts, and a client-only SPA has none. Adopting seo means adopting a server-rendered pack instead, or serving the crawlable surface outside this app.
-- **llm-calls**, **premium-design**, **enterprise-compliance**, **multi-tenancy** — left unbound. Adopting one means supplying its *Binds to a stack* answers in the matching appendix as part of adoption.
 
 ## Deploy seam
 

@@ -60,17 +60,6 @@ apps/backend/
 - **Runner: pytest + pytest-django** (`uv run pytest`).
 - Base per-ring kinds, bound: **model invariants + pure helpers** — plain units, no DB where possible; **services/selectors** — `pytest.mark.django_db` tests against real Postgres (the ORM *is* the persistence layer — faking it tests nothing); **API** — DRF `APIClient` contract tests asserting status codes, envelope shape, and auth guards. Gateways are faked at the adapter seam, never by patching ORM or framework internals.
 
-## Add-on bindings (if adopted)
-
-- **test-mode** (`add-ons/test-mode/`): one middleware resolves the mode signal from an inbound header onto the request — fail closed: missing or unknown means production. In test mode the flag-gated gateways (the base default-off booleans) route to their sinks — Django's `console.EmailBackend` is the canonical email sink; other gateways ship a structured-log/no-op adapter. The test-user picker is an unauthenticated DRF view gated on the same signal; it returns `[]` in production, and an `APIClient` test asserts that.
-- **otp-auth** (`add-ons/otp-auth/`) — model A (self-managed):
-  - **Storage** — an `OtpChallenge` model (hashed code, short TTL, `purpose` field) in its own Django app with its own migrations.
-  - **Verify** — hashing in a shared util, with `django.utils.crypto.constant_time_compare` for the timing-safe verify; verify is never stubbed in test mode.
-  - **Double-submit race** — a unique constraint on (target, purpose); `IntegrityError` → `409` through the shared exception handler.
-  - **Delivery** — through the gateway adapters behind the default-off flags; in test mode delivery sinks to the structured log, where the tester reads the real code.
-  - **Phone numbers** — canonicalised to E.164 with the **`phonenumbers`** library.
-  - **Rate limits** — send/verify are DRF throttles on those views (database cache backend — no separate store on this pack); the per-challenge attempt cap lives on the challenge row.
-
 ## Conflict register
 
 - **Base says:** each feature module holds four rings — `domain/`, `service/`, `repo/`, `controller/`, `dtos/` — with a pure, framework-free domain at the centre. **In this stack:** a feature is a **Django app** — `models.py` / `services.py` / `selectors.py` / `api/` — and the centre is not framework-free: invariants live on ORM models (constraints, `clean()`, model methods) and in service functions. **Because:** Django's app registry, ORM, admin, and migrations all key off the app layout; a parallel pure-domain layer over active-record models duplicates every entity and drifts — the services/selectors convention is how real Django shops keep the discipline without a fake hexagon. **Concretely:** DO put every write use case in `services.py` and every read composition in `selectors.py`; DON'T create `domain/`/`repo/` folders or entity classes that mirror models.

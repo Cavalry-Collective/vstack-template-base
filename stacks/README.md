@@ -40,5 +40,5 @@ Packs activate by **instruction, not machinery**. Each area's `CLAUDE.md` (`apps
 1. Create `stacks/<pack-name>/` with the four required files.
 2. Put the precedence line atop each appendix and a conflict register at the end; keep every line additions-only.
 3. Write the manifest `README.md` — identity, appendix→base mapping, suggested dev + CI `<pm>` blocks, deploy-seam pointer.
-4. Bind the shipped add-ons. For each directory under `add-ons/`, add its concrete bindings to the matching appendix (what that add-on's *Binds to a stack* section asks for). Where the add-on carries its own `bindings.md` (see `add-ons/README.md`), add the new pack's bound-or-unbound section there instead. An add-on the pack covers in neither place is declared unbound in the manifest; silence is a defect.
+4. Do no add-on work. Add-on wiring is derived at adoption from each add-on's *Binds to a stack* seam list plus this pack's appendices. Note in the manifest only a genuine incompatibility: an add-on whose requirements the stack cannot meet.
 5. Nothing else to wire — the per-area `CLAUDE.md` pointers pick the pack up as soon as it is the only directory under `stacks/` (see *Activation*).

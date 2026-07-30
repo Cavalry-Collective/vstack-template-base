@@ -45,7 +45,7 @@ This file owns migrations, seed, schema conventions, and query/transaction mecha
 
 - **Local Postgres is one fixed-name Docker container** (`postgres:16`), started by `make bootstrap` with start-or-run semantics, shared across worktrees per the root `CLAUDE.md` — reuse it, never start a second copy.
 - **One shared container, one database per worktree.** Derive the name deterministically (sanitize the branch to `[a-z0-9_]`, truncate to Postgres's 63-byte identifier limit, prefix `app_` — `feature/x` → `app_feature_x`), re-point the db-name segment of `DATABASE_URL` after copying `.env` in, and have `bootstrap` create the database if missing. Drop it on worktree teardown. See conflict register.
-- **Seed:** an idempotent management command (`manage.py seed_dev`, upsert via `update_or_create` by business key) with realistic, named accounts (they also back the test-mode picker, base `db/CLAUDE.md`); non-production only — the base rule stands. Backfills: idempotent, batched, resumable management commands under the owning app, invoked explicitly.
+- **Seed:** an idempotent management command (`manage.py seed_dev`, upsert via `update_or_create` by business key) with realistic, named accounts (base `db/CLAUDE.md`); non-production only — the base rule stands. Backfills: idempotent, batched, resumable management commands under the owning app, invoked explicitly.
 - **pytest-django creates its own `test_*` database** — the suite never touches the dev schema; `--reuse-db` is a local speed-up only.
 
 ## Operations

@@ -6,7 +6,7 @@ Binds `apps/backend/CLAUDE.md` — relocated at Day-1 to `apps/frontend/src/serv
 
 ## Scope
 
-This file owns the server side: composition root, the queries/actions controller edge, aspects, sessions and edge concerns, server testing, and the add-on bindings. Data layer → `./db.md`; the UI half → `./frontend.md`; provisioning and deploys → `./infra.md`.
+This file owns the server side: composition root, the queries/actions controller edge, aspects, sessions and edge concerns, and server testing. Data layer → `./db.md`; the UI half → `./frontend.md`; provisioning and deploys → `./infra.md`.
 
 ## Stack binding at a glance
 
@@ -53,24 +53,6 @@ The base controller ring ("validates input, invokes one use case, maps the resul
 
 - **Runner: Vitest** (`tests/` mirrors `src/server/`). Pack decision — see the README.
 - Base per-ring kinds, bound: **domain** — plain units; **service** — use cases via `buildContainer({ overrides })` fakes; **repo** — integration against the real local Postgres (share it carefully across suites); **controller edge** — actions and queries are plain async functions, unit-test one directly when it accrues logic; the default edge coverage is the Playwright e2e suite (`./frontend.md` *Testing*) driving the real screens.
-
-## Add-on bindings (if adopted)
-
-- **test-mode** (`add-ons/test-mode/`):
-  - The mode signal is an inbound header/signed cookie resolved once in `request-context.ts` onto the request context — fail closed: missing or unknown means production.
-  - In test mode the flag-gated integrations (the base default-off booleans) route to their stdout/no-op sinks.
-  - The test-user picker is a query gated on the same signal; it returns `[]` in production, and a test asserts that.
-- **otp-auth** (`add-ons/otp-auth/`), model A (self-managed):
-  - An `otp_challenge` table (hashed code, short TTL, `purpose` column) via node-pg-migrate; hashing + timing-safe verify in `shared/utils/`.
-  - Delivery through gateway adapters behind domain ports, gated by the default-off flags; phone numbers canonicalised to E.164 with `libphonenumber-js`.
-  - A unique constraint on (target, purpose) resolves the double-submit race to the domain conflict error, which the verify action returns as its envelope `error.code` — the client treats it as "already done, proceed".
-  - Attempt rate limits keep their counters in Postgres — no separate store on this pack.
-  - In test mode delivery is sinked to the structured log — the tester reads the real code there, and verify is never stubbed.
-- **llm-calls** (`add-ons/llm-calls/`):
-  - The provider SDK lives in a repo-ring gateway adapter behind a domain port, wired in `container.ts`.
-  - Model id, token/cost caps, timeout, and the default-off flag are keys in the env schema.
-  - The canned-response sink is the adapter's no-op twin — selected by the flag or the test-mode signal, so it doubles as the test-mode stub.
-  - Calls finish inside the request (no fire-and-forget); per-call usage (model, tokens, latency, user/tenant) is a structured log line, queryable through the log drain (`./infra.md` → *Observability*).
 
 ## Conflict register
 

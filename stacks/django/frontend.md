@@ -34,7 +34,7 @@ This file owns the SPA build, routing, data flow, config, styling, and frontend 
 | `vike`, any prerender/SSG plugin | build-time HTML generation |
 | `*.server.ts(x)` files | a server tier on the web project |
 
-A requirement that genuinely needs server-rendered HTML — public search indexability above all — is a **pack change**, not a patch. See `add-ons/seo/bindings.md`, where this pack is recorded **unbound** for exactly that reason.
+A requirement that genuinely needs server-rendered HTML — public search indexability above all — is a **pack change**, not a patch. See `../README.md` → *Defining constraint*.
 
 ## Data flow — one origin, `/api`
 
