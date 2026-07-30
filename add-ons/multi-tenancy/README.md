@@ -42,4 +42,4 @@ Cross-tenant attempts are standing tests, not review notes; a tenant-owned endpo
 - **llm-calls** — its per-tenant cost/usage monitoring keys on this add-on's tenant id.
 
 ## Specs
-The buildable program — tenant model, membership, invitations, resolution, switching, APIs, data model, and acceptance criteria — is [`SPEC.md`](SPEC.md). On adoption, move it into the top-level `specs/` (renamed to that directory's conventions) — one spec home after adoption.
+The buildable program — tenant model, membership, invitations, resolution, switching, APIs, data model, and acceptance criteria — is [`SPEC.md`](SPEC.md). It stays here as reference; when the project implements tenancy, write its actual requirement spec in the top-level `specs/` (per `specs/README.md`), drawing on it.
