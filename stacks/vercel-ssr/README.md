@@ -31,7 +31,7 @@ This pack removes the separate backend application:
 4. Delete `apps/backend/`.
 5. Update root `CLAUDE.md` and `README.md` to describe one full-stack Next.js app.
 6. Copy the command block below into root `CLAUDE.md`.
-7. Implement the CI checklist in `.github/workflows/ci.yml`.
+7. Copy `.github/workflows/examples/ci.yml.example` to `.github/workflows/ci.yml` and implement the CI checklist in it.
 8. Record `Stack: vercel-ssr; appendices under stacks/vercel-ssr/ (4 appendices incl. infra); one app, apps/backend removed` in **Learnings**.
 
 Use a pnpm workspace with `apps/frontend`, Node 22, and root `"type": "module"`. Pin `packageManager` and align the Node major with Terraform.
@@ -69,7 +69,7 @@ pnpm migrate     # node-pg-migrate up; rollback with migrate:down
 
 - Terraform connects the Vercel project to the repository with `main` as production.
 - Protect `main`; green `ci.yml` is the merge gate.
-- Delete the `deploy.yml` stub. Vercel's Git integration is the only normal deployment path.
+- Do not copy the `deploy.yml` example. Vercel's Git integration is the only normal deployment path.
 - Run Neon migrations before pushing code that reads the new schema.
 - Use the persistent `develop` preview and its dedicated Neon branch for staging.
 - Use `vercel deploy` only for an emergency.

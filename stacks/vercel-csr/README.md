@@ -27,7 +27,7 @@ The frontend is a static SPA with no SSR or prerendering. Adopt `vercel-ssr` whe
 
 1. Keep this directory and delete the other stack packs.
 2. Copy the command block below into root `CLAUDE.md`.
-3. Implement the CI checklist in `.github/workflows/ci.yml`.
+3. Copy `.github/workflows/examples/ci.yml.example` to `.github/workflows/ci.yml` and implement the CI checklist in it.
 4. Keep the base SPA wording unchanged.
 5. Record `Stack: vercel-csr; appendices under stacks/vercel-csr/ (4 appendices incl. infra)` in root `CLAUDE.md` **Learnings**.
 
@@ -65,7 +65,7 @@ pnpm migrate     # node-pg-migrate up; rollback with backend migrate:down
 
 - Terraform connects both Vercel projects to the repository with `main` as the production branch.
 - Protect `main`; green `ci.yml` is the merge gate.
-- Delete the `deploy.yml` stub. Vercel's Git integration is the only normal deployment path.
+- Do not copy the `deploy.yml` example. Vercel's Git integration is the only normal deployment path.
 - Run Neon migrations before pushing code that reads the new schema.
 - Use the persistent `develop` preview and its dedicated Neon branch for staging.
 - Use `vercel deploy` only for an emergency.

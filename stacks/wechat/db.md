@@ -1,8 +1,10 @@
-# MySQL, CynosDB, and Knex: database appendix
+# MySQL, TDSQL-C, and Knex: database appendix
 
 > Rides on top of the base contract; this file only adds stack bindings and resolves conflicts. Where this appendix and a base file disagree, the conflict register below wins — for this stack only.
 
-Use MySQL 8 locally, CynosDB serverless in production, Knex for migrations and queries, and the `mysql2` driver.
+Use TDSQL-C (CynosDB) MySQL 8.0 serverless in production, a matching `mysql:8.0` container locally, Knex for migrations and queries, and the `mysql2` driver.
+
+TDSQL-C runs Tencent's own TXSQL kernel and is wire-compatible with MySQL 5.7 and 8.0 — 8.4 is not offered. Pin local and CI MySQL to the same `8.0` line so a query that passes locally behaves the same in production. Oracle's community MySQL 8.0 is end-of-life, so the supported engine here is Tencent's managed one; do not read the local container's support status as the cluster's.
 
 ## Migrations
 
@@ -25,7 +27,7 @@ Use MySQL 8 locally, CynosDB serverless in production, Knex for migrations and q
 
 ## Local and test databases
 
-- Run one fixed-name MySQL container shared across worktrees.
+- Run one fixed-name `mysql:8.0` container shared across worktrees.
 - Keep one development database rather than per-worktree databases.
 - Keep development seed data realistic, named, idempotent, and keyed by business identifiers.
 - Treat the test suite as destructive.
@@ -35,7 +37,7 @@ Use MySQL 8 locally, CynosDB serverless in production, Knex for migrations and q
 
 ## Production operations
 
-- Run migrations through the private SCF event function after Terraform and function-code deployment.
+- Run migrations through the private SCF event function after Terraform and the image-digest update, using the same image as the web function.
 - Pass reset and forced-reseed options only through explicit invocation input.
 - Keep every migration backward-compatible with the previous function version.
 - Keep production bootstrap seeds idempotent and non-fatal.
@@ -48,4 +50,4 @@ Use MySQL 8 locally, CynosDB serverless in production, Knex for migrations and q
 
 ## Conflict register
 
-- **Base says:** seed and reset operations never run against production. **In this stack:** controlled bootstrap seeds and imports may run through the private migration function, and the reset capability exists there. **Because:** CynosDB is VPC-locked and the migration function is the authenticated production write path. **Concretely:** keep production seeds idempotent and non-fatal; DON'T expose or default `resetSchema`, and never invoke it unattended against production.
+- **Base says:** seed and reset operations never run against production. **In this stack:** controlled bootstrap seeds and imports may run through the private migration function, and the reset capability exists there. **Because:** TDSQL-C is VPC-locked and the migration function is the authenticated production write path. **Concretely:** keep production seeds idempotent and non-fatal; DON'T expose or default `resetSchema`, and never invoke it unattended against production.

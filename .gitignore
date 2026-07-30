@@ -30,3 +30,5 @@ yarn-error.log*
 
 # Claude Code — agent worktrees live here (root CLAUDE.md "Working in a git worktree"); never commit them
 .claude/worktrees/
+# Local runtime state written by the agent, not project content
+.claude/scheduled_tasks.lock
