@@ -41,5 +41,12 @@ Cross-tenant attempts are standing tests, not review notes; a tenant-owned endpo
 - **test-mode** — seed at least two tenants with members so cross-tenant assertions and the test-user picker are walkable; if a pack's *mode signal* happens to be named "tenant", it is a different concept — never resolve the organisation from it.
 - **llm-calls** — its per-tenant cost/usage monitoring keys on this add-on's tenant id.
 
-## Specs
-The buildable program — tenant model, membership, invitations, resolution, switching, APIs, data model, and acceptance criteria — is [`SPEC.md`](SPEC.md). It stays here as reference; when the project implements tenancy, write its actual requirement spec in the top-level `specs/` (per `specs/README.md`), drawing on it.
+## Implementation areas
+
+What a tenancy implementation must cover, with the opinionated call for each. When the project implements tenancy, write its requirement spec in the top-level `specs/` (per `specs/README.md`), covering these:
+
+- **Tenant model & lifecycle.** An organisation has a globally unique, URL-safe slug (renames are admin-only and audited) and a status: active, suspended, or archived. Any authenticated user can create one and becomes its owner; creation seeds the owner membership and a one-to-one settings row in one transaction. Suspended fails closed on every scoped surface with its own `403`; archived answers `404` everywhere except the owner's own membership list and the unarchive action.
+- **Membership & roles.** Ship the minimal ladder — owner ⊃ admin ⊃ member — and let enterprise-compliance's RBAC supersede it where adopted. Nobody grants a role above their own; only owners grant or revoke owner. The last active owner can never be removed, downgraded, or leave — enforce it race-safely in one transaction. A removed or departed user loses access on their next request. Membership lookups may cache per user+tenant with synchronous invalidation and a TTL backstop of 5 minutes or less.
+- **Invitations.** Invite by email with a role no higher than the inviter's. The token is single-use, expiring, stored hashed, compared timing-safely, and never logged raw. One pending invitation per organisation and email; inviting an existing member is a conflict. Pending invitations are listable and revocable.
+- **Resolution & switching.** Path-based resolution is the default: the organisation id rides the URL path and the guard validates, in order, authenticated → member → organisation active → role permits. Subdomain or custom-domain resolution waits for a product requirement. The caller's membership list drives the switcher; switching is navigation, revalidated server-side on every request (the client-state reset is in *Approach*).
+- **Screens.** Switcher, create-organisation, members, invitations, and organisation settings — each with the standard loading/error/empty states, and mockups before the initial build (`design/`).
