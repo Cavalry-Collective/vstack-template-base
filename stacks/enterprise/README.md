@@ -67,4 +67,4 @@ pnpm migrate     # prisma migrate dev (the single root `migrate` verb)
 
 ## Deploy seam
 
-- `prisma migrate deploy` and the Next build output deploy and run through the cloud pipeline — see `infra/CLAUDE.md` (GCP/Terraform) for where migrate-on-deploy runs.
+- `prisma migrate deploy` and the Next build output deploy and run through the cloud pipeline — see `infra/CLAUDE.md` (Terraform) for where migrate-on-deploy runs.

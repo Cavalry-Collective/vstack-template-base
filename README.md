@@ -36,7 +36,7 @@ That's it. There is nothing to install and no generator to run — the template 
 | `apps/backend/` | Backend app — onion architecture (Domain → Service → Repo → Controller) |
 | `apps/frontend/` | Frontend SPA — layered store / services / pages / components |
 | `db/` | Database & migration contract (`db/CLAUDE.md`) with reversible migrations under `db/migrations/` |
-| `infra/` | Terraform infrastructure (GCP-first conventions; adaptable) |
+| `infra/` | Terraform infrastructure (provider chosen per project; GCP worked examples) |
 | `design/` | UI mockups + the **design guide** (`design-guide.html` + `tokens.css`) — "Keystone", the visual keystone confirmed before UI work: design principles + full foundations as a token-driven SaaS system (Cavalry palette by default), rebranded per project; components deliberately left flexible; reference, not part of the build |
 | `specs/` | Feature specs — written before implementation |
 | `stacks/` | Optional stack packs — appendix docs binding the agnostic contracts to one concrete stack; one chosen at instantiation, the rest deleted. See [`stacks/README.md`](stacks/README.md) |

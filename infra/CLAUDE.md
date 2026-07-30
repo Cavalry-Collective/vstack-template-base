@@ -2,7 +2,7 @@
 
 The infrastructure contract — read before touching anything under `infra/`. Repo-wide rules (principles, workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs the Terraform under `infra/`. Agent instructions for this folder are here; there is no separate AGENTS.md. **If a stack pack is adopted (a single directory kept under `stacks/`) and it ships an `infra.md` appendix, also read that before working here** — it adds the concrete bindings, and its conflict register resolves any disagreement with this file, for that stack only.
 
-> **This template's blessed cloud is GCP.** Sections marked **(GCP)** apply when using it; on AWS/Azure follow the equivalent context, auth, and discovery tooling for that provider.
+> **The cloud provider is chosen per project.** Sections marked **(GCP)** are worked examples for that provider; on another cloud, follow its equivalent context, auth, and discovery tooling.
 
 ## Purpose
 Agents working in this folder will typically do one of two things:
