@@ -92,7 +92,7 @@ Reference examples: `add-ons/saas-billing/README.md` (add-on with implementation
 
 ## Principles (must follow)
 
-Load-bearing engineering rules; honor them on every change. They are stack- and tooling-agnostic. The first four are adapted from Andrej Karpathy's coding guidelines, folded into this file so no external reference is needed.
+Load-bearing engineering rules; honor them on every change. They are stack- and tooling-agnostic.
 
 - **Think before coding.** Don't assume, don't hide confusion, surface tradeoffs. State your assumptions and ask when uncertain; present multiple interpretations rather than silently picking one; suggest simpler alternatives and respectfully push back when warranted; stop and name what's confusing rather than proceeding on unclear requirements.
 - **Simplicity first / YAGNI.** Write the minimum code that solves the problem. No unrequested features, no abstractions for single-use code, no configurability or error handling for cases that can't occur. "We might want it later" is not a reason. If 200 lines could be 50, rewrite. Every added layer, dependency, or config key must pass the self-review justification (see *Self-review before merge*).
