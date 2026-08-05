@@ -146,9 +146,19 @@ Complete this once when creating a project.
    - Add `.github/workflows/deploy.yml` only when the chosen pack requires it and the deployment
      target is configured.
    - Add a real `.env.example`.
-6. **Set the visual baseline.** Declare the primary form factor in `apps/frontend/CLAUDE.md`.
-   Rebrand `design/tokens.css`, open `design/design-guide.html`, and confirm the visual system
-   before building screens.
+6. **Set the visual baseline.** Complete these in order, before any screen work starts.
+   - Declare the primary form factor in `apps/frontend/CLAUDE.md`.
+   - **Agree the UI component approach with the user** — headless primitives with an own styled
+     layer, a copy-in component set, or a styled kit
+     ([`apps/frontend/CLAUDE.md`](apps/frontend/CLAUDE.md) → *UI component approach*). Never pick
+     it silently. Record the answer under **Learnings**.
+   - Rebrand `design/tokens.css`.
+   - Reconcile `design/design-guide.html` with the agreed approach
+     (→ *Hydrating the design guide*), then hydrate its *Components & reuse* chapter with real
+     specimens as shared primitives are built.
+   - **Open `design/design-guide.html` in a browser and have the user review it.** The visual
+     system is confirmed from the rendered page, never from the source or a diff. Record the
+     sign-off under **Learnings**.
 7. **Add runtime configuration.** Restore the local environment and secrets. Stand up staging when
    the chosen pack defines one.
 8. **Run the complete suite.** Push the configured project and confirm that its first CI run is

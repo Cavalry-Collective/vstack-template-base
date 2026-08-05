@@ -45,10 +45,10 @@ Bind the frontend to server-first Next.js App Router. Use JavaScript or TypeScri
 
 ## UI bindings
 
-- Wrap Radix UI primitives as atoms.
+- Wrap the UI foundation chosen in the base's *UI component approach* as atoms; default that choice to Radix UI primitives.
 - Keep interactive primitives as client leaves.
 - Use CSS variables, Tailwind, or a static token module that Server Components can consume.
-- Do not use runtime styling that forces the token boundary into a Client Component.
+- Do not use runtime styling that forces the token boundary into a Client Component. This rules out a styled kit built on runtime CSS-in-JS; a kit that compiles to static CSS is fine.
 - Pass only React-serialisable values into client leaves.
 - Format dates on one side of the boundary with an explicit locale and timezone.
 - Move focus to the main landmark and announce route changes.

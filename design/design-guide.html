@@ -1431,10 +1431,25 @@
       <h1>Components &amp; reuse</h1>
       <p class="lede">Reuse before invention — nothing new is built before the ladder
         below is exhausted.</p>
-      <p>Where are the components? Deliberately absent — apps differ too much to pin an
-        inventory. What's fixed is what components are <em>made of</em>: semantic tokens, the
-        state ladder, the focus ring, the motion bands, the accessibility floor. Two apps with
+      <p>Where are the components? Not here <em>yet</em>. This guide ships as foundations,
+        because a template cannot know a project's components. Every project hydrates this
+        chapter: as each shared primitive lands in <code>atoms/</code> or <code>molecules/</code>,
+        its specimen is added below, rendered from this project's own tokens with its variants and
+        states. Until then, what is fixed is what components are <em>made of</em>: semantic tokens,
+        the state ladder, the focus ring, the motion bands, the accessibility floor. Two apps with
         different components should still read as one practice.</p>
+      <div class="callout">
+        <p><strong>Hydration, in two moves.</strong> Full rules in
+          <code>apps/frontend/CLAUDE.md</code> → <em>Hydrating the design guide</em>. First
+          reconcile the foundation chapters with the project's chosen UI component approach and
+          get the reconciled guide accepted. Then fill the <em>Specimens</em> section below,
+          updating a specimen in the same change that alters its primitive. Organisms are
+          feature-specific and stay out of the guide.</p>
+      </div>
+
+      <h2>Specimens</h2>
+      <p>Not yet hydrated. Replace this paragraph with this project's shared primitives as they
+        are built — each one rendered live, showing every variant and every state on the ladder.</p>
 
       <h2>Before you build</h2>
       <p>Every new screen, section, or control starts by working down this ladder and stopping
@@ -1459,7 +1474,8 @@
         the original instead.</p>
       <div class="callout">
         <p><strong>Twice is a coincidence, thrice is a pattern.</strong> Recurs across features →
-        promote into the app's <code>atoms/</code>. Recurs across <em>projects</em> → earn a specimen here.
+        promote into the app's <code>atoms/</code>, and add its specimen above in the same change.
+        Recurs across <em>projects</em> → promote it back into the template's guide.
         The guide grows from evidence, not speculation.</p>
       </div>
       <ul class="rules">
