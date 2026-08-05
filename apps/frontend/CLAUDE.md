@@ -55,11 +55,23 @@ A route is part of the app's public contract; a file path is an implementation d
 
 ## Design guide — the visual keystone (confirm before building UI)
 
-The project's visual system lives in the design guide (`design/design-guide.html`): the design principles, every foundation (colour, type, spacing, layout, shape, surfaces, motion, iconography, states/focus, accessibility, content, data formatting), and the composition chapters (screen archetypes, tables & grids, forms, view states & feedback) — rendered live from the single token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`). Foundations only, by design: components stay flexible per app and are built from these foundations.
+The project's visual system lives in the design guide (`design/design-guide.html`): the design principles, every foundation (colour, type, spacing, layout, shape, surfaces, motion, iconography, states/focus, accessibility, content, data formatting), and the composition chapters (screen archetypes, tables & grids, forms, view states & feedback) — rendered live from the single token source (`design/tokens.css`, the seed for the app's `tokens.<ext>`). It ships with foundations only, because a template cannot know a project's components. A project hydrates it: see *Hydrating the design guide* below.
 
 - **The guide is a gate.** For a new project or a rebrand, no screen or component work starts until the guide reflects the brand, has been reviewed in a browser, and is signed off — record the sign-off as a line in root `CLAUDE.md` **Learnings** (who confirmed, guide version/date). Once the system is established, small additions don't re-gate — but a new foundational token lands in the guide first.
 - **Customise by editing tokens, not screens.** A rebrand edits the primitive token tier; the semantic tier and the whole guide re-derive from it.
-- **The guide binds components without prescribing them.** Every component consumes semantic tokens, follows the guide's state ladder and focus spec, and meets its accessibility floor. A pattern that recurs across projects earns a specimen in the guide; a stack pack may add a Storybook against the same tokens.
+- **The guide binds components without prescribing them.** Every component consumes semantic tokens, follows the guide's state ladder and focus spec, and meets its accessibility floor. Within a project, every shared primitive earns a specimen in that project's guide (see *Hydrating the design guide*). A pattern that recurs across *projects* is promoted back into the template's guide.
+
+### Hydrating the design guide
+
+The guide arrives as foundations and is filled in per project, in two moves.
+
+**1. Reconcile the guide with the chosen approach.** Once *UI component approach* is settled, re-read the sections that describe how components look and behave: states & focus, shape & border, surfaces & elevation, motion, density, tables & grids, forms, view states. A styled kit arrives with its own answers to several of them. For each mismatch, either theme the kit onto the guide's answer or amend the guide to the kit's. This feeds the sign-off in *The guide is a gate*; it is not a second approval step.
+
+**2. Populate *Components & reuse* with the project's real components.** As each shared primitive lands in `atoms/` or `molecules/`, add a specimen to the guide: the component rendered from the project's own tokens, with its variants and states. The guide then answers rung 3 of its own reuse ladder ("does the app already have it?") instead of sending the reader to the code. Update the specimen in the same change that adds or alters a primitive; a specimen that has drifted from the app is worse than no specimen. Organisms are feature-specific and stay out of the guide.
+
+**Open the guide for the user whenever either move finishes.** Launch the rendered `design/design-guide.html` in a browser and say what changed. The guide is reviewed as a rendered page, never as source or a diff — a token that resolves wrong, a specimen that has drifted, and a broken state ladder are all invisible in a diff. Do not treat a hydration or reconciliation as complete until the user has seen it.
+
+A stack pack may bind move 2 to a component workshop (Storybook or equivalent) rendered against the same tokens. The guide remains the single reviewable page either way.
 
 **Never-violate gates** (the named guide chapter is canonical):
 
@@ -69,6 +81,27 @@ The project's visual system lives in the design guide (`design/design-guide.html
 4. Reuse first: archetype → documented pattern → existing screens/primitives → extend a primitive → only then new, with the PR recording why nothing fit (guide → *Components & reuse*).
 5. One density app-wide, set at the token layer — never mixed within a page (guide → *Screen archetypes*).
 6. Tables, forms, and view states follow the composition patterns — the pattern outranks the component library's defaults (guide → *Tables & grids*, *Forms*, *View states & feedback*). A working table ships the standard kit (search, sort, column filters, pagination, column customisation, selection) by default; dropping a capability is the recorded decision.
+
+## UI component approach (decide with the user before building UI)
+
+How much of the component layer the project writes is a Day-1 decision, and it belongs to the user. **Ask before the first screen or component is built; never pick silently.** Record the answer as a line in root `CLAUDE.md` **Learnings**: which option, one sentence of reasoning, the date. Then reconcile the design guide with the answer and get it accepted before screen work starts (*Hydrating the design guide* above).
+
+Three options:
+
+1. **Headless primitives with an own styled layer.** Unstyled behavioural primitives (Radix or equivalent) wrapped as `atoms/` that map the project's tokens. Every stack pack binds this by default. It suits a project with its own design guide and token set, which is this template's normal case.
+2. **Copy-in component set.** A generator (shadcn/ui or equivalent) writes headless-plus-styling files into `atoms/`, which the project then owns and edits. Same dependencies as option 1, with the code written for you, at the cost of adopting the generator's token naming.
+3. **Styled component kit.** A themed library (MUI, Mantine, Chakra, Ant) supplies finished components. It suits an internal or admin tool where shipping speed outranks brand fidelity, or a project with no bespoke design guide.
+
+**The deciding question is how far the project's design guide sits from the kit's defaults.** A styled kit ships its own colour ramp, spacing scale, and component appearance. Where the guide is close to those, option 3 removes real work. Where the guide is bespoke, the project overrides the kit on every screen, which is more work than writing the styled layer and harder to review. Measure rather than assume: a hand-written `atoms/` tier usually runs a few hundred lines in total, well under the size of a single feature's organisms.
+
+Whichever option is chosen:
+
+- **Take behaviour from a library and write only the appearance.** Focus management, keyboard handling, widget ARIA, table state, and date and timezone maths come from a library (root `CLAUDE.md` → *Don't reinvent existing solutions*). Spacing, colour, and variants come from the project's tokens.
+- **Never mix two foundations.** One library owns a given widget; a second library for the same widget is a defect.
+- **The design guide still gates the work.** A styled kit is themed onto the project's tokens; it is never accepted at its own defaults.
+- **Options 1 and 2 leave *Component structure* as written.** Option 3 substitutes the kit for the headless foundation named there, keeps the atomic tiers and the DRY gate unchanged, and is a deviation from the adopted stack pack's UI binding — say so in the same Learnings line.
+
+**Add a specialised library when a need is behavioural and hard, whichever option is in force.** A headless table library once a table needs sort, filter, pagination, column visibility, or selection (the standard kit in *Design guide* gate 6). A date library at the first formatting or timezone need. Neither depends on the choice above.
 
 ## Page layout & design tokens
 
@@ -124,7 +157,7 @@ Tokens say where values come from; this says which values are good. Checkable pe
 
 ## Interaction feedback & perceived performance
 
-- **Every actionable control shows its state from tokens.** Pressed/active, focus-visible, and disabled states live on the shared `atoms/`/`molecules/` primitives, not per page. Hover is a pointer-device affordance; on touch, the pressed state carries the feedback — never leave a tap without visible response. Surface the headless foundation's focus-visible; don't suppress it.
+- **Every actionable control shows its state from tokens.** Pressed/active, focus-visible, and disabled states live on the shared `atoms/`/`molecules/` primitives, not per page. Hover is a pointer-device affordance; on touch, the pressed state carries the feedback — never leave a tap without visible response. Surface the UI foundation's focus-visible; don't suppress it.
 - **In-flight feedback stays on the control that triggered the action.** Disable the control and show an inline busy indicator there — never blank the whole screen for a local action. Full-screen/section loading is for a screen's initial data fetch only (the `loading` state above).
 - **Prefer optimistic updates for low-risk mutations** (toggles, reorders, favourites) with rollback and an error message on failure; reserve blocking spinners for genuinely blocking waits.
 - **Initial content load uses skeletons that match the final layout;** short indeterminate waits use a spinner. Don't layout-shift from spinner to content.
@@ -149,7 +182,7 @@ Tokens say where values come from; this says which values are good. Checkable pe
 
 ## Component structure — atomic design
 
-Consistency comes from reuse, not per-screen discipline. Every component sits in one of five atomic tiers, built over a headless foundation you never skip — the foundation is a dependency, not a folder: unstyled behavioural primitives from a headless UI library that solve focus management, keyboard handling, and widget-level ARIA for the components routed through it (not page-level a11y; see *Accessibility baseline*).
+Consistency comes from reuse, not per-screen discipline. Every component sits in one of five atomic tiers, built over the UI foundation chosen in *UI component approach*. The foundation is a dependency, not a folder, and it is never skipped: it solves focus management, keyboard handling, and widget-level ARIA for the components routed through it (not page-level a11y; see *Accessibility baseline*). Under options 1 and 2 that foundation is an unstyled headless library; under option 3 it is the styled kit.
 
 1. **Atoms** (`components/atoms/`) — the smallest primitives, each mapping the project's tokens onto the foundation: `<Button>`, `<Input>`, `<Icon>`, `<Label>`.
 2. **Molecules** (`components/molecules/`) — small, still-generic compositions of atoms: `<FormField>` (label + input + error), `<SearchBar>`, `<Card>`.
@@ -168,7 +201,7 @@ Consistency comes from reuse, not per-screen discipline. Every component sits in
 
 ## Accessibility baseline
 
-Non-negotiable. The headless library covers a11y only for widgets routed through it; everything below is the page author's responsibility.
+Non-negotiable. The UI library covers a11y only for widgets routed through it; everything below is the page author's responsibility.
 
 - **Colour contrast.** Semantic colour tokens meet WCAG 2.1 AA against their intended background — 4.5:1 body text, 3:1 large text and UI/graphical boundaries. A constraint on the token set.
 - **Keyboard operability.** Every interactive element is keyboard-reachable and operable; keep a visible focus indicator — never remove the outline without a token-based replacement.
@@ -193,7 +226,7 @@ One language is the **reference**; every other language stays in exact parity wi
 
 ## Coding standards
 
-- **Never reimplement what the UI library already gives you.** Typography, buttons, inputs, and the like are built on the chosen UI library, wrapped through the shared `atoms/`/`molecules/` tier — never hand-rolled. A bespoke `<Button>` duplicating the library's is the canonical mistake: it fragments styling, drops the accessibility the library solved, and drifts over time.
+- **Never reimplement what the UI library already gives you.** Typography, buttons, inputs, and the like are built on the library chosen in *UI component approach*, wrapped through the shared `atoms/`/`molecules/` tier — never hand-rolled. A bespoke `<Button>` duplicating the library's is the canonical mistake: it fragments styling, drops the accessibility the library solved, and drifts over time.
 - **Cross-cutting concerns belong in shared hooks/services.** Wrap repeated API/auth/error-reporting plumbing once and reuse it; don't copy it into every page.
 - **Don't accumulate one-off helpers in `src/lib/`.** Co-locate a helper with its only caller until reuse actually appears; `lib/` is for genuinely shared, side-effect-light code.
 - **Use libraries instead of hand-rolling — especially for dates.** See *Don't reinvent existing solutions* in the root `CLAUDE.md` Principles (the canonical statement of this rule).

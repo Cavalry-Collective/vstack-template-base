@@ -12,7 +12,7 @@ Bind the frontend to React, TypeScript, Vite, React Router, and a platform-neutr
 | Routing | React Router library mode in `src/routes.tsx` |
 | Data | relative `/api` calls through `services/http.ts` |
 | State | one React Context provider per domain |
-| Styling | Tailwind CSS 4, Radix UI, CSS-variable tokens |
+| Styling | Tailwind CSS 4, CSS-variable tokens; UI foundation per the base's *UI component approach* (this pack defaults to Radix UI) |
 | Configuration | Zod-parsed `VITE_*` values |
 | Tests | Vitest, React Testing Library, Playwright |
 
@@ -44,7 +44,8 @@ The deployment platform must provide:
 ## UI, version, and testing
 
 - Map router pending, error, empty, and missing-resource states to the shared primitives.
-- Declare tokens through Tailwind 4 `@theme` and wrap Radix primitives as atoms.
+- Declare tokens through Tailwind 4 `@theme`.
+- Wrap the UI foundation chosen in the base's *UI component approach* as atoms; default that choice to Radix primitives.
 - Use mobile-first utilities, container queries for components, and one shared gutter primitive.
 - Inject `VITE_APP_VERSION`, render it, and poll `version.json` for a dismissible refresh prompt.
 - Offer an explicit reload when an old lazy chunk no longer exists.

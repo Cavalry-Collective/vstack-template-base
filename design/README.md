@@ -10,6 +10,10 @@ the visual keystone confirmed before any UI work (`apps/frontend/CLAUDE.md` →
 *Design guide*) — and **`CLAUDE.md`**, the rules for creating the prototypes
 (prototype work only, not app development). Everything below concerns the prototypes.
 
+The guide ships as foundations and is **hydrated per project**: reconciled with the
+chosen UI component approach, then populated with that project's own component
+specimens as they are built (`apps/frontend/CLAUDE.md` → *Hydrating the design guide*).
+
 ## Layout
 
 Keep prototypes findable so "point the relevant prototype at the spec" is mechanical, not a hunt.

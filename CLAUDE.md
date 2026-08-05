@@ -48,7 +48,7 @@ When instruction files disagree: the area file (`apps/*/CLAUDE.md`, `db/CLAUDE.m
 
 ### Frontend
 
-**Frontend** — store / services / pages / components layering with consistent loading/error/empty/success states and reuse of base UI primitives. **Read `apps/frontend/CLAUDE.md` before touching `apps/frontend/`.**
+**Frontend** — store / services / pages / components layering with consistent loading/error/empty/success states and reuse of base UI primitives. **Read `apps/frontend/CLAUDE.md` before touching `apps/frontend/`.** On a new project, agree the UI component approach with the user before any screen or component is built (that file → *UI component approach*).
 
 ### UI mockup / design reference
 
@@ -159,6 +159,6 @@ Where `main` is protected (Day-1 step 11) or the work is spec-backed (`specs/REA
 
 ## Learnings
 
-Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it. At instantiation the usual first entry is the stack-pack choice (see the Day-1 checklist in `README.md`).
+Durable, cross-session notes go here instead of the memory system (see the note at the top of this file). Keep each entry to a line or two — what was learned and how to apply it. At instantiation the usual first entries are the stack-pack choice and the UI component approach the user agreed (`apps/frontend/CLAUDE.md` → *UI component approach*); see the Day-1 checklist in `README.md`.
 
 - Spec tool: none by default. Spec Kit was removed on 2026-07-29; adopt a tool per `specs/README.md` if wanted. Feature numbers 001–004 are consumed and must not be reused: 001 design guide (retired), 002 repo-guidance audit (retired, no directory), 003–004 seo (retired, artifacts deleted).
