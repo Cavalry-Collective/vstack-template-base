@@ -13,7 +13,7 @@ Bind the frontend to React, TypeScript, Vite, React Router, and the Django API.
 | Data | relative `/api` calls through `services/http.ts` |
 | Contract | drf-spectacular OpenAPI to openapi-typescript |
 | State | React Context by domain |
-| Styling | Tailwind CSS 4; UI foundation per the base's *UI component approach* (this pack defaults to Radix UI) |
+| Styling | Tailwind CSS 4; UI foundation per the base's *UI component approach* (this pack defaults to shadcn/ui) |
 | Tests | Vitest, React Testing Library, Playwright |
 
 Everything exposed through `VITE_*` is public. Parse frontend configuration once with Zod.
@@ -41,7 +41,7 @@ Everything exposed through `VITE_*` is public. Parse frontend configuration once
 ## UI, version, and testing
 
 - Declare tokens through Tailwind 4 `@theme`.
-- Wrap the UI foundation chosen in the base's *UI component approach* as atoms; default that choice to Radix primitives.
+- Wrap the UI foundation chosen in the base's *UI component approach* as atoms; default that choice to shadcn/ui components generated into `atoms/` (Radix primitives under the hood).
 - Self-host fonts and keep one `cn()` helper.
 - Inject and render `VITE_APP_VERSION`.
 - Serve `version.json` with `no-store` and show a dismissible refresh prompt when it changes.

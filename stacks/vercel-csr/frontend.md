@@ -12,7 +12,7 @@ Bind the frontend to React 19, TypeScript, Vite 7, React Router, and Vercel's st
 | Routing | React Router library mode in `src/routes.tsx` |
 | Data | relative `/api` calls through `services/http.ts` |
 | State | one React Context provider per domain |
-| Styling | Tailwind CSS 4, CSS-variable tokens; UI foundation per the base's *UI component approach* (this pack defaults to Radix UI) |
+| Styling | Tailwind CSS 4, CSS-variable tokens; UI foundation per the base's *UI component approach* (this pack defaults to shadcn/ui) |
 | Configuration | Zod-parsed `VITE_*` values in `src/lib/env.ts` |
 | Tests | TypeScript, Vite build, Playwright |
 
@@ -51,7 +51,7 @@ Everything exposed through `VITE_*` is public. Never put a secret in the fronten
 - Use the shared empty and not-found components.
 - Declare semantic tokens through Tailwind 4 `@theme`.
 - Wrap the UI foundation chosen in the base's *UI component approach* as atoms.
-- Default that choice to Radix primitives with `class-variance-authority`, one `cn()` helper, and `lucide-react`.
+- Default that choice to shadcn/ui components generated into `atoms/` — Radix primitives, `class-variance-authority`, one `cn()` helper, and `lucide-react` under the hood.
 - Self-host fonts with `font-display: swap`.
 - Use mobile-first utilities, container queries for reusable components, and intrinsic layout before new breakpoints.
 - Keep page gutters in one `<Container>` or `<Section>` primitive.

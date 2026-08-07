@@ -65,11 +65,13 @@ The project's visual system lives in the design guide (`design/design-guide.html
 
 The guide arrives as foundations and is filled in per project, in two moves.
 
-**1. Reconcile the guide with the chosen approach.** Once *UI component approach* is settled, re-read the sections that describe how components look and behave: states & focus, shape & border, surfaces & elevation, motion, density, tables & grids, forms, view states. A styled kit arrives with its own answers to several of them. For each mismatch, either theme the kit onto the guide's answer or amend the guide to the kit's. This feeds the sign-off in *The guide is a gate*; it is not a second approval step.
+**1. Reconcile the guide with the chosen approach.** Once *UI component approach* is settled, re-read the sections that describe how components look and behave: states & focus, shape, surfaces & elevation, motion, density, tables & grids, forms, view states. A styled kit arrives with its own answers to several of them. For each mismatch, either theme the kit onto the guide's answer or amend the guide to the kit's. This feeds the sign-off in *The guide is a gate*; it is not a second approval step.
 
-**2. Populate *Components & reuse* with the project's real components.** As each shared primitive lands in `atoms/` or `molecules/`, add a specimen to the guide: the component rendered from the project's own tokens, with its variants and states. The guide then answers rung 3 of its own reuse ladder ("does the app already have it?") instead of sending the reader to the code. Update the specimen in the same change that adds or alters a primitive; a specimen that has drifted from the app is worse than no specimen. Organisms are feature-specific and stay out of the guide.
+**2. Populate *Components* with the project's real components.** As each shared primitive lands in `atoms/` or `molecules/`, add a specimen to the guide's *Components* chapter under its layer in the component hierarchy (atoms or molecules): the component rendered from the project's own tokens, with its variants and states. The guide then answers the existing-component rungs of its own reuse order ("does the app already have it?") instead of sending the reader to the code. Update the specimen in the same change that adds or alters a primitive; a specimen that has drifted from the app is worse than no specimen. Organisms are feature-specific and stay out of the guide.
 
 **Open the guide for the user whenever either move finishes.** Launch the rendered `design/design-guide.html` in a browser and say what changed. The guide is reviewed as a rendered page, never as source or a diff — a token that resolves wrong, a specimen that has drifted, and a broken state ladder are all invisible in a diff. Do not treat a hydration or reconciliation as complete until the user has seen it.
+
+**Review specimens zoomed, not only full-page.** A full-page capture hides glyph-level defects. Inspect each composed specimen at ~2× and judge it as a screenshot of the shipped product: icon-to-text proportion, control size against the context's density (dense toolbars use the sm control token), one type size per element class within a row, vertical centring of every inline element, and column alignment. Compare against the component set's defaults before signing off.
 
 A stack pack may bind move 2 to a component workshop (Storybook or equivalent) rendered against the same tokens. The guide remains the single reviewable page either way.
 
@@ -78,18 +80,18 @@ A stack pack may bind move 2 to a component workshop (Storybook or equivalent) r
 1. Every colour, size, space, and duration resolves to a semantic token — a hex or px literal in a screen is a defect (guide → *Tokens*).
 2. Pick the screen archetype before building any screen — its zones, page rhythm, and width are fixed, never re-derived per page (guide → *Screen archetypes*).
 3. Surfaces follow the ladder: no card-like container inside another; separate in order whitespace → background shift → border → divider (guide → *Surfaces & elevation*).
-4. Reuse first: archetype → documented pattern → existing screens/primitives → extend a primitive → only then new, with the PR recording why nothing fit (guide → *Components & reuse*).
+4. Reuse first: archetype → documented pattern → existing organism/molecule/atom → extend a component → generate from the project's component library → only then new, with the PR recording why nothing fit (guide → *Components*).
 5. One density app-wide, set at the token layer — never mixed within a page (guide → *Screen archetypes*).
 6. Tables, forms, and view states follow the composition patterns — the pattern outranks the component library's defaults (guide → *Tables & grids*, *Forms*, *View states & feedback*). A working table ships the standard kit (search, sort, column filters, pagination, column customisation, selection) by default; dropping a capability is the recorded decision.
 
 ## UI component approach (decide with the user before building UI)
 
-How much of the component layer the project writes is a Day-1 decision, and it belongs to the user. **Ask before the first screen or component is built; never pick silently.** Record the answer as a line in root `CLAUDE.md` **Learnings**: which option, one sentence of reasoning, the date. Then reconcile the design guide with the answer and get it accepted before screen work starts (*Hydrating the design guide* above).
+How much of the component layer the project writes is a Day-1 decision, and it belongs to the user. **Ask before the first screen or component is built; never pick silently.** When the user has no preference, record option 2 (the copy-in set) as the default. Record the answer as a line in root `CLAUDE.md` **Learnings**: which option, one sentence of reasoning, the date. Then reconcile the design guide with the answer and get it accepted before screen work starts (*Hydrating the design guide* above).
 
 Three options:
 
-1. **Headless primitives with an own styled layer.** Unstyled behavioural primitives (Radix or equivalent) wrapped as `atoms/` that map the project's tokens. Every stack pack binds this by default. It suits a project with its own design guide and token set, which is this template's normal case.
-2. **Copy-in component set.** A generator (shadcn/ui or equivalent) writes headless-plus-styling files into `atoms/`, which the project then owns and edits. Same dependencies as option 1, with the code written for you, at the cost of adopting the generator's token naming.
+1. **Headless primitives with an own styled layer.** Unstyled behavioural primitives (Radix or equivalent) wrapped as `atoms/` that map the project's tokens. It suits a project that wants to own every line of its styled layer rather than start from generated files.
+2. **Copy-in component set — the default when the user has no preference.** A generator (shadcn/ui or an equivalent port for the stack) writes headless-plus-styling files into `atoms/`, which the project then owns and edits. Same dependencies as option 1, with the code written for you. The design guide's semantic tier already uses shadcn's theme vocabulary (`design/tokens.css`), so generated components consume the project's tokens without renaming. The web stack packs default to this option. The wechat pack names no UI foundation, so on that stack the Day-1 decision picks one explicitly.
 3. **Styled component kit.** A themed library (MUI, Mantine, Chakra, Ant) supplies finished components. It suits an internal or admin tool where shipping speed outranks brand fidelity, or a project with no bespoke design guide.
 
 **The deciding question is how far the project's design guide sits from the kit's defaults.** A styled kit ships its own colour ramp, spacing scale, and component appearance. Where the guide is close to those, option 3 removes real work. Where the guide is bespoke, the project overrides the kit on every screen, which is more work than writing the styled layer and harder to review. Measure rather than assume: a hand-written `atoms/` tier usually runs a few hundred lines in total, well under the size of a single feature's organisms.
@@ -116,7 +118,7 @@ Two things make every screen feel like one product: a single shared layout and a
 **One token source, three tiers.** All spacing, colour, typography, radius, and elevation come from the single token source, never hardcoded per page:
 
 1. **Primitive tokens** — raw, context-free values (`--red-400`, `--space-3`).
-2. **Semantic tokens** — primitives mapped to meaning (`--color-bg`, `--gutter-screen`, `--header-clearance`). Components reference these (plus form-factor tokens such as `--bottom-nav-clearance` only when mobile is the primary form factor).
+2. **Semantic tokens** — primitives mapped to meaning (`--background`, `--gutter-screen`, `--header-clearance`); colour roles follow shadcn's theme vocabulary (guide → *Tokens*). Components reference these (plus form-factor tokens such as `--bottom-nav-clearance` only when mobile is the primary form factor).
 3. **Component tokens** — per-component overrides, only where genuinely needed.
 
 Pages and components consume **semantic** tokens; they never reach past them to a raw primitive.
@@ -152,7 +154,7 @@ Tokens say where values come from; this says which values are good. Checkable pe
 - **Type.** One modular type scale in the token source; at most 2 font families, ~4 sizes and ~2 weights per screen; body copy capped at ~60–75ch. A new size is a new scale step in tokens, not a one-off value in a component.
 - **Spacing.** Every margin/padding/gap resolves to a step on the spacing scale. If the scale can't express it, fix the scale, not the instance.
 - **Hierarchy.** Exactly one primary (filled) action per view; everything else is secondary/tertiary. One H1 per page; heading levels nest in order and never skip.
-- **Colour.** Semantic intent tokens for meaning (success/warning/danger/info), always paired with text or an icon — never colour alone. Limit accent surfaces so the single primary CTA stays the most prominent element.
+- **Colour.** Semantic intent tokens for meaning (success/warning/destructive/info), always paired with text or an icon — never colour alone. Limit accent surfaces so the single primary CTA stays the most prominent element.
 - **Alignment & density.** Content aligns to the shared layout's grid and gutters — no per-screen one-off gutters. Density follows the declared primary form factor and stays consistent within a view.
 
 ## Interaction feedback & perceived performance

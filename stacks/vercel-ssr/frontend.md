@@ -12,7 +12,7 @@ Bind the frontend to TypeScript, Next.js App Router, Server Components, and Serv
 | Reads | server module `controller/queries.ts` |
 | Mutations | server module `controller/actions.ts` |
 | Client state | React Context only for shared interactive state |
-| Styling | Tailwind CSS 4, `next/font`; UI foundation per the base's *UI component approach* (this pack defaults to Radix UI) |
+| Styling | Tailwind CSS 4, `next/font`; UI foundation per the base's *UI component approach* (this pack defaults to shadcn/ui) |
 | Tests | TypeScript, Next build, Vitest as needed, Playwright |
 
 Default every file to a Server Component. Add `'use client'` only at the smallest interactive leaf.
@@ -46,7 +46,7 @@ Unauthenticated queries and actions redirect to login while preserving the inten
 
 - Declare tokens through Tailwind 4 `@theme`.
 - Wrap the UI foundation chosen in the base's *UI component approach* as atoms, keeping client directives at the interactive leaf.
-- Default that choice to Radix primitives with `class-variance-authority`, one `cn()` helper, `lucide-react`, and `next/font`.
+- Default that choice to shadcn/ui components generated into `atoms/`, plus `next/font`. Under the hood that brings Radix primitives, `class-variance-authority`, one `cn()` helper, and `lucide-react`.
 - Reject a styled kit that requires runtime CSS-in-JS: it pulls the token boundary into a Client Component. A kit that compiles to static CSS is fine.
 - Use mobile-first utilities, container queries for reusable components, and intrinsic layout before new breakpoints.
 - Keep page gutters in one shared layout primitive.

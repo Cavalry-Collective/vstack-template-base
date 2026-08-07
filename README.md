@@ -151,10 +151,11 @@ Complete this once when creating a project.
    - **Agree the UI component approach with the user** — headless primitives with an own styled
      layer, a copy-in component set, or a styled kit
      ([`apps/frontend/CLAUDE.md`](apps/frontend/CLAUDE.md) → *UI component approach*). Never pick
-     it silently. Record the answer under **Learnings**.
+     it silently; when the user has no preference, use the default that section records.
+     Record the answer under **Learnings**.
    - Rebrand `design/tokens.css`.
    - Reconcile `design/design-guide.html` with the agreed approach
-     (→ *Hydrating the design guide*), then hydrate its *Components & reuse* chapter with real
+     (→ *Hydrating the design guide*), then hydrate its *Components* chapter with real
      specimens as shared primitives are built.
    - **Open `design/design-guide.html` in a browser and have the user review it.** The visual
      system is confirmed from the rendered page, never from the source or a diff. Record the
