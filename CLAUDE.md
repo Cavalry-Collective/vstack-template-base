@@ -137,6 +137,7 @@ Before opening a PR or merging, re-read the full diff end to end — including f
 - Names state business meaning (see *Readability and Naming*).
 - Every new abstraction, dependency, or config key has one line in the PR: the simpler option and why it was rejected. If you can't write that line, build the simpler option. No second caller yet → no abstraction.
 - New code follows an existing pattern, named in the PR — or the PR says why none fits. If the pattern itself is wrong, fix it repo-wide in its own change; don't fork it locally.
+- For every UI composition added or changed, the PR names the comparable existing instance or documented pattern used as its baseline — or says why none fits — and confirms that unrelated visual structure was preserved.
 
 ### Working in a git worktree
 
