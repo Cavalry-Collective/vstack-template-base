@@ -84,6 +84,8 @@ A stack pack may bind move 2 to a component workshop (Storybook or equivalent) r
 5. One density app-wide, set at the token layer — never mixed within a page (guide → *Screen archetypes*).
 6. Tables, forms, and view states follow the composition patterns — the pattern outranks the component library's defaults (guide → *Tables & grids*, *Forms*, *View states & feedback*). A working table ships the standard kit (search, sort, column filters, pagination, column customisation, selection) by default; dropping a capability is the recorded decision.
 
+**Existing screens are the baseline for tweak work.** Before changing an existing screen, inspect the current implementation in the affected state and viewport, using the running app or the review context already supplied with the request. Treat the request as a delta, not permission to redesign: preserve its layout, hierarchy, spacing, typography, component variants, copy, states, and responsive behaviour unless the request explicitly changes them. A tweak never re-derives the screen from the design guide or its original mockup; the existing app is the reference.
+
 ## UI component approach (decide with the user before building UI)
 
 How much of the component layer the project writes is a Day-1 decision, and it belongs to the user. **Ask before the first screen or component is built; never pick silently.** When the user has no preference, record option 2 (the copy-in set) as the default. Record the answer as a line in root `CLAUDE.md` **Learnings**: which option, one sentence of reasoning, the date. Then reconcile the design guide with the answer and get it accepted before screen work starts (*Hydrating the design guide* above).
@@ -196,7 +198,8 @@ Consistency comes from reuse, not per-screen discipline. Every component sits in
 
 **The DRY gate — the UI must be *actually* DRY:**
 
-- **Reuse-first.** Before building any component, search `atoms/` and `molecules/` for one that exists. A second variant of something already there is the canonical failure this structure prevents.
+- **Reuse components and compositions.** Before adding or changing a UI action, search the same feature and then the app for the most comparable existing instance of that action or composition. Reusing the same atom is not sufficient: in comparable contexts, also match placement, density, label shape, loading/disabled behaviour, and responsive treatment. If the new instance deliberately differs, record the contextual reason.
+- **One owner at the second comparable instance.** When the same semantic composition appears twice in comparable contexts, give it one implementation in the same change: reuse or extend the owning molecule/organism, or extract one at the appropriate tier. Share a coherent interaction, not merely a bundle of matching classes. If the contexts require meaningfully different behaviour, keep them separate and document the distinction.
 - **Never build a one-off.** Every header, button, input, modal, table, or icon button is the shared organism/primitive — never hand-rolled. Wrap from the start, even before a component is widely reused, so a later token/behaviour change lands everywhere at once.
 - **No feature-specific atoms or molecules.** Genuinely generic → global `molecules/`; carries business meaning → organism. Nothing in between — this one rule stops the shared tiers re-fragmenting per feature.
 - **Audit for duplication periodically** (in the spirit of the i18n key-parity check): two components that render the same thing are a defect to merge.
@@ -270,6 +273,7 @@ Run it; don't infer from reading the code.
 
 - **A new screen's initial build is verified against its `design/` mockup** — render it and look (a screenshot or equivalent). No mockup? Sketch the screen in the feature's spec and get it approved there first — never invent UI for a non-trivial new screen silently. Later iterations verify against the running app, not the mockup. (Full loop + mockup inventory: `design/README.md`.)
 - Start the dev server and load the touched screen.
+- For a tweak to an existing screen, reuse the running screen or supplied review capture as the baseline; no separate before/after capture is required. Confirm the requested delta is present and unrelated visual structure is unchanged.
 - Force all four states to render (loading/error/empty/success) — don't just read the code.
 - One keyboard-only pass: tab order sane, focus visible, Esc/Enter work on any modal or dialog.
 - Exercise the screen at the declared primary form factor, **and at ~320 px and 200% zoom** — confirm nothing overflows, clips, or forces horizontal scroll, and fixed chrome doesn't overlap content (force it; don't infer safety from the classes).
