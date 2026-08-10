@@ -32,7 +32,7 @@ UI code may import only a module's `controller/` files.
 - Put reads in `controller/queries.ts`. Authorise, invoke one use case, return a plain DTO, and use React `cache()` for duplicate reads within one render.
 - Put mutations in `controller/actions.ts` with `'use server'`. Parse, authorise, invoke one use case, and return the result envelope.
 - Treat every Server Action as a publicly invokable endpoint. Never rely on the rendering UI for authorisation.
-- Use route handlers only for `/health`, webhooks, and real external consumers.
+- Use route handlers only for `/health`, webhooks, real external consumers, queue consumers, and streamed responses such as long inference.
 - Return `{ ok: true, data }` or `{ ok: false, error: { code, message, correlationId } }` from actions.
 - Keep the base pagination envelope on list queries.
 
@@ -49,7 +49,28 @@ UI code may import only a module's `controller/` files.
 - Keep session redirects in the UI layer and authorisation at the data edge.
 - Use an in-memory limiter only for soft per-instance limits.
 - Keep correctness-bearing state outside serverless memory.
-- Finish all work before returning a response.
+- Finish request-scoped work before returning a response. Hand anything longer to a queue message (see *Background work: Vercel Queues*).
+
+## Streaming and long-running inference
+
+Bind the llm-calls add-on's streaming inference to Vercel Functions on Fluid compute.
+
+- Stream inference through a route handler that returns a streamed `Response`. Server Actions are not a streaming surface for long model calls.
+- Raise `maxDuration` per route (`export const maxDuration = ...`) above the worst-case model call: the default is 300 s, the maximum 800 s on Pro/Enterprise (1,800 s behind Vercel's extended-duration beta).
+- Streaming does not extend `maxDuration`; it keeps idle timeouts on the path from closing the connection. A call that can outlast the ceiling runs as a queue job instead.
+- Fluid compute bills active CPU rather than total running time, so a handler that spends minutes awaiting a provider stream stays cheap.
+
+## Background work: Vercel Queues
+
+Bind asynchronous jobs, including the llm-calls add-on's asynchronous inference, to Vercel Queues (`@vercel/queue`, public beta).
+
+- Send with `send(topic, payload, { idempotencyKey })`, using the primary business record id as the idempotency key.
+- Consume with an App Router route handler wrapped in `handleCallback`, registered under `experimentalTriggers` (type `queue/v2beta`) in `vercel.json`. Consumers have no public URL; Vercel invokes them internally.
+- Treat the consumer as a controller edge: parse the message with a Zod DTO and invoke one use case.
+- Delivery is at-least-once and not FIFO, even with a single consumer. Guard every consumer with the job record per the base idempotency rules.
+- Failed messages retry until their TTL by default and there is no built-in dead-letter queue. Bound attempts in the consumer's `retry` callback: past the limit, record the failure and return `{ acknowledge: true }`.
+- For inference jobs, check the job record before calling the model so a redelivery never re-runs a completed or in-flight generation. The SDK extends the message lease while the handler runs; keep the route's `maxDuration` above worst-case inference so the lease never lapses mid-call.
+- Local dev publishes to the real queue service and runs handlers in-process; there is no offline emulator.
 
 ## Testing
 

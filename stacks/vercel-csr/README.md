@@ -19,7 +19,7 @@ The frontend is a static SPA with no SSR or prerendering. Adopt `vercel-ssr` whe
 | File | Covers |
 |---|---|
 | `frontend.md` | client-only rendering, routing, `/api` proxy, styling, testing |
-| `backend.md` | Fastify onion binding, Awilix, Vercel entrypoint |
+| `backend.md` | Fastify onion binding, Awilix, Vercel entrypoint, streaming, queues |
 | `db.md` | Postgres migrations, `pg`, Neon pooling |
 | `infra.md` | Vercel projects, staging, deployment, observability |
 
@@ -60,6 +60,7 @@ pnpm migrate     # node-pg-migrate up; rollback with backend migrate:down
 - Use signed HTTP-only cookies for sessions.
 - Use React Context and plain `fetch` until client cache invalidation requires another tool.
 - Use direct SQL through `pg`; do not add an ORM.
+- Use Vercel Queues (public beta) for background jobs; do not add a third-party job runner.
 
 ## Deployment
 

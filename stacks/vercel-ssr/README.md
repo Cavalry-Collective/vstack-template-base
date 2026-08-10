@@ -17,7 +17,7 @@ Choose `vercel-csr` instead when the product needs a separate API and a purely c
 | File | Covers |
 |---|---|
 | `frontend.md` | App Router UI, routing, state, styling, testing |
-| `backend.md` | relocated onion, queries, actions, sessions, testing |
+| `backend.md` | relocated onion, queries, actions, sessions, streaming, queues, testing |
 | `db.md` | Postgres migrations, `pg`, Neon pooling |
 | `infra.md` | Vercel project, staging, deployment, observability |
 
@@ -64,6 +64,7 @@ pnpm migrate     # node-pg-migrate up; rollback with migrate:down
 - Use Vitest for server and isolated frontend logic.
 - Use React Context only where an interactive subtree shares or mutates server data.
 - Use direct SQL through `pg`; do not add an ORM.
+- Use Vercel Queues (public beta) for background jobs; do not add a third-party job runner.
 
 ## Deployment
 

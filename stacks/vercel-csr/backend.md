@@ -49,7 +49,28 @@ Use Fastify encapsulation to scope aspects to the route subtree that needs them.
 - Set validated `TRUST_PROXY=true` in Vercel so source IPs survive the proxy.
 - Use a shared store when a rate limit must be globally exact.
 - Keep correctness-bearing state in Postgres or the signed cookie.
-- Complete background work before returning the response.
+- Complete request-scoped work before returning the response. Hand anything longer to a queue message (see *Background work: Vercel Queues*).
+
+## Streaming and long-running inference
+
+Bind the llm-calls add-on's streaming inference to Vercel Functions on Fluid compute.
+
+- Stream by returning a Node `Readable` or web `ReadableStream` from the Fastify handler; Vercel streams function responses natively.
+- Raise the API function's `maxDuration` above the worst-case model call: the default is 300 s, the maximum 800 s on Pro/Enterprise (1,800 s behind Vercel's extended-duration beta).
+- Streaming does not extend `maxDuration`; it keeps idle timeouts on the path from closing the connection. A call that can outlast the ceiling runs as a queue job instead.
+- Fluid compute bills active CPU rather than total running time, so a handler that spends minutes awaiting a provider stream stays cheap.
+
+## Background work: Vercel Queues
+
+Bind asynchronous jobs, including the llm-calls add-on's asynchronous inference, to Vercel Queues (`@vercel/queue`, public beta).
+
+- Send with `send(topic, payload, { idempotencyKey })`, using the primary business record id as the idempotency key.
+- Consume with a route handler wrapped in `handleCallback`, registered under `experimentalTriggers` (type `queue/v2beta`) in the API project's `vercel.json`. Consumers have no public URL; Vercel invokes them internally.
+- Treat the consumer as a controller-ring edge: parse the message with a Zod DTO and invoke one use case.
+- Delivery is at-least-once and not FIFO, even with a single consumer. Guard every consumer with the job record per the base idempotency rules.
+- Failed messages retry until their TTL by default and there is no built-in dead-letter queue. Bound attempts in the consumer's `retry` callback: past the limit, record the failure and return `{ acknowledge: true }`.
+- For inference jobs, check the job record before calling the model so a redelivery never re-runs a completed or in-flight generation. The SDK extends the message lease while the handler runs; keep `maxDuration` above worst-case inference so the lease never lapses mid-call.
+- Local dev publishes to the real queue service and runs handlers in-process; there is no offline emulator.
 
 ## Entrypoint
 
@@ -67,6 +88,8 @@ Vercel detects Fastify and deploys it with no configuration, so the entrypoint i
 ## Reference
 
 - [Fastify on Vercel](https://vercel.com/docs/frameworks/backend/fastify) — entrypoint detection and the supported filenames.
+- [Vercel Queues](https://vercel.com/docs/queues) — concepts, SDK, and limits.
+- [Function duration](https://vercel.com/docs/functions/configuring-functions/duration) — `maxDuration` defaults and maximums.
 
 ## Testing
 

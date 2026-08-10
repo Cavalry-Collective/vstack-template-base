@@ -49,6 +49,7 @@ Authenticate with a team API token. Run `vercel whoami`, confirm the team and pr
 - Send server runtime logs to an external drain through one marketplace integration.
 - Configure Analytics and Speed Insights through `frontend.md`.
 - Use request-log search for historical production incidents; the CLI live tail is not durable evidence.
+- When queues are in use, watch backlog and max message age under Observability → Queues; queue topics and triggers live in code (`vercel.json`), not Terraform.
 
 Do not declare an integration-owned log drain in Terraform. Manage its environment coverage in the integration.
 
