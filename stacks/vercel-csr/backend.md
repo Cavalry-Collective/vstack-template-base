@@ -85,6 +85,10 @@ Vercel detects Fastify and deploys it with no configuration, so the entrypoint i
 - Add `apps/backend/vercel.json` only when a setting genuinely differs from the defaults. A rewrite to the entrypoint is not one of them.
 - Run `vercel dev` to exercise the deployed request path locally; a plain `node src/server.js` is enough for unit-level verification.
 
+**This holds because Vercel's Git integration builds the project** — the deployment model `./infra.md` mandates — and detection runs on every push. Check that before applying this section. A project that has left that model, with Git deployments disabled and `vercel build --prebuilt` running in CI, builds from settings fetched by `vercel pull` and gets no detection at all: the backend builds as a static site and the deploy stops at `No Output Directory named "public" found`.
+
+Restore the Git integration rather than working around it. Where a project genuinely cannot — a deploy that must migrate the database *before* the new code goes live is the usual reason — declare the build instead: `builds: [{ src: "src/server.js", use: "@vercel/node" }]` with a catch-all route to it, and export a default `handler(req, res)` that dispatches through Fastify, guarding the local `listen()` on `!process.env.VERCEL`. **Change both halves together.** The config alone deploys a file that exports no handler, which 404s every request — worse than the failed build, because it reaches production before a health check catches it.
+
 ## Reference
 
 - [Fastify on Vercel](https://vercel.com/docs/frameworks/backend/fastify) — entrypoint detection and the supported filenames.
