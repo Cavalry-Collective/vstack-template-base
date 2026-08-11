@@ -180,6 +180,117 @@
   td.num { font-variant-numeric: tabular-nums; text-align: right; }
   td.num-prop { text-align: right; }
 
+  /* —— Component reference pages —— */
+  main.component-mode { max-width: min(var(--container-content), 100%); }
+  h3 { font-family: var(--font-family-display); font-size: var(--font-size-300);
+    line-height: var(--line-height-tight); margin: var(--space-4) 0 var(--space-1); }
+  .component-layout { display: grid; grid-template-columns: minmax(0, 1fr) max-content;
+    gap: var(--space-4); align-items: start; }
+  .component-content { min-width: 0; }
+  .component-page h2 { margin-top: var(--space-4); }
+  .component-page .lede { margin-bottom: var(--space-4); }
+  .page-outline { position: sticky; top: var(--space-5); width: calc(var(--space-6) * 2.5);
+    border-left: var(--border-1) solid var(--border); padding-left: var(--space-3); }
+  .page-outline strong { display: block; margin-bottom: var(--space-2);
+    font-size: var(--text-caption); text-transform: uppercase;
+    letter-spacing: var(--tracking-caps); color: var(--muted-foreground); }
+  .page-outline a { display: block; padding: var(--space-1) 0;
+    font-size: var(--font-size-100); color: var(--muted-foreground); text-decoration: none; }
+  .page-outline a:hover { color: var(--primary-hover); }
+  .page-outline .nested { padding-left: var(--space-3); }
+
+  .component-card-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--space-2); margin: var(--space-2) 0; }
+  .component-card { margin: 0; min-width: 0; }
+  .component-card-box { min-height: calc(var(--space-6) + var(--space-4));
+    display: grid; place-items: center; padding: var(--space-2);
+    border: var(--border-1) solid var(--border); border-radius: var(--radius-2);
+    background: var(--card); overflow: hidden; }
+  .component-card figcaption { margin-top: var(--space-2); font-size: var(--font-size-200); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center;
+    gap: var(--space-2); height: var(--control-height); padding: 0 var(--control-padding-x);
+    border: var(--border-1) solid transparent; border-radius: var(--control-radius);
+    font: var(--font-weight-medium) var(--font-size-200)/var(--line-height-tight) var(--font-family-base);
+    white-space: nowrap; text-decoration: none; cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-standard),
+      background var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard); }
+  .btn svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex: none; }
+  .btn-default { color: var(--primary-foreground); background: var(--primary); }
+  .btn-default:hover, .btn-default.is-hover { background: var(--primary-hover); }
+  .btn-default:active, .btn-default.is-active { background: var(--primary-active); }
+  .btn-secondary { color: var(--secondary-foreground); background: var(--secondary); }
+  .btn-secondary:hover, .btn-secondary.is-hover,
+  .btn-secondary:active, .btn-secondary.is-active { border-color: var(--border-strong); }
+  .btn-outline { color: var(--foreground); background: var(--background);
+    border-color: var(--input); }
+  .btn-outline:hover, .btn-outline.is-hover,
+  .btn-outline:active, .btn-outline.is-active { background: var(--accent); }
+  .btn-ghost { color: var(--foreground); background: transparent; }
+  .btn-ghost:hover, .btn-ghost.is-hover,
+  .btn-ghost:active, .btn-ghost.is-active { background: var(--accent); }
+  .btn-link { height: auto; color: var(--link); background: transparent;
+    padding: 0; border-radius: var(--radius-1); }
+  .btn-link:hover, .btn-link.is-hover,
+  .btn-link:active, .btn-link.is-active { color: var(--primary-hover); text-decoration: underline; }
+  .btn-destructive { color: var(--destructive-strong); background: var(--destructive-subtle);
+    border-color: var(--destructive-border); }
+  .btn-destructive:hover, .btn-destructive.is-hover { background: var(--destructive-border); }
+  .btn-destructive:active, .btn-destructive.is-active {
+    color: var(--destructive-foreground); background: var(--destructive-strong);
+    border-color: var(--destructive-strong); }
+  .btn.is-focus { outline: var(--focus-ring-width) solid var(--ring);
+    outline-offset: var(--focus-ring-offset); }
+  .btn:disabled, .btn.is-disabled { color: var(--foreground-disabled);
+    background: var(--muted); border-color: var(--border); cursor: not-allowed; }
+  .btn-sm { height: var(--control-height-sm); padding-inline: var(--control-padding-x-sm); }
+  .btn-xs { height: var(--control-height-xs); padding-inline: var(--control-padding-x-xs); }
+  .btn-lg { height: var(--control-height-lg); padding-inline: var(--control-padding-x-lg); }
+  .btn-icon { width: var(--control-height); padding-inline: 0; }
+  .btn-icon.btn-xs { width: var(--control-height-xs); }
+  .btn-icon.btn-sm { width: var(--control-height-sm); }
+  .btn-icon.btn-lg { width: var(--control-height-lg); }
+  .btn-spinner { width: var(--icon-size-sm); height: var(--icon-size-sm);
+    border: var(--border-2) solid currentColor; border-right-color: transparent;
+    border-radius: var(--radius-round); animation: button-spin var(--duration-slow) linear infinite; }
+  @keyframes button-spin { to { rotate: 1turn; } }
+
+  .anatomy-frame { border: var(--border-1) solid var(--border);
+    border-radius: var(--radius-2); overflow: hidden; max-width: calc(var(--space-6) * 11);
+    margin: var(--space-3) auto; }
+  .anatomy-stage { display: grid; place-items: center; overflow-x: auto; background: var(--muted); }
+  .anatomy-svg { display: block; width: min(100%, calc(var(--space-6) * 11)); height: auto; }
+  .anatomy-svg .surface { fill: var(--info-subtle); stroke: var(--info-border); }
+  .anatomy-svg .part-required { fill: var(--background); stroke: var(--destructive-border); }
+  .anatomy-svg .part-optional { fill: var(--background); stroke: var(--info-border); }
+  .anatomy-svg .ink { fill: none; stroke: var(--foreground); stroke-width: var(--border-2); }
+  .anatomy-svg text { font-family: var(--font-family-base); fill: var(--foreground); }
+  .anatomy-svg .button-label { font-size: var(--font-size-500); }
+  .anatomy-svg .prop { font-family: var(--font-family-mono);
+    font-size: var(--font-size-400); font-weight: var(--font-weight-bold); }
+  .anatomy-svg .meta { font-size: var(--font-size-400); }
+  .anatomy-svg .required-text { fill: var(--destructive-strong); }
+  .anatomy-svg .optional-text { fill: var(--info-strong); }
+  .anatomy-svg .required-line { stroke: var(--destructive-strong); }
+  .anatomy-svg .optional-line { stroke: var(--info-strong); }
+  .anatomy-svg .size-name { font-family: var(--font-family-mono);
+    font-size: var(--font-size-300); font-weight: var(--font-weight-bold);
+    fill: var(--muted-foreground); }
+  .anatomy-frame figcaption { padding: var(--space-3); border-top: var(--border-1) solid var(--border); }
+
+  @media (max-width: 63.999rem) {
+    .component-layout { grid-template-columns: minmax(0, 1fr); }
+    .component-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .page-outline { position: static; width: auto; border-left: none;
+      border-top: var(--border-1) solid var(--border); padding: var(--space-3) 0 0; }
+  }
+  @media (max-width: 39.999rem) {
+    .component-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .anatomy-svg { min-width: calc(var(--space-6) * 10); }
+  }
+  @media (prefers-reduced-motion: reduce) { .btn-spinner { animation: none; } }
+
   /* —— Colour —— */
   .ramp-row { display: grid; grid-template-columns: 6ch 1fr; gap: var(--space-3);
     align-items: center; margin: var(--space-2) 0; }
@@ -473,13 +584,14 @@
       <a href="#accessibility">Accessibility</a>
       <a href="#content">Content</a>
       <a href="#data">Data formatting</a>
+      <div class="nav-group">Components</div>
+      <a href="#components">Components</a>
+      <a href="#button">Button</a>
       <div class="nav-group">Composition</div>
       <a href="#archetypes">Screen archetypes</a>
       <a href="#tables">Tables &amp; grids</a>
       <a href="#forms">Forms</a>
       <a href="#view-states">View states &amp; feedback</a>
-      <div class="nav-group">Beyond</div>
-      <a href="#components">Components</a>
       </nav>
     </details>
   </aside>
@@ -489,14 +601,11 @@
     <section id="intro">
       <p class="kicker">Keystone · design guide</p>
       <h1>Introduction</h1>
-      <p class="lede">Cavalry ships many applications, and they should feel like the work
-        of one team. This guide is the design standard behind all of them: the principles,
-        tokens, and rules that define how our products look, behave, and communicate.</p>
-      <p>Every project chooses its own tech stack and component library, so this guide
-        deliberately stops short of implementation. It fixes the design decisions — the
-        visual language, the patterns, the values — and leaves each stack free to apply
-        them. Stating the expectations once, here, lets every new project start consistent
-        and scale quickly without restating them.</p>
+      <p class="lede">Cavalry creates many applications. This guide keeps their design
+        consistent. It defines how our products look, behave, and communicate.</p>
+      <p>Each project chooses its own tech stack and component library. This guide defines
+        the shared visual language, patterns, and values. Each stack applies those design
+        decisions through its own implementation.</p>
       <ul class="rules">
         <li><strong>Starting a project:</strong> rebrand by editing the primitive tier of
           the design tokens; every page of this guide re-renders from the new values.
@@ -507,47 +616,51 @@
           violation is a defect.</li>
       </ul>
       <div class="callout">
-        <p><strong>No special cases.</strong> When a shared building block cannot do what
-        a screen needs — a token scale missing a value, a component missing a feature —
-        extend the block, then use it. Never build a one-off inside a screen.</p>
+        <p><strong>Extend shared building blocks.</strong> If a token or component lacks a
+          required capability, extend it before building the screen. Do not build a
+          one-off inside a screen.</p>
       </div>
     </section>
 
     <section id="principles">
       <p class="kicker">Start</p>
       <h1>Principles</h1>
-      <p class="lede">Every principle serves one goal: reduce the user's cognitive effort.
-        The system adapts to the user's mental model, not the other way around. Six
-        principles in priority order — when two conflict, the earlier one wins.</p>
+      <p class="lede">Reduce cognitive effort by following the user's mental model.</p>
       <div class="principles">
         <div class="principle"><span class="num">01</span><h2>Familiarity over novelty</h2>
-          <p>Prioritize established design patterns over original ones. Users should immediately understand how to interact with the system without needing to learn a new interface. Every page should feel familiar, predictable, and consistent with the rest of the product.</p></div>
-        <div class="principle"><span class="num">02</span><h2>Content before commentary</h2>
-          <p>Interfaces exist to help users work with data, not read explanations. Keep instructional text and decorative copy to a minimum. Every word should have a purpose.</p></div>
-        <div class="principle"><span class="num">03</span><h2>Make structure visible</h2>
-          <p>Information is rarely flat. Use visual hierarchy, grouping, spacing, nesting, and typography to reflect relationships between data so users can quickly understand how information is organized.</p></div>
+          <p>Use established patterns so users can act without learning a new interface.
+            Keep pages familiar, predictable, and consistent.</p></div>
+        <div class="principle"><span class="num">02</span><h2>Self-explanatory interfaces</h2>
+          <p>Make interfaces self-explanatory through familiar controls, clear labels,
+            and visible structure. Do not add instructional text. Use tooltips to explain
+            functionality that may not be obvious.</p></div>
+        <div class="principle"><span class="num">03</span><h2>Reflect domain structure</h2>
+          <p>Reflect the domain's hierarchical relationships through grouping, spacing,
+            nesting, and typography.</p></div>
         <div class="principle"><span class="num">04</span><h2>Progressive disclosure</h2>
-          <p>Present information and functionality only when it is needed. Use expandable sections, nested views, secondary pages, and contextual controls to reduce cognitive load while keeping advanced functionality easily accessible.</p></div>
+          <p>Reveal information and controls when needed. Keep advanced features
+            accessible through expandable sections, nested views, secondary pages, and
+            contextual controls.</p></div>
         <div class="principle"><span class="num">05</span><h2>Guide the primary journey</h2>
-          <p>Every screen should make the intended workflow obvious. The primary action should stand out through placement, visual emphasis, and button hierarchy, allowing users to complete common tasks with minimal thought.</p></div>
+          <p>Make the intended workflow clear. Emphasise the primary action through
+            placement, visual weight, and button hierarchy.</p></div>
         <div class="principle"><span class="num">06</span><h2>Motion with purpose</h2>
-          <p>Animation should communicate, not decorate. Use motion to soften transitions, indicate cause and effect, provide feedback, direct attention, and make waiting feel more natural. Motion should never distract from the task.</p></div>
+          <p>Use motion to soften transitions, show cause and effect, provide feedback,
+            guide attention, and support loading. Keep it subtle and task-focused.</p></div>
       </div>
     </section>
 
     <section id="tokens">
       <p class="kicker">Start</p>
       <h1>Tokens</h1>
-      <p class="lede">Every design decision is a named token. Screens reference roles,
-        never raw values.</p>
-      <p>A <strong>design token</strong> names the role of a value: a button references
-        <code>--primary</code>, never <code>#e02b20</code>. Screens contain no hard-coded
-        colour, spacing, typography, or motion values, so changing a token updates every
-        screen that depends on it. In this template the tokens live in one file,
-        <code>tokens.css</code>.</p>
+      <p class="lede">Give every design decision a named token. Screens reference
+        semantic roles. They do not reference raw values.</p>
+      <p>A <strong>design token</strong> names the role of a value. For example, a button
+        references <code>--primary</code>. It does not reference <code>#e02b20</code>.
+        Changing a token updates every screen that uses it. This template stores tokens
+        in <code>tokens.css</code>.</p>
 
       <h2>Token hierarchy</h2>
-      <p>The tokens are organised in three tiers.</p>
       <figure class="figure">
         <div class="tiers">
           <div class="tier"><span class="t-name">1 · primitive</span><span>Raw design values — the brand palette, spacing scale, type scale, motion durations. <strong>Only this tier changes in a rebrand.</strong> <span class="mono">--red-400 · --space-3 · --duration-fast</span></span></div>
@@ -561,8 +674,6 @@
       </figure>
 
       <h2>How tokens resolve</h2>
-      <p>A screen asks for a role; the role resolves through the tiers to one raw value,
-        set once.</p>
       <figure class="figure">
         <div class="tiers">
           <div class="tier"><span class="t-name">screen asks</span><span>"What colour is the primary action?" → <code>--primary</code></span></div>
@@ -571,9 +682,7 @@
           <div class="tier-arrow">resolves to ↓</div>
           <div class="tier"><span class="t-name">primitive</span><span><code>--red-400</code> = <span class="resolved" data-token="--red-400"></span> — the raw value, set once</span></div>
         </div>
-        <figcaption>Changing the primitive updates every component that references it; the
-          screen never changes. Every annotation in this guide is read from the tokens the
-          same way, at load.</figcaption>
+        <figcaption>Changing the primitive updates every component that references it.</figcaption>
       </figure>
 
       <h2>Naming</h2>
@@ -609,16 +718,13 @@
     <section id="colour">
       <p class="kicker">Foundation</p>
       <h1>Colour</h1>
-      <p class="lede">A small, consistent palette: neutral surfaces with a subtle purple
-        cast, Cavalry red for primary actions, and supporting colours for semantic
-        meaning.</p>
+      <p class="lede">Use neutral surfaces with a subtle purple cast. Use Cavalry red for
+        primary actions and supporting colours for semantic meaning.</p>
       <p>Screens never reference raw colours directly. They consume semantic colour
         tokens, which resolve to the underlying colour ramps
         (<a href="#tokens">Tokens</a>).</p>
 
       <h2>Semantic colour roles</h2>
-      <p>Semantic tokens describe the purpose of a colour rather than its appearance.
-        These are the only colour tokens screens use.</p>
       <div class="table-wrap"><table id="color-roles">
         <tr><th></th><th>Token</th><th>Value</th><th>Purpose</th></tr>
       </table></div>
@@ -631,7 +737,6 @@
       <div id="ramps"></div>
 
       <h2>Intent formula</h2>
-      <p>Status colours follow one structure throughout the system.</p>
       <div class="table-wrap"><table>
         <tr><th>Purpose</th><th>Ramp step</th></tr>
         <tr><td>Subtle background</td><td><code>50</code></td></tr>
@@ -644,11 +749,9 @@
         so four steps is their whole ramp.</p>
 
       <h2>Accessibility</h2>
-      <p>Every semantic colour pairing meets WCAG AA — verified, not assumed: 4.5:1 for
-        body text, 3:1 for large text and UI elements. Brand-vivid values that cannot hold
-        4.5:1 (<code>--red-300</code>, the pure brand red, and <code>--amber-400</code>)
-        are for illustrations, decorative accents, and large graphics only — never
-        body-size text on a light background.</p>
+      <p>Verify every semantic colour pairing against WCAG AA. Body text needs a 4.5:1
+        contrast ratio. Large text and UI elements need 3:1. Use vivid brand values only
+        for illustrations, decorative accents, and large graphics.</p>
 
       <h2>Meaning</h2>
       <p>Colour reinforces meaning but is never the only indicator. Pair it with icons,
@@ -664,9 +767,9 @@
           <figcaption><strong>Don't</strong> — a bare red dot carries meaning by colour alone.</figcaption>
         </figure>
       </div>
-      <p>Destructive actions share the same brand red as primary actions. They are
-        distinguished through verb-first labels, confirmation flows, placement, and
-        context — never by introducing a separate red.</p>
+      <p>Use <code>--primary</code> for primary actions and <code>--destructive</code> for
+        destructive actions. Reinforce intent through labels, confirmation, placement,
+        and context.</p>
 
       <ul class="rules">
         <li>Screens use semantic colour tokens only — never a ramp step, never a
@@ -683,16 +786,13 @@
     <section id="typography">
       <p class="kicker">Foundation</p>
       <h1>Typography</h1>
-      <p class="lede">Typography creates clear hierarchy while staying quiet: as few
-        sizes and weights as necessary, so information rather than styling carries
-        the emphasis.</p>
+      <p class="lede">Typography creates a clear, quiet hierarchy. Use only the sizes and
+        weights needed to communicate structure.</p>
       <p>The system uses Space Grotesk for display text and headings, and Inter for all
         interface and body text. When neither font is available, both fall back to the
         system font stack.</p>
 
       <h2>Type scale</h2>
-      <p>The type scale is a small set of reusable roles; the specimens below render from
-        the live tokens.</p>
       <div class="table-wrap"><table>
         <tr><th>Role</th><th>Specimen</th><th>Token</th><th>Use for</th></tr>
         <tr><td>Display</td><td><span style="font-family:var(--font-family-display);font-size:var(--font-size-600);font-weight:var(--font-weight-bold);line-height:var(--line-height-tight);letter-spacing:var(--tracking-tight)">Display</span></td><td><code>600</code> <span class="resolved" data-token="--font-size-600"></span> · display · bold</td><td>Covers, heroes, full-page utility</td></tr>
@@ -705,14 +805,9 @@
         <tr><td>Metric</td><td><span style="font-size:var(--font-size-400);font-weight:var(--font-weight-bold);font-variant-numeric:tabular-nums">12,480</span></td><td><code>400</code> · tabular</td><td>KPIs, dashboard stats</td></tr>
         <tr><td>Code</td><td><code style="white-space:normal">sum(rows)</code></td><td>mono</td><td>Code, ids</td></tr>
       </table></div>
-      <p>The scale is intentionally limited. Most screens need no more than four type
-        sizes and two font weights.</p>
-
       <h2>Hierarchy</h2>
-      <p>Typography communicates structure before decoration. Each screen carries one
-        page title, and heading levels descend without skipping. Express hierarchy with
-        size first, before reaching for additional weights or colours; introduce a new
-        size only by extending the shared scale, never as a one-off value.</p>
+      <p>Each screen has one page title. Heading levels descend without gaps. Use size to
+        show hierarchy before adding weight or colour. Add new sizes to the shared scale.</p>
 
       <h2>Line height</h2>
       <p>Reading text prioritises comfort; interface text prioritises alignment. Body
@@ -784,15 +879,11 @@
     <section id="spacing">
       <p class="kicker">Foundation</p>
       <h1>Spacing</h1>
-      <p class="lede">Spacing communicates relationships: elements that belong together
-        sit closer together, and every increase in spacing signals a stronger
-        separation.</p>
-      <p>Enterprise applications also use screen space efficiently. Prefer compact
-        layouts that maximise information density without compromising readability,
-        hierarchy, or ease of interaction — and remove decorative whitespace before
-        reducing spacing that communicates structure.</p>
-      <p>The system uses a six-step spacing scale. Related elements sit one step closer
-        together than unrelated elements.</p>
+      <p class="lede">Spacing communicates relationships. Place related elements closer
+        together. Use larger gaps to show stronger separation.</p>
+      <p>Use screen space efficiently. Prefer compact layouts that preserve readability,
+        hierarchy, and ease of use. Remove decorative whitespace before reducing
+        structural spacing.</p>
       <div class="ruler" id="space-ruler"></div>
 
       <h2>Container padding</h2>
@@ -810,20 +901,9 @@
           the spacing scale governs space <em>between</em> siblings; boxes the padding <em>within</em> a container.</figcaption>
       </figure>
 
-      <h2>Information density</h2>
-      <p>Users of enterprise systems spend most of their time scanning, comparing, and
-        editing information. Interfaces maximise the useful content visible at once
-        without feeling cluttered: compact layouts reduce scrolling, improve comparison
-        between related information, and increase efficiency. Prefer tighter layouts
-        over excessive whitespace, keep related information close, and group it into
-        clear visual sections — but preserve the spacing that communicates hierarchy,
-        and add no whitespace purely for aesthetics.</p>
-
       <h2>Vertical rhythm</h2>
-      <p>Spacing, typography, and component dimensions work together: all land on the
-        same underlying 4px grid, so rows align naturally between neighbouring columns
-        and components and users can scan quickly. Text within components uses tighter
-        line heights so controls stay aligned to the grid.</p>
+      <p>Align spacing, typography, and component dimensions to the 4px grid. Use tight
+        line heights inside components.</p>
       <figure class="figure">
         <div class="rhythm">
           <div class="blk"><strong>Heading</strong></div>
@@ -859,11 +939,8 @@
     <section id="layout">
       <p class="kicker">Foundation</p>
       <h1>Layout</h1>
-      <p class="lede">One consistent frame for every screen: the responsive grid,
-        breakpoints, gutters, and content widths every page inherits.</p>
-      <p>Pages never recreate these values. They inherit them from the shared layout,
-        so every page behaves consistently across the product.</p>
-
+      <p class="lede">Every screen uses the same responsive grid, breakpoints, gutters,
+        and content widths.</p>
       <h2>Responsive grid</h2>
       <figure class="figure">
         <div class="grid-demo g12" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -878,8 +955,6 @@
         widths — six of twelve is half the page everywhere.</p>
 
       <h2>Content width</h2>
-      <p>Pages use one of two standard content widths; the
-        <a href="#archetypes">screen archetype</a> determines which.</p>
       <div class="table-wrap"><table>
         <tr><th>Token</th><th>Value</th><th>Purpose</th></tr>
         <tr><td><code>--container-content</code></td><td><span class="resolved" data-token="--container-content"></span></td><td>Standard application screens</td></tr>
@@ -898,10 +973,8 @@
       </table></div>
 
       <h2>Shared layout</h2>
-      <p>The shared layout owns the application frame — navigation, headers, gutters,
-        safe-area handling, and fixed chrome. It alone reads the clearance tokens, so
-        fixed chrome reserves its space exactly once, safe areas included. Pages consume
-        these values; they never redefine them.</p>
+      <p>The shared layout owns navigation, headers, gutters, safe areas, and fixed
+        chrome. It applies clearance tokens once. Pages do not redefine them.</p>
       <div class="table-wrap"><table>
         <tr><th>Token</th><th>Value</th><th>Purpose</th></tr>
         <tr><td><code>--side-nav-width</code></td><td><span class="resolved" data-token="--side-nav-width"></span></td><td>The fixed navigation rail</td></tr>
@@ -926,12 +999,10 @@
     <section id="shape">
       <p class="kicker">Foundation</p>
       <h1>Shape</h1>
-      <p class="lede">Shape establishes visual hierarchy and grouping: a small set of
-        corner radii keeps components consistent and nested surfaces coherent.</p>
+      <p class="lede">Shape establishes hierarchy and grouping. A small radius scale
+        keeps components consistent and nested surfaces coherent.</p>
 
       <h2>Corner radius</h2>
-      <p>Use the smallest radius that suits the component; larger surfaces generally
-        use larger radii.</p>
       <div class="tiles">
         <div class="tile"><div class="box" style="border-radius:var(--radius-1)"></div><span class="caption"><code>--radius-1</code> badges, chips, small elements</span></div>
         <div class="tile"><div class="box" style="border-radius:var(--radius-2)"></div><span class="caption"><code>--radius-2</code> buttons, inputs, cards (default)</span></div>
@@ -950,10 +1021,9 @@
       </div>
 
       <h2>Borders</h2>
-      <p>Borders define separation, not decoration. <code>--border-1</code> is the
-        default border throughout the interface; <code>--border-2</code> is reserved for
-        selected, active, and focused elements. Heavier borders are not an emphasis
-        tool — create hierarchy through layout, spacing, and typography instead.</p>
+      <p>Use borders to separate content. <code>--border-1</code> is the default.
+        Reserve <code>--border-2</code> for selected, active, and focused elements.
+        Create emphasis through layout, spacing, and typography.</p>
 
       <ul class="rules">
         <li>Use only the shared radius tokens; larger surfaces generally carry larger
@@ -969,15 +1039,12 @@
     <section id="elevation">
       <p class="kicker">Foundation</p>
       <h1>Surfaces &amp; elevation</h1>
-      <p class="lede">Surfaces establish hierarchy by grouping related content. Every
-        surface belongs to a defined level that sets its background, shadow, and
-        stacking order together.</p>
+      <p class="lede">Surfaces group related content. Each level defines its background,
+        shadow, and stacking order.</p>
       <p>Create hierarchy with the simplest visual treatment possible: spacing before
         backgrounds, backgrounds before borders, borders before shadows.</p>
 
       <h2>Surface levels</h2>
-      <p>The interface uses four surface levels. Cards group content, not other
-        cards.</p>
       <div class="table-wrap"><table>
         <tr><th>Level</th><th>Tokens</th><th>Holds</th><th>May contain</th></tr>
         <tr><td>Recessed</td><td><code>--muted</code> · no shadow</td><td>Wells, table headers, inset panels, disabled areas</td><td>Flat content only — nothing raised</td></tr>
@@ -1055,11 +1122,8 @@
     <section id="motion">
       <p class="kicker">Foundation</p>
       <h1>Motion</h1>
-      <p class="lede">Motion communicates change: what happened, where content came
-        from, and what to focus on next. It never exists purely for decoration.</p>
-      <p>Every animation has a clear purpose — communicating state, preserving context,
-        or guiding attention.</p>
-
+      <p class="lede">Motion shows what changed, where content came from, and what needs
+        attention. Every animation must support a task.</p>
       <h2>Duration</h2>
       <p>Three duration bands, chosen by the size of the transition: larger surfaces
         move more slowly than smaller interactions. Hover a lane to preview it.</p>
@@ -1072,12 +1136,6 @@
       <h2>Easing</h2>
       <p>Use the shared easing tokens throughout: <code>--ease-decelerate</code> for
         entrances, <code>--ease-standard</code> for every other transition.</p>
-
-      <h2>Purpose</h2>
-      <p>Motion is used only to communicate state changes, explain where content comes
-        from or goes, guide attention to important changes, smooth transitions between
-        interface states, and make waiting and loading feel more natural. Decorative,
-        looping, and ambient animation is avoided.</p>
 
       <ul class="rules">
         <li>Every animation has a purpose.</li>
@@ -1092,8 +1150,8 @@
     <section id="iconography">
       <p class="kicker">Foundation</p>
       <h1>Icons</h1>
-      <p class="lede">Icons aid recognition, never decoration. The system uses one icon
-        set and four sizes, and an icon always belongs to a label.</p>
+      <p class="lede">Icons aid recognition. Use one icon set and four standard sizes.
+        Each icon belongs to a label.</p>
 
       <h2>Sizes</h2>
       <p>Four sizes cover every context; choose by where the icon sits, not by taste.</p>
@@ -1103,19 +1161,6 @@
         <div class="tile"><span class="icon-box" style="padding:var(--space-1)"><svg style="width:var(--icon-size-md);height:var(--icon-size-md)" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></svg></span><span class="caption"><code>--icon-size-md</code> <span class="resolved" data-token="--icon-size-md"></span> · buttons, controls</span></div>
         <div class="tile"><span class="icon-box" style="padding:var(--space-1)"><svg style="width:var(--icon-size-lg);height:var(--icon-size-lg)" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></svg></span><span class="caption"><code>--icon-size-lg</code> <span class="resolved" data-token="--icon-size-lg"></span> · navigation, features</span></div>
       </div>
-
-      <h2>Consistency</h2>
-      <p>Each project adopts one icon set, recorded once at adoption; sets are never
-        mixed — a second set's line weight and style break the familiarity the icons
-        exist to provide. Use the conventional icon for an action, the one users already
-        know from established products.</p>
-
-      <h2>Icons and labels</h2>
-      <p>An icon is part of its label: it inherits the label's colour and centres to the
-        label's first line. Default to icon plus label. An icon-only control is allowed
-        only when the metaphor is established <em>and</em> the control carries an
-        accessible name; otherwise keep the label. Add icons only where they aid
-        recognition — an icon on every item helps no one.</p>
 
       <ul class="rules">
         <li>One icon set per project, recorded once — never mixed.</li>
@@ -1130,15 +1175,11 @@
     <section id="states">
       <p class="kicker">Foundation</p>
       <h1>States &amp; focus</h1>
-      <p class="lede">Every interactive element follows the same interaction states, so
-        users can predict how a control responds regardless of its type.</p>
-      <p>State changes are driven by the design tokens, not by individual components.
-        A component never defines its own interaction colours or behaviour.</p>
-
+      <p class="lede">Every interactive element uses the same state model. Users can
+        predict how each control responds.</p>
       <h2>Interaction states</h2>
-      <p>Every interactive element progresses through the same state model, shown here
-        on an abstract control. Hover and pressed derive automatically from the
-        underlying colour ramp — one step above rest for hover, two for pressed.</p>
+      <p>Derive hover and pressed states from the colour ramp. Hover uses one step above
+        rest. Pressed uses two.</p>
       <div class="states">
         <div class="state"><span class="sample">Rest</span><span class="caption">400</span></div>
         <div class="state"><span class="sample s-hover">Hover</span><span class="caption">500 (+1)</span></div>
@@ -1157,11 +1198,6 @@
         the browser's focus outline unless it is replaced with the system focus
         ring.</p>
 
-      <h2>Touch feedback</h2>
-      <p>Touch interactions always provide immediate visual feedback. Where hover is
-        unavailable, the pressed state communicates that the interaction has been
-        recognised.</p>
-
       <ul class="rules">
         <li>Every interactive element follows the shared state model.</li>
         <li>Hover is one ramp step above rest; pressed is two. No component-specific
@@ -1176,8 +1212,6 @@
     <section id="accessibility">
       <p class="kicker">Foundation</p>
       <h1>Accessibility</h1>
-      <p class="lede">Every screen meets one consistent baseline. Most of it is built
-        into the system through the shared tokens and components.</p>
       <ul class="rules">
         <li>Semantic colour pairings meet WCAG AA contrast requirements.</li>
         <li>Interactive elements show a visible keyboard focus indicator.</li>
@@ -1189,39 +1223,40 @@
         <li>Never rely on colour alone to communicate meaning.</li>
         <li>Headings establish a logical document structure.</li>
       </ul>
-      <p>Detailed accessibility guidance and implementation requirements — ARIA,
-        keyboard behaviour, screen-reader support — live in
-        <code>apps/frontend/CLAUDE.md</code>.</p>
+      <p>See <code>apps/frontend/CLAUDE.md</code> for ARIA, keyboard, and screen-reader
+        requirements.</p>
     </section>
 
     <section id="content">
       <p class="kicker">Foundation</p>
       <h1>Content</h1>
-      <p class="lede">Interface copy helps users understand, decide, or act. Write only
-        what users need to complete their task.</p>
-      <p>Prioritise, in order: accuracy, clarity, relevance, concision, tone. Never
-        sacrifice meaning for brevity.</p>
+      <p class="lede">Write simple business English that users can scan.</p>
+      <p>Prioritise accuracy, clarity, relevance, concision, and tone.</p>
 
       <h2>Writing principles</h2>
-      <p>Write in plain, direct English. Avoid promotional, conversational, or overly
-        enthusiastic language.</p>
       <ul class="rules">
-        <li>Sentence case everywhere; actions verb-first — "Save changes", never
-          "OK".</li>
-        <li>Short, complete sentences; active voice unless passive is clearer; one idea
-          per sentence.</li>
-        <li>Lead with the information users need first, and group related information
-          together.</li>
-        <li>Specific nouns and verbs; state observable actions and outcomes, not vague
-          claims.</li>
-        <li>Use established product and domain terminology; define unfamiliar terms
-          only when necessary.</li>
-        <li>Remove words that do not change the meaning.</li>
+        <li>Lead with the main point. Group related information.</li>
+        <li>Use short, complete sentences. Keep most under 20 words.</li>
+        <li>Use active voice and one idea per sentence.</li>
+        <li>Use sentence case. Start action labels with a verb, such as "Save changes".</li>
+        <li>Use plain, specific words. Use technical terms only for technical concepts.</li>
+        <li>Use established product and domain terms. Define unfamiliar terms when needed.</li>
+        <li>Write literally for international readers. Avoid idioms and cultural references.</li>
+        <li>Use transitions only when they clarify contrast, addition, or result.</li>
+        <li>Include enough context for users without internal knowledge.</li>
         <li>Never blame the user.</li>
       </ul>
 
+      <h2>Message structure</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Message</th><th>Structure</th></tr>
+        <tr><td>Task</td><td>Action + target + deadline or context</td></tr>
+        <tr><td>Update</td><td>Outcome + cause</td></tr>
+        <tr><td>Policy</td><td>If condition, action or consequence</td></tr>
+        <tr><td>Complex content</td><td>Start with a useful signpost, such as "Next steps:" or "Risk:"</td></tr>
+      </table></div>
+
       <h2>Common patterns</h2>
-      <p>Each surface has a specific purpose.</p>
       <div class="table-wrap"><table>
         <tr><th>Surface</th><th>The copy's job</th></tr>
         <tr><td>Empty</td><td>Why it's empty + the next step: "No invoices yet. Create your first invoice."</td></tr>
@@ -1264,29 +1299,32 @@
 
       <h2>What to avoid</h2>
       <ul class="rules">
-        <li>Filler, unnecessary words, and explanations of obvious behaviour.</li>
-        <li>Invented terminology when established terms exist.</li>
-        <li>Marketing language, exaggerated claims, rhetorical questions, and
-          slogans.</li>
-        <li>Artificial contrasts for emphasis, and the same point repeated in
-          different words.</li>
-        <li>Introductions or conclusions that do not help the user.</li>
+        <li>Filler such as "just", "simply", "actually", "basically", and
+          "in order to".</li>
+        <li>Vague urgency. Give a specific deadline.</li>
+        <li>Invented names, metaphors, labels, or shorthand.</li>
+        <li>History about failed, reverted, or superseded approaches unless it affects
+          the user's action.</li>
+        <li>Marketing language, rhetorical questions, slogans, and fragments for emphasis.</li>
+        <li>Artificial contrasts, decorative repetition, and exaggerated certainty.</li>
+        <li>Introductions or conclusions that repeat information.</li>
       </ul>
       <p>Prefer instructions and outcomes over explanations.</p>
       <div class="table-wrap"><table>
         <tr><th>Instead of</th><th>Write</th></tr>
+        <tr><td>Complete this ASAP.</td><td>Complete this by 3:00 PM today.</td></tr>
         <tr><td>The system handles the issue automatically.</td><td>The system retries the request up to three times.</td></tr>
         <tr><td>The setting controls visibility, not access.</td><td>The setting controls whether the item is visible. It does not change who can access it.</td></tr>
       </table></div>
 
       <h2>Content management</h2>
       <p>Store all user-facing copy in the application's localisation or string
-        resources — reviewable as one surface. No hard-coded text in components.</p>
+        resources. Review it as one surface. Do not hard-code text in components.</p>
 
       <ul class="rules">
         <li>Write to help users understand, decide, or act; prioritise accuracy over
           brevity.</li>
-        <li>Plain, direct English; sentence case; established terminology.</li>
+        <li>Plain, direct English; short sentences; sentence case; established terminology.</li>
         <li>One action, one verb.</li>
         <li>Empty states explain and guide; errors explain what happened and how to
           recover; success messages confirm the completed action.</li>
@@ -1298,12 +1336,9 @@
     <section id="data">
       <p class="kicker">Foundation</p>
       <h1>Data formatting</h1>
-      <p class="lede">Users never relearn how dates, numbers, or currencies are
-        displayed from one screen to another: the same value always appears in the
-        same format.</p>
-      <p>Each data type has one format, implemented through the platform's formatting
-        libraries rather than custom logic. Store data in its canonical form and format
-        it only when presented to users.</p>
+      <p class="lede">Display each data type consistently across every screen.</p>
+      <p>Use platform formatting libraries. Store canonical values and format them for
+        display.</p>
 
       <h2>Standard formats</h2>
       <div class="table-wrap"><table>
@@ -1337,23 +1372,14 @@
     <section id="archetypes">
       <p class="kicker">Composition</p>
       <h1>Screen archetypes</h1>
-      <p class="lede">Most enterprise applications consist of a small number of
-        recurring page layouts. Start from one of these archetypes before designing a
-        new screen.</p>
-      <p>Consistent page structures reduce the learning curve for users, speed up
-        development, and keep the product visually coherent. A page has one primary
-        archetype; individual sections may reuse patterns from another archetype (a
-        dashboard widget shows a small table), but the overall page structure stays
-        consistent. If no archetype fits, extend this guide before creating a new page
-        layout.</p>
+      <p class="lede">Start each new screen from one of these recurring page layouts.</p>
+      <p>Give each page one primary archetype. Sections may reuse patterns from another
+        archetype. If none fits, extend this guide before creating a new layout.</p>
 
       <h2>Application frame</h2>
-      <p>Every page lives within the shared application layout
-        (<a href="#layout">Layout</a>), which owns the header, the navigation, the
-        responsive behaviour, the gutters, and the content width. The archetype defines
-        only the content area. Below <code>sm</code> the nav rail collapses into a
-        menu — or a bottom bar on a mobile-first project — and the same page fills the
-        same region unchanged.</p>
+      <p>The shared <a href="#layout">layout</a> owns navigation, responsive behaviour,
+        gutters, and content width. The archetype defines the content area. Below
+        <code>sm</code>, the navigation becomes a menu or bottom bar.</p>
       <figure class="figure">
         <div class="frames">
           <div>
@@ -1378,9 +1404,8 @@
       </figure>
 
       <h2>Shared page structure</h2>
-      <p>Every page begins the same way: a page title (the page's only H1), an optional
-        description, an optional breadcrumb or back action, page-level actions on the
-        trailing edge, then the page content.</p>
+      <p>Begin with one H1 and optional context or navigation. Place page actions on the
+        trailing edge. Put page content below.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ph"><span class="ttl"></span><span class="act"></span></div>
@@ -1392,8 +1417,7 @@
       </figure>
 
       <h2>Table / grid</h2>
-      <p>Browse, search, filter, and act on many records — customers, orders, users,
-        invoices. Use when the primary task is finding or managing many items.</p>
+      <p>Use to find and manage collections.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ph"><span class="ttl"></span><span class="act"></span></div>
@@ -1408,8 +1432,7 @@
       </figure>
 
       <h2>Record detail</h2>
-      <p>Everything about a single record — a customer profile, an invoice, an employee
-        record. Use when understanding one record is the primary task.</p>
+      <p>Use to view one record.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ph"><span class="ttl"></span><span class="act"></span></div>
@@ -1423,9 +1446,7 @@
       </figure>
 
       <h2>Form</h2>
-      <p>Create or edit a record on a single page — create customer, edit invoice,
-        update profile. Use when users can complete the task comfortably in one
-        sitting.</p>
+      <p>Use to create or edit a record in one sitting.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ph"><span class="ttl"></span></div>
@@ -1440,13 +1461,9 @@
       </figure>
 
       <h2>Multi-step flow</h2>
-      <p>Guide users through a longer or unfamiliar process — onboarding, a loan
-        application, checkout, product setup. Use when the task has several logical
-        stages or would otherwise overwhelm users.</p>
-      <p>The progress stepper is horizontal, centred at the top of the content, above
-        the step. A stepper implies sequence — a long page that merely has many
-        sections is not a multi-step flow; give it vertical section tabs that work as
-        a minimap, never a stepper.</p>
+      <p>Use for long or unfamiliar processes with distinct stages.</p>
+      <p>Centre a horizontal progress stepper above the current step. Use vertical
+        section tabs for long pages without a fixed sequence.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ph"><span class="ttl"></span></div>
@@ -1461,9 +1478,7 @@
       </figure>
 
       <h2>Dashboard</h2>
-      <p>An overview of system status that directs users to the operational pages —
-        executive, sales, operations. A dashboard summarises and links to where the
-        work happens; it never becomes the workplace itself.</p>
+      <p>Summarise system status and link to the relevant operational pages.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ph"><span class="ttl"></span><i style="width:20%"></i></div>
@@ -1478,9 +1493,7 @@
       </figure>
 
       <h2>Settings</h2>
-      <p>View and modify configuration — profile, security, billing, notifications,
-        team. Group related settings; a large settings area earns vertical tabs — a
-        minimap of the groups — never a long scrolling page.</p>
+      <p>Group related settings. Use vertical section tabs for large settings areas.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ph"><span class="ttl"></span></div>
@@ -1494,9 +1507,7 @@
       </figure>
 
       <h2>Utility</h2>
-      <p>Standalone pages outside the application shell — sign in, sign up, password
-        reset, verify email, invitation acceptance, first-run onboarding. These pages
-        omit the application navigation and focus on one task.</p>
+      <p>Use outside the application shell for one task, such as sign-in or password reset.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ctr">
@@ -1512,10 +1523,7 @@
       </figure>
 
       <h2>Error &amp; status</h2>
-      <p>Communicate that something prevented the requested action and guide the user
-        to recovery — not found, forbidden, server error, maintenance, offline, session
-        expired. Every error page explains what happened and offers a meaningful next
-        step.</p>
+      <p>Explain what blocked the action and provide a recovery step.</p>
       <figure class="figure">
         <div class="pg" aria-hidden="true">
           <div class="ctr">
@@ -1578,23 +1586,13 @@
     <section id="tables">
       <p class="kicker">Composition</p>
       <h1>Tables &amp; grids</h1>
-      <p class="lede">Tables are the primary workspace in enterprise applications.
-        Default to the standard table pattern whenever users work with collections of
-        data.</p>
-      <p>Search, sorting, filtering, pagination, column management, and bulk actions
-        are part of the standard experience — present by default, never added later as
-        requirements emerge. This pattern implements the
-        <a href="#archetypes">Table / grid archetype</a>: build it with the project's
-        shared data table component, based on the adopted component library and table
-        engine, and extend the shared component through the
-        <a href="#components">reuse order</a> rather than creating feature-specific
-        implementations.</p>
+      <p class="lede">Use the standard table pattern for collections of data.</p>
+      <p>Include search, sorting, filtering, pagination, column management, and bulk
+        actions by default. Build from the shared table component and follow the
+        <a href="#components">reuse order</a>.</p>
       <div class="callout">
-        <p><strong>Optimise for repeated use, not first use.</strong> Enterprise users
-        work in the same tables every day, so consistency, efficiency, and
-        discoverability outrank a minimal first impression. A capability experienced
-        users rely on is part of the standard table, never an optional enhancement —
-        which is why these defaults are richer than a consumer application's.</p>
+        <p><strong>Optimise for repeated use.</strong> Keep frequent actions consistent,
+          efficient, and easy to find.</p>
       </div>
 
       <h2>Anatomy</h2>
@@ -1634,9 +1632,7 @@
         header, never inside the toolbar.</p>
 
       <h2>Standard capabilities</h2>
-      <p>Every capability below is <strong>on by default</strong> for a working table.
-        Removing one (pagination on a bounded ten-row list, selection where no bulk
-        action exists) is a deliberate product decision, and it is recorded.</p>
+      <p>Enable all standard capabilities by default. Record any removal.</p>
       <div class="table-wrap"><table>
         <tr><th>Capability</th><th>The norm</th></tr>
         <tr><td>Global search</td><td>One box, leading in the toolbar; matches as you type across every searchable column; behaves as a filter and clears like one.</td></tr>
@@ -1692,12 +1688,9 @@
         </figure>
       </div>
       <h2>Row behaviour</h2>
-      <p>The row is the primary interaction target: clicking it opens the record, and
-        the trailing actions column carries the secondary tasks. One row height per
-        table (<code>box-sm</code> padding, <code>font-size-200</code>, tight
-        line-height) — cell content truncates with the full value reachable, and the
-        row never grows. The header is recessed and sticks while the table scrolls;
-        selection and identity columns stay pinned when it scrolls horizontally.</p>
+      <p>Clicking a row opens its record. Put secondary tasks in the trailing actions
+        column. Use one row height per table. Keep the header, selection column, and
+        identity column pinned while scrolling.</p>
 
       <h2>Filter state</h2>
       <p>Filtering always remains visible: active filter chips, a Clear all action, and
@@ -1758,34 +1751,22 @@
     <section id="forms">
       <p class="kicker">Composition</p>
       <h1>Forms</h1>
-      <p class="lede">Forms are the primary pattern for creating and editing data. They
-        minimise cognitive load through a clear, predictable structure.</p>
-      <p>Use the project's shared form components rather than composing fields directly
-        from HTML elements. Configure the component library to follow this standard,
-        and extend the shared components through the
-        <a href="#components">reuse order</a> instead of creating feature-specific
-        variations.</p>
+      <p class="lede">Use forms to create and edit data.</p>
+      <p>Use shared form components and follow the
+        <a href="#components">reuse order</a>.</p>
       <div class="callout">
-        <p><strong>Optimise forms for data entry, not visual symmetry.</strong> Field
-        widths match the expected input, not the grid — not every field is full width.
-        Dense forms are acceptable while they stay readable; reduce scrolling before
-        adding decorative whitespace. Short related pairs — first and last name, postal
-        code and country — share a row instead of each spanning the page.</p>
+        <p><strong>Optimise forms for data entry.</strong> Match field widths to expected
+          input. Keep readable forms compact. Place short, related fields in one row.</p>
       </div>
 
       <h2>Structure</h2>
-      <p>Every form follows the same layout: page header → field groups → actions. Each
-        field group holds its fields in one column; only short, closely related fields
-        share a row. Fields sit <code>--space-3</code> apart, groups
-        <code>--page-section-gap</code> apart (<a href="#archetypes">Form
-        archetype</a>). Avoid complex multi-column forms unless there is a clear
-        usability benefit.</p>
+      <p>Order forms as page header → field groups → actions. Use one column. Short,
+        related fields may share a row. Use <code>--space-3</code> between fields and
+        <code>--page-section-gap</code> between groups.</p>
 
       <h2>Field anatomy</h2>
-      <p>Every field follows the same structure: label, input, helper text. Labels are
-        always visible and sit above the field. Helper text sits below the input and
-        explains; the validation message replaces it when present. Placeholders give
-        examples only — never labels.</p>
+      <p>Order fields as label → input → helper text. Keep labels visible. Replace helper
+        text with validation messages. Use placeholders only for examples.</p>
       <div class="dodont">
         <figure class="do">
           <div class="demo"><div style="display:grid;gap:var(--space-1);max-width:14rem">
@@ -1823,10 +1804,8 @@
 
       <h2>Validation</h2>
       <p>Validate as early as practical without interrupting the user's flow. When
-        validation fails: the error appears directly beneath the affected field,
-        replacing the helper text; it explains what is wrong and how to fix it; and on
-        submission, focus moves to the first invalid field. Errors help users recover —
-        they never merely state that validation failed.</p>
+        validation fails, replace the helper with a specific recovery message. On
+        submission, move focus to the first invalid field.</p>
       <figure class="figure">
         <div style="display:grid;gap:var(--space-1);max-width:14rem">
           <span style="font-size:var(--font-size-200);font-weight:var(--font-weight-medium)">Email</span>
@@ -1889,21 +1868,13 @@
     <section id="view-states">
       <p class="kicker">Composition</p>
       <h1>View states &amp; feedback</h1>
-      <p class="lede">Every page and component communicates its current state clearly.
-        A state replaces only the content it describes; feedback appears as close as
-        possible to what caused it.</p>
-      <p>This chapter decides placement; the wording is covered in
-        <a href="#content">Content</a>.</p>
+      <p class="lede">Replace only the affected content. Place feedback near its cause.</p>
       <div class="callout">
-        <p><strong>Preserve context whenever possible.</strong> Never wipe the page
-        during a refresh, replace the whole screen because one zone is loading, or
-        show a full-screen spinner for a partial update. Stale data stays visible
-        while newer data loads, and errors appear only where they occurred.</p>
+        <p><strong>Preserve context.</strong> Keep stale data visible during refreshes.
+          Show loading and errors only in the affected zone.</p>
       </div>
 
       <h2>View states</h2>
-      <p>The same view states apply throughout the application. A loading or error
-        state replaces only the affected content, never the entire page.</p>
       <div class="table-wrap"><table>
         <tr><th>State</th><th>Where it renders</th><th>Behaviour</th></tr>
         <tr><td>Loading</td><td>In the zone it describes</td><td>Skeletons matching the final layout</td></tr>
@@ -1932,12 +1903,8 @@
       </div>
 
       <h2>Loading</h2>
-      <p>Skeletons preserve layout and reduce perceived waiting: simple geometric
-        shapes matching the size and structure of the final content, so the swap causes
-        no layout shift, pulsing subtly on the shared motion tokens. No full-page
-        spinners, no shimmer sweeps, no placeholder text. If the layout is known, use
-        skeletons; if only an individual action is pending, show progress on the
-        control itself instead.</p>
+      <p>Match skeletons to the final layout and pulse them with shared motion tokens.
+        Show progress on the control for individual pending actions.</p>
       <figure class="figure">
         <div style="display:grid;gap:var(--space-3);max-width:18rem;margin-inline:auto;background:var(--card);border:var(--border-1) solid var(--border);border-radius:var(--radius-2);padding:var(--space-3)" aria-hidden="true">
           <div style="display:flex;gap:var(--space-2);align-items:center">
@@ -1959,11 +1926,8 @@
       </figure>
 
       <h2>Empty states</h2>
-      <p>An empty state explains why nothing is shown and what the user can do next.
-        Differentiate three situations, each guiding its own next action: no data
-        exists yet (offer the create action), filters returned no results (offer to
-        clear or adjust them), and the user lacks permission (say so, and name who to
-        ask).</p>
+      <p>Distinguish new, filtered, and permission empty states. Offer create, clear
+        filters, or contact-owner actions as appropriate.</p>
 
       <h2>Refreshing</h2>
       <p>Refreshing preserves context: existing content stays visible under a subtle
@@ -1971,8 +1935,7 @@
         loading screen during a refresh.</p>
 
       <h2>Feedback</h2>
-      <p>Choose the lightest feedback mechanism that clearly communicates the outcome,
-        and show it as close as possible to the cause.</p>
+      <p>Use the lightest feedback mechanism that fits. Place it near the cause.</p>
       <div class="table-wrap"><table>
         <tr><th>Situation</th><th>Pattern</th></tr>
         <tr><td>Field validation, control feedback — validation, toggle, press</td><td>Inline, at the control that caused it</td></tr>
@@ -2000,18 +1963,14 @@
     </section>
 
     <section id="components">
-      <p class="kicker">Beyond</p>
+      <p class="kicker">Component system</p>
       <h1>Components</h1>
-      <p class="lede">Applications are built by composing reusable components. Screens
-        never build UI directly from HTML elements or duplicate existing components.</p>
-      <p>Components own appearance, interaction, accessibility, and behaviour; screens
-        compose them. Components consume the design system through semantic tokens,
-        never hard-coded values.</p>
+      <p class="lede">Build screens from reusable components and semantic tokens.</p>
+      <p>Components own appearance, interaction, accessibility, and behaviour.</p>
       <div class="callout">
-        <p><strong>Never style HTML elements directly in application code.</strong>
-        HTML elements are implementation details of the component library, not building
-        blocks for screens: <code>&lt;Button /&gt;</code>, never
-        <code>&lt;button className="…"&gt;</code>.</p>
+        <p><strong>Use shared components in application code.</strong> Use
+          <code>&lt;Button /&gt;</code>. Do not style a raw
+          <code>&lt;button className="…"&gt;</code>.</p>
       </div>
 
       <h2>Component hierarchy</h2>
@@ -2029,17 +1988,101 @@
           <div class="tier-arrow">↓</div>
           <div class="tier"><span class="t-name">pages</span><span>An archetype filled with the feature's content.</span></div>
         </div>
-        <figcaption>Each layer is built from the one above it.</figcaption>
       </figure>
-      <p><strong>Atoms</strong> — Button, Input, Checkbox, Switch, Badge, Avatar, Icon,
-        Spinner — own their styling, states, accessibility, and interaction behaviour.
-        Screens use these shared components rather than styling HTML elements.</p>
-      <p><strong>Molecules</strong> — Form field, Search input, Empty state, Pagination,
-        Date picker, Command palette — are complete interactions that appear in multiple
-        places.</p>
-      <p><strong>Organisms</strong> — Billing summary, User profile, Navigation sidebar,
-        Data table, Activity feed — belong to the application, not the design
-        system.</p>
+      <p><strong>Atoms</strong> and <strong>molecules</strong> are generic across features.
+        <strong>Organisms</strong> carry business meaning and belong to the application.</p>
+
+      <h2>Baseline inventory</h2>
+      <p>Build the following components under these exact names. Treat each row as one
+        capability with variants. The Source column lists matching registry items.</p>
+
+      <p><strong>Controls</strong> — build before the first screen.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Component</th><th>Source</th><th>Contract</th></tr>
+        <tr><td>Button</td><td><code>button</code></td><td>Variants <code>default · secondary · outline · ghost · link · destructive</code>; sizes <code>xs · sm · default · lg · icon-xs · icon-sm · icon · icon-lg</code>; loading and disabled states. The one button — screens never use a raw <code>&lt;button&gt;</code>.</td></tr>
+        <tr><td>Input</td><td><code>input · textarea · input-group</code></td><td>One control shape (height, radius, focus ring, invalid state) in single-line, multiline, and addon modes. The search input is an addon recipe of this control.</td></tr>
+        <tr><td>Select</td><td><code>select · combobox</code></td><td>Plain, searchable, and multi-with-chips modes; the same control shape as Input.</td></tr>
+        <tr><td>Checkbox · RadioGroup · Switch</td><td><code>checkbox · radio-group · switch</code></td><td>Styled choice controls; a browser-default control is a defect.</td></tr>
+        <tr><td>Field</td><td><code>field</code></td><td>Label + control + description + error, wired for assistive technology; the anatomy is fixed in <a href="#forms">Forms</a>. Screens never compose label and error by hand.</td></tr>
+      </table></div>
+
+      <p><strong>Display</strong> — build before the first screen.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Component</th><th>Source</th><th>Contract</th></tr>
+        <tr><td>Badge</td><td><code>badge</code></td><td>The status surface, in pill, status-dot-with-label, and removable-chip modes. Tones use the shared intent scale. A second pill, dot, or chip component is a defect.</td></tr>
+        <tr><td>Avatar</td><td><code>avatar</code></td><td>Image with initials fallback; group overlap with <code>+N</code> overflow.</td></tr>
+        <tr><td>Card</td><td><code>card</code></td><td>The raised surface, with padding variants. Never nested in another card; inner grouping uses a flat inset (<a href="#elevation">Surfaces &amp; elevation</a>).</td></tr>
+        <tr><td>List</td><td><code>item</code></td><td>The list row: media + content + meta + actions. Every row renders with this component.</td></tr>
+        <tr><td>Tooltip</td><td><code>tooltip</code></td><td>The only tooltip mechanism — a bare <code>title</code> attribute is a defect.</td></tr>
+        <tr><td>Spinner · Skeleton</td><td><code>spinner · skeleton</code></td><td>The loading indicators (<a href="#view-states">View states</a>); reduced-motion safe; never re-composed per call site.</td></tr>
+        <tr><td>Progress</td><td><code>progress</code></td><td>Determinate progress bar on the intent scale.</td></tr>
+      </table></div>
+
+      <p><strong>Navigation</strong> — build before the first screen.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Component</th><th>Source</th><th>Contract</th></tr>
+        <tr><td>Tabs · Segmented</td><td><code>tabs · toggle-group</code></td><td>Tabs switch views; Segmented picks a value. One active-state treatment app-wide.</td></tr>
+        <tr><td>DropdownMenu</td><td><code>dropdown-menu</code></td><td>Row and toolbar overflow actions; items support a destructive tone.</td></tr>
+      </table></div>
+
+      <p><strong>Feedback &amp; overlays</strong> — build before the first screen.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Component</th><th>Source</th><th>Contract</th></tr>
+        <tr><td>Dialog</td><td><code>dialog · alert-dialog</code></td><td>One modal shell app-wide; the confirm preset handles destructive-action confirmation and returns the user's choice.</td></tr>
+        <tr><td>Toast</td><td><code>toast</code></td><td>One system, mounted once at the app shell; routing rules in <a href="#view-states">View states &amp; feedback</a>. Two toast systems is a defect.</td></tr>
+        <tr><td>Alert</td><td><code>alert</code></td><td>Inline banner on the intent scale: title, description, optional action, dismissible.</td></tr>
+        <tr><td>Empty</td><td><code>empty</code></td><td>Zone empty <em>and</em> error states: media + title + description + action. The error recipe adds retry and the correlation ID.</td></tr>
+      </table></div>
+
+      <p>Build these at first need, to this contract — not improvised per screen:</p>
+      <div class="table-wrap"><table>
+        <tr><th>Component</th><th>Source</th><th>Contract</th></tr>
+        <tr><td>Drawer</td><td><code>sheet · drawer</code></td><td>The sliding panel, from any edge; swipe-dismissable on mobile.</td></tr>
+        <tr><td>Pagination</td><td><code>pagination</code></td><td>Windowed page list with page-size control; pairs with the table standard kit (<a href="#tables">Tables &amp; grids</a>).</td></tr>
+        <tr><td>DatePicker</td><td>composition</td><td>Popover + calendar from the project's date library. Hand-rolled date logic is a defect.</td></tr>
+        <tr><td>Image</td><td>custom</td><td>Ratio frame with loading placeholder, error fallback, and a preview / lightbox group.</td></tr>
+        <tr><td>Upload</td><td>custom</td><td>File picker with drag zone, per-file progress, and an image-card list mode.</td></tr>
+        <tr><td>Steps</td><td>custom</td><td>Progress through a sequence; one component with an orientation option. A second implementation is a defect.</td></tr>
+        <tr><td>Statistic</td><td>custom</td><td>Label + value + optional delta and sparkline, for dashboards.</td></tr>
+      </table></div>
+      <ul class="rules">
+        <li>Entries marked <em>custom</em> have no source in the component registry —
+          build them as atoms from semantic tokens.</li>
+        <li>There is no Icon component: use the icon library directly, at the sizes fixed
+          in <a href="#iconography">Icons</a>.</li>
+        <li>One implementation per widget role. A second toast, pill, tooltip, or
+          modal shell, whatever its styling, is a duplicate to merge.</li>
+      </ul>
+
+      <h2>Intent scale</h2>
+      <p>Components express status through one shared scale, consuming the semantic
+        colour roles (<a href="#colour">Colour</a>):
+        <code>neutral · info · success · warning · destructive</code>. Every component
+        tone option uses these names.</p>
+      <ul class="rules">
+        <li>Component-local vocabularies — <code>ok/warn/bad</code>,
+          <code>pass/fail</code>, <code>r/y/g</code>, <code>error</code> — are defects.
+          <code>destructive</code> is the spelling, matching the token layer.</li>
+        <li>A project needing an extra tone (for example an AI-provenance tone) adds
+          it to the token system once, with the same subtle/border/strong pairing.
+          Do not add a tone inside a single component.</li>
+        <li>Never repurpose <code>--accent</code> as a tone — it is the quiet hover
+          surface (<a href="#tokens">Tokens</a>).</li>
+      </ul>
+
+      <h2>Component naming</h2>
+      <p>Component APIs follow the shadcn/ui conventions, so generated and hand-written
+        components read identically.</p>
+      <ul class="rules">
+        <li>Files are kebab-case (<code>alert-dialog</code>); exports are PascalCase, and
+          compound parts concatenate root and part: <code>CardHeader</code>,
+          <code>AlertDialogCancel</code>.</li>
+        <li>Parts reuse one vocabulary: <code>Trigger · Content · Header · Footer ·
+          Title · Description · Action · Media · Group · Item · Separator</code>.</li>
+        <li>Appearance options are <code>variant</code> and <code>size</code>, each
+          with its default value named <code>default</code>. Do not name a default
+          value <code>primary</code> or <code>md</code>.</li>
+      </ul>
 
       <h2>Reuse order</h2>
       <p>Before creating anything new, stop at the first option that fits. "It would be
@@ -2071,13 +2114,144 @@
       </figure>
 
       <ul class="rules">
-        <li>Build screens from shared components, not raw HTML elements; never style
-          native HTML elements directly in application code.</li>
+        <li>Build screens from shared components. Never style native HTML elements
+          directly in application code.</li>
         <li>Use semantic design tokens only.</li>
         <li>Search before creating; extend before duplicating.</li>
         <li>Promote repeated components into the shared library.</li>
         <li>Screens compose components; components own behaviour.</li>
       </ul>
+    </section>
+
+    <section id="button" class="component-page">
+      <div class="component-layout">
+        <div class="component-content">
+          <header>
+            <p class="kicker">Components · Controls</p>
+            <h1>Button</h1>
+          </header>
+
+          <h2 id="button-when-to-use">When to use</h2>
+          <p>Use a button for immediate actions and form submission. Use a link for
+            navigation.</p>
+          <p>Group attached actions when they operate on the same object. Use a toggle
+            control when the interaction changes a persistent on/off or selected state.</p>
+
+          <h2 id="button-variants">Variants</h2>
+          <p>All variants support rest, hover, focus, pressed, disabled, and loading.
+            Loading keeps the button width stable. Explain unavailable actions outside
+            the disabled control.</p>
+
+          <h3 id="button-variant-default">Default</h3>
+          <p>Use for the single action that best advances the current task.</p>
+          <div class="component-card-grid" data-button-grid="default"></div>
+
+          <h3 id="button-variant-secondary">Secondary</h3>
+          <p>Use for a visible supporting action.</p>
+          <div class="component-card-grid" data-button-grid="secondary"></div>
+
+          <h3 id="button-variant-outline">Outline</h3>
+          <p>Use for visible, lower-emphasis controls on plain backgrounds.</p>
+          <div class="component-card-grid" data-button-grid="outline"></div>
+
+          <h3 id="button-variant-ghost">Ghost</h3>
+          <p>Use for compact toolbars, menus, and repeated row actions.</p>
+          <div class="component-card-grid" data-button-grid="ghost"></div>
+
+          <h3 id="button-variant-link">Link</h3>
+          <p>Use sparingly when an action belongs inside a passage of text.</p>
+          <div class="component-card-grid" data-button-grid="link"></div>
+
+          <h3 id="button-variant-destructive">Destructive</h3>
+          <p>Use for actions that delete data or cause hard-to-reverse changes. Confirm
+            consequential actions.</p>
+          <div class="component-card-grid" data-button-grid="destructive"></div>
+
+          <h3 id="button-variant-with-icon">With icon</h3>
+          <p>Add a leading or trailing icon when it improves recognition or communicates
+            direction. Keep the visible label, preserve the shared icon-to-label gap,
+            and mirror leading and trailing placement in right-to-left layouts.</p>
+          <div class="component-card-grid" data-button-grid="with-icon"></div>
+          <p>The icon form supports every appearance variant and text-button size.</p>
+
+          <h3 id="button-variant-icon-only">Icon only</h3>
+          <p>Use for familiar, repeated actions when space is constrained. Supply an
+            accessible name and a Tooltip. Match its size to neighbouring buttons.</p>
+          <div class="component-card-grid" data-button-grid="icon-only"></div>
+          <p>The icon-only form supports every appearance variant. Its accessible name
+            describes the action.</p>
+
+          <h2 id="button-anatomy">Anatomy</h2>
+          <figure class="anatomy-frame">
+            <div class="anatomy-stage">
+              <svg class="anatomy-svg" viewBox="0 0 1080 560" role="img" aria-labelledby="button-anatomy-title button-anatomy-desc">
+                <title id="button-anatomy-title">Button anatomy</title>
+                <desc id="button-anatomy-desc">A labelled button has required children and optional inline-start and inline-end icons. An icon button uses the icon size and requires an accessible label.</desc>
+
+                <rect class="surface" x="50" y="170" width="540" height="175" rx="30"/>
+                <rect class="part-optional" x="115" y="220" width="72" height="72"/>
+                <rect class="part-required" x="220" y="220" width="200" height="72"/>
+                <rect class="part-optional" x="453" y="220" width="72" height="72"/>
+                <g class="ink" transform="translate(127 232) scale(2)"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.7-7.5 1.1-1.1a5.5 5.5 0 0 0 0-7.8Z"/></g>
+                <text class="button-label" x="320" y="256" text-anchor="middle" dominant-baseline="middle">Button</text>
+                <g class="ink" transform="translate(465 232) scale(2)"><path d="m6 9 6 6 6-6"/></g>
+
+                <line class="required-line" x1="320" y1="105" x2="320" y2="220"/>
+                <text class="prop required-text" x="320" y="55" text-anchor="middle">children</text>
+                <text class="meta required-text" x="320" y="88" text-anchor="middle">Label · Required</text>
+
+                <line class="optional-line" x1="151" y1="292" x2="151" y2="380"/>
+                <text class="prop optional-text" x="151" y="422" text-anchor="middle">data-icon</text>
+                <text class="meta optional-text" x="151" y="455" text-anchor="middle">inline-start · Optional</text>
+
+                <line class="optional-line" x1="489" y1="292" x2="489" y2="380"/>
+                <text class="prop optional-text" x="489" y="422" text-anchor="middle">data-icon</text>
+                <text class="meta optional-text" x="489" y="455" text-anchor="middle">inline-end · Optional</text>
+                <text class="size-name" x="320" y="525" text-anchor="middle">size="default"</text>
+
+                <rect class="surface" x="850" y="170" width="150" height="175" rx="30"/>
+                <rect class="part-required" x="889" y="220" width="72" height="72"/>
+                <g class="ink" transform="translate(901 232) scale(2)"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.7-7.5 1.1-1.1a5.5 5.5 0 0 0 0-7.8Z"/></g>
+                <line class="required-line" x1="925" y1="292" x2="925" y2="380"/>
+                <text class="prop required-text" x="925" y="422" text-anchor="middle">children</text>
+                <text class="meta required-text" x="925" y="455" text-anchor="middle">Icon · Required</text>
+                <text class="size-name" x="925" y="510" text-anchor="middle">size="icon"</text>
+                <text class="size-name" x="925" y="540" text-anchor="middle">aria-label · Required</text>
+              </svg>
+            </div>
+            <figcaption><strong>Button anatomy</strong></figcaption>
+          </figure>
+
+          <h2 id="button-sizes">Sizes</h2>
+          <div class="component-card-grid">
+            <figure class="component-card"><div class="component-card-box"><button class="btn btn-default btn-xs" type="button">Extra small</button></div><figcaption><strong>Extra small</strong></figcaption></figure>
+            <figure class="component-card"><div class="component-card-box"><button class="btn btn-default btn-sm" type="button">Small</button></div><figcaption><strong>Small</strong></figcaption></figure>
+            <figure class="component-card"><div class="component-card-box"><button class="btn btn-default" type="button">Default</button></div><figcaption><strong>Default</strong></figcaption></figure>
+            <figure class="component-card"><div class="component-card-box"><button class="btn btn-default btn-lg" type="button">Large</button></div><figcaption><strong>Large</strong></figcaption></figure>
+            <figure class="component-card"><div class="component-card-box"><button class="btn btn-default btn-icon btn-xs" type="button" aria-label="Add item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><figcaption><strong>Icon XS</strong></figcaption></figure>
+            <figure class="component-card"><div class="component-card-box"><button class="btn btn-default btn-icon btn-sm" type="button" aria-label="Add item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><figcaption><strong>Icon SM</strong></figcaption></figure>
+            <figure class="component-card"><div class="component-card-box"><button class="btn btn-default btn-icon" type="button" aria-label="Add item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><figcaption><strong>Icon</strong></figcaption></figure>
+            <figure class="component-card"><div class="component-card-box"><button class="btn btn-default btn-icon btn-lg" type="button" aria-label="Add item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><figcaption><strong>Icon LG</strong></figcaption></figure>
+          </div>
+
+        </div>
+
+        <aside class="page-outline" aria-label="On this page">
+          <strong>On this page</strong>
+          <a href="#button-when-to-use">When to use</a>
+          <a href="#button-variants">Variants</a>
+          <a class="nested" href="#button-variant-default">Default</a>
+          <a class="nested" href="#button-variant-secondary">Secondary</a>
+          <a class="nested" href="#button-variant-outline">Outline</a>
+          <a class="nested" href="#button-variant-ghost">Ghost</a>
+          <a class="nested" href="#button-variant-link">Link</a>
+          <a class="nested" href="#button-variant-destructive">Destructive</a>
+          <a class="nested" href="#button-variant-with-icon">With icon</a>
+          <a class="nested" href="#button-variant-icon-only">Icon only</a>
+          <a href="#button-anatomy">Anatomy</a>
+          <a href="#button-sizes">Sizes</a>
+        </aside>
+      </div>
     </section>
 
     <nav class="pager" aria-label="Chapter navigation">
@@ -2130,7 +2304,7 @@
     ['Actions', [
       ['--primary', 'The single primary action on a screen'],
       ['--secondary', 'Secondary actions, quiet fills'],
-      ['--accent', 'Hover, selected, and highlighted surfaces — never the primary action'],
+      ['--accent', 'Hover, selected, and highlighted surfaces; the primary action uses --primary'],
       ['--link', 'Inline links'],
     ]],
     ['Intent', [
@@ -2159,6 +2333,34 @@
     el.textContent = cs.getPropertyValue(el.dataset.token).trim();
   });
 
+  // Button reference — one state ladder feeds every variant.
+  const BUTTON_STATES = [
+    ['rest', 'Rest'], ['hover', 'Hover'], ['focus', 'Focus'],
+    ['active', 'Pressed'], ['disabled', 'Disabled'], ['loading', 'Loading'],
+  ];
+  const BUTTON_ICON = '<svg data-icon="inline-start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+  function buttonSpecimen(kind, state) {
+    const iconOnly = kind === 'icon-only';
+    const withIcon = kind === 'with-icon';
+    const variant = iconOnly || withIcon ? 'default' : kind;
+    const stateClass = state === 'rest' || state === 'loading' ? '' : ` is-${state}`;
+    const sizeClass = iconOnly ? ' btn-icon' : '';
+    const disabled = state === 'disabled' ? ' disabled' : '';
+    const busy = state === 'loading' ? ' aria-busy="true"' : '';
+    const name = iconOnly ? 'Continue' : '';
+    let content = iconOnly ? BUTTON_ICON : withIcon ? BUTTON_ICON + 'Continue' : 'Continue';
+    if (state === 'loading') content = '<span class="btn-spinner" data-icon="inline-start" aria-hidden="true"></span>' + (iconOnly ? '' : 'Loading');
+    return `<button class="btn btn-${variant}${sizeClass}${stateClass}" type="button"${disabled}${busy}${name ? ` aria-label="${name}"` : ''}>${content}</button>`;
+  }
+
+  document.querySelectorAll('[data-button-grid]').forEach(grid => {
+    const kind = grid.dataset.buttonGrid;
+    grid.innerHTML = BUTTON_STATES.map(([state, label]) =>
+      `<figure class="component-card"><div class="component-card-box">${buttonSpecimen(kind, state)}</div><figcaption><strong>${label}</strong></figcaption></figure>`
+    ).join('');
+  });
+
   // Chapter router — each section is a page; hash is the address. `.routed`
   // on <html> gates everything that only makes sense once the router runs.
   document.documentElement.classList.add('routed');
@@ -2168,23 +2370,26 @@
   syncMenu();
   compact.addEventListener('change', syncMenu);
 
-  const pages = [...document.querySelectorAll('main > section')];
   const links = [...document.querySelectorAll('.sidebar a[href^="#"]')];
+  const pages = links.map(link => document.getElementById(link.hash.slice(1))).filter(Boolean);
   const titles = Object.fromEntries(pages.map(s => [s.id, s.querySelector('h1').textContent]));
   const prevEl = document.getElementById('pager-prev');
   const nextEl = document.getElementById('pager-next');
 
   function show(id) {
-    if (!titles[id]) id = 'intro';
-    pages.forEach(s => s.hidden = s.id !== id);
-    links.forEach(a => a.classList.toggle('active', a.hash.slice(1) === id));
-    const i = pages.findIndex(s => s.id === id);
+    const target = document.getElementById(id);
+    const pageId = titles[id] ? id : target?.closest('main > section')?.id || 'intro';
+    pages.forEach(s => s.hidden = s.id !== pageId);
+    links.forEach(a => a.classList.toggle('active', a.hash.slice(1) === pageId));
+    document.querySelector('main').classList.toggle('component-mode', pageId === 'button');
+    const i = pages.findIndex(s => s.id === pageId);
     const prev = pages[i - 1], next = pages[i + 1];
     prevEl.hidden = !prev; nextEl.hidden = !next;
     if (prev) { prevEl.href = '#' + prev.id; prevEl.innerHTML = `<span class="caption">Previous</span>${titles[prev.id]}`; }
     if (next) { nextEl.href = '#' + next.id; nextEl.innerHTML = `<span class="caption">Next</span>${titles[next.id]}`; }
     if (compact.matches) menu.open = false;
-    window.scrollTo(0, 0);
+    if (id !== pageId && target) target.scrollIntoView();
+    else window.scrollTo(0, 0);
   }
   addEventListener('hashchange', () => show(location.hash.slice(1)));
   show(location.hash.slice(1));
