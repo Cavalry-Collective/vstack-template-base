@@ -27,10 +27,8 @@
   Brand-vivid values that can't hold 4.5:1 (pure Cavalry red, amber) sit at
   300/400 for graphics and large accents only, never body-size text on white.
 
-  Note: --primary and --destructive share the brand-red family in this
-  palette — destructive actions are disambiguated by wording and
-  confirmation, not hue. And --accent is shadcn's accent: the quiet
-  hover/selected surface, never the CTA colour — the CTA is --primary.
+  --accent is shadcn's accent: the quiet hover/selected surface, never the
+  CTA colour. The CTA uses --primary.
 
   Breakpoints can't be custom properties in media queries — keep in sync by
   convention: sm 640 · lg 1024. Author from the smallest width up.
@@ -201,6 +199,7 @@
   --destructive-border: var(--red-200);
   --destructive-foreground: var(--white);
   --info: var(--violet-400);
+  --info-strong: var(--violet-600);     /* text on the subtle tint — formula step 600 */
   --info-subtle: var(--violet-50);
   --info-border: var(--violet-200);
 
@@ -225,10 +224,14 @@
   /* ════════════════ 3 · COMPONENT ════════════════ */
 
   --control-height: 2.25rem;    /* 36 — shadcn's default control size (h-9)     */
+  --control-height-xs: 1.75rem; /* 28 — shadcn extra-small actions              */
   --control-height-sm: 2rem;    /* 32 — dense contexts: table toolbars (h-8)    */
+  --control-height-lg: 2.5rem;  /* 40 — prominent standalone actions            */
   --control-radius: var(--radius-2);
   --control-padding-x: var(--space-3);
+  --control-padding-x-xs: var(--space-2);
   --control-padding-x-sm: var(--space-2); /* pairs with --control-height-sm */
+  --control-padding-x-lg: var(--space-4);
 
   /* Box model — a container's inner padding; one size per column.
      The spacing scale governs space BETWEEN siblings, boxes the space WITHIN. */
