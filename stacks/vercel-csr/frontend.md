@@ -68,7 +68,7 @@ Everything exposed through `VITE_*` is public. Never put a secret in the fronten
 ## Testing
 
 - Run TypeScript and Vite build.
-- Cover every screen's states and primary flow with Playwright.
+- Cover each user flow in `specs/test-flows.md` with Playwright, with screen states as flow variants.
 - Run desktop and mobile Playwright projects.
 - Request a deep link directly to prove the SPA fallback.
 - Add unit tests only when a store slice, service, or helper has branching logic worth isolating.
