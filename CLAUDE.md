@@ -107,17 +107,26 @@ Load-bearing engineering rules; honor them on every change. They are stack- and 
 The concrete bar for *Goal-driven execution*: do not report work as done until all of the following hold. If a step cannot be run (e.g. the toolchain TODOs in *Common commands* are still unfilled), say so explicitly rather than skipping it silently. This is a hard self-check the agent runs before claiming completion — until a real `ci.yml` exists, the gate is not delegated.
 
 - `<pm> lint`, `<pm> typecheck`, `<pm> test`, and `<pm> build` all pass for the touched apps.
-- New or changed behaviour is covered by tests that assert behaviour, not implementation.
+- New or changed behaviour is proven by a step or assertion in the flow test that covers it, or by a case in that rule's unit tests. `specs/test-flows.md` matches the suite. Tests assert behaviour, not implementation.
 - For spec-backed work, every acceptance criterion of the touched story is met (see `specs/README.md`).
 - Per-app and per-area completion rules in the relevant home file are satisfied — frontend route + i18n parity (`apps/frontend/CLAUDE.md`), reversible (up/down) or explicitly-justified migration (`db/CLAUDE.md`). That file is the source of truth; don't re-derive here.
 - No new TODO/FIXME left in code you touched without a tracked follow-up.
 
 ## Testing
 
-- Tests are part of "done." Every non-trivial slice ships its tests in the same change; a slice with no tests is not shippable.
-- A bug fix starts with a failing test that reproduces the bug, then the fix makes it pass.
-- Name the kind of test by what it proves — unit (a rule in isolation), integration (a use case across rings/layers), contract (an API or port boundary). Pick the cheapest kind that proves the behaviour.
-- Assertion quality follows *Don't overfit to the immediate request* (assert behaviour, not implementation); test placement and per-ring/per-layer coverage live in each app's `CLAUDE.md`.
+- Tests are part of "done". A change to behaviour ships with the tests that prove it, in the same PR.
+- Keep one curated suite, organised by user flow. A user flow is the sequence of steps a user takes to reach a goal.
+- `specs/test-flows.md` is the flow index. It lists each flow, its steps, its variants and the one test file that runs it. Update it in the same change as the tests.
+- Before a bug fix or a feature, find the flow in the index that covers the behaviour. Extend that flow's test with a step or an assertion.
+- For a bug fix, add the step or assertion before the fix. Confirm that it fails before the fix and passes after it.
+- Create a new flow or test case only when no flow in the index covers the behaviour. Add it to the index, and explain in the PR description why no existing flow fits.
+- Name tests and test files after the flow or rule they prove. Never name them after a bug, spec, story, feature number, date, request or person.
+- Check every step of a flow in one run of that flow. Do not add a separate test that repeats the flow to check one step.
+- Test each cross-cutting concern (language, viewport, error state, accessibility) once, as a variant of one flow. Do not repeat it across screens or copy tests for each design variant.
+- When a feature is removed or a flow changes, delete or merge its tests and update the index in the same change. Do not write a test that checks a removed feature is still absent.
+- Write unit tests for pure rules such as pricing, sizing and date arithmetic. Group the cases by rule. When you fix a bug in a rule, add or correct a case in that group.
+- Choose the kind of test by what it proves: unit (a rule in isolation), integration (a use case across rings/layers), contract (an API or port boundary), end-to-end (a user flow). Use the cheapest kind that proves the behaviour, and test each behaviour at one level only.
+- Assertion quality follows *Don't overfit to the immediate request* (assert behaviour, not implementation). Test placement lives in each app's `CLAUDE.md`.
 
 ## Development workflow
 

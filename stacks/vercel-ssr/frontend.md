@@ -63,7 +63,7 @@ Unauthenticated queries and actions redirect to login while preserving the inten
 ## Testing
 
 - Run TypeScript and `next build`.
-- Cover every screen's states and primary flow with Playwright.
+- Cover each user flow in `specs/test-flows.md` with Playwright, with screen states as flow variants.
 - Run desktop and mobile Playwright projects.
 - Add Vitest only for isolated store or helper logic.
 

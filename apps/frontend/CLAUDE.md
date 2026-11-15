@@ -263,7 +263,7 @@ These bind the frontend to the backend's cross-cutting machinery. All three live
 
 - **Store slices & `lib/` helpers** — plain unit tests.
 - **Services** — network mocked at the edge: assert request shape and response/error mapping, never by stubbing internal methods.
-- **Organisms** — test behaviour and the four states (loading/error/empty/success), not markup. The four-state contract is itself a test checklist for every data-backed screen.
+- **Organisms** — test behaviour, not markup. Test the four states (loading/error/empty/success) once in the shared state components. In e2e, check a screen's error and empty states as variants of its flow (root *Testing*).
 - **No broad DOM snapshots.** Snapshot the data a component receives, not its rendered output — markup snapshots lock in structure and produce noise on every refactor.
 - **At least one automated check runs at a narrow viewport.** Run the e2e suite (or a representative subset) at the minimum supported width as well as the primary — a suite pinned to one desktop width is how mobile-layout regressions ship. (Concrete mechanism: the active stack pack.)
 
