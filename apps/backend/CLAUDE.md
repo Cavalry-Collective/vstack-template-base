@@ -83,7 +83,7 @@ Ports are defined inside, implemented outside, and connected in one place — th
 
 ## Testing the rings
 
-The architecture exists to make testing cheap — exploit it. Each ring maps to a kind of test; **most coverage sits in the fast inner rings**, thinning outward. Test each behaviour in one ring only. Do not repeat a domain rule's cases in the service, repo and controller tests.
+The architecture exists to make testing cheap — exploit it. Each ring maps to a kind of test; **most coverage sits in the fast inner rings**, thinning outward. Test each behaviour in one ring only. Do not duplicate a domain rule's test cases in the service, repo and controller tests.
 
 - **Domain — pure unit tests.** No mocks, no I/O (the ring forbids I/O, so its tests need none). Assert the invariants and rules directly.
 - **Service — use-case tests.** Drive the use case with in-memory fakes of the ports (the composition-root swap described in *Wiring*); assert orchestration and transaction boundaries, not the database.
