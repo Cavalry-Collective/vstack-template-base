@@ -173,7 +173,7 @@ Run the repo's lint, typecheck, test and build commands, along with any integrat
 
 #### Step 6. Proofread
 
-Proofread every user-facing string, error message and documentation change. Use short, plain and readable language. Avoid filler and AI-sounding phrasing. Use a proofreading tool such as `/vstack:proofread`. Apply the same standard to the PR description and the review request message in steps 9 and 10.
+Proofread every user-facing string, error message and documentation change. Use short, plain and readable language. Avoid filler and AI-sounding phrasing. Use a proofreading tool such as `/vstack:proofread`. Apply the same standard to the PR description and the review request message in steps 8 and 9.
 
 ### Ship
 
@@ -181,42 +181,70 @@ Proofread every user-facing string, error message and documentation change. Use 
 
 Before opening the PR, have the most capable available model review the full diff against `origin/main` in a fresh context. Use `/code-review high`, or a subagent on the strongest model given only the diff, this file and the area `CLAUDE.md` files the change touches. Ask it to review the change as a pull request reviewer would, checking for:
 
-- Bugs and logic errors, including edge cases and error handling.
-- Security issues, such as missing access checks, injection or leaked secrets.
-- Performance problems, such as unnecessary queries or work inside loops.
-- Missing or weak tests for each changed behaviour.
-- Readability, naming and compliance with the rules in this file.
-- The change sits in the correct layer or ring, and no business logic leaked outside it (see *Change the right place, surgically*).
-- No unrelated code was reformatted or refactored. Only imports made redundant by the change were removed.
-- Names state business meaning (see *Readability and Naming*).
-- Every new abstraction, dependency or config key has one line in the PR: the simpler option and why it was rejected. If you cannot write that line, use the simpler option. Do not add an abstraction before there is a second caller.
-- New code follows an existing pattern, named in the PR, or the PR says why none fits. If the pattern itself is wrong, fix it repo-wide in a separate change. Do not fork it locally.
-- For every UI composition added or changed, the PR names the comparable existing instance or documented pattern used as its baseline, or says why none fits, and confirms that unrelated visual structure was preserved.
+- **Correctness:** bugs, logic errors, edge cases and weak error handling.
+- **Security:** missing access checks, injection and leaked secrets.
+- **Performance:** unnecessary queries or redundant work inside loops.
+- **Tests:** missing or weak tests for each changed behaviour.
+- **Fit:** the change sits in the right layer, follows existing patterns, avoids unrelated changes, uses names that state business meaning, and follows the rules in this file and the area `CLAUDE.md` files.
+- **Justification:** the PR names the simpler option for each new abstraction, dependency or config key, the existing pattern it follows, and the baseline for each UI change.
 
 The reviewer reports each finding with the file, line, problem and suggested fix. Fix every valid finding, then run step 5 again. List any finding you chose not to fix, and why, in the PR description.
 
-#### Step 8. Record evidence
+#### Step 8. Open the PR
 
-For each behaviour, record the evidence that demonstrates it: the command or API call you ran and the output you observed, or a video or screenshot for a change users can see. Include it in the PR description in step 9. If you cannot upload a file, give the user its path and ask them to attach it.
+For each behaviour, record the evidence that demonstrates it: the command or API call you ran and the output you observed, or a video or screenshot for a change users can see.
 
-#### Step 9. Open the PR
+Write the PR description using the template below, with the evidence in it. Proofread it, show it to the user and wait for confirmation. Once confirmed, push the branch and open the PR.
 
-Write the PR description using `.github/PULL_REQUEST_TEMPLATE.md`. Proofread it, show it to the user and wait for confirmation. Once confirmed, push the branch and open the PR.
+```markdown
+<!--
+Bug fix: start with "Fixes [<TICKET>](<ticket link>): <what users saw, and where>." Keep "Cause".
+Any other change: start with one sentence describing what the PR changes. Delete "Cause".
+If there is no ticket, describe what users saw. Delete any section that does not apply.
+-->
 
-#### Step 10. Ask for review
+<One line: what the PR fixes or changes.>
 
-Write the [review request message](#review-request-message) for the user to send to the reviewer, for example in Slack. Ask for the names of the reviewer and anyone to CC if the user has not already provided them. Proofread the message.
+## Cause
+<Bug fix only. Why the bug occurred, in plain language.>
 
-#### Step 11. Follow review through to merge
+## Changes
+- <One bullet per user-visible behaviour.>
 
-- Wait for all CI checks to pass and make sure all branch protection rules on `main` are met before merging.
-- If a CI check fails, fix the underlying cause and push the fix. Never bypass a check to make it pass.
-- Reply to each review comment explaining what changed, then resolve the thread.
-- Before reporting that the PR is ready, check its merge state and confirm that no review threads remain unresolved.
-- Rebase onto `origin/main`, run step 5 again, and merge using a rebase or fast-forward merge. Never create a merge commit.
-- After merging, stop any dev servers you started and delete the worktree and its branch.
+## Evidence
+<The command or call you ran and the output you observed, or a video or screenshot, for each behaviour.>
 
-### Review request message
+## Tests
+- <Bug fix: how you reproduced the bug, and what happens on `main` compared with this PR.>
+- <The flow test extended or added. If you added a new flow, explain why no existing flow fits.>
+- <Anything not covered by automated tests, and why.>
+
+## Before release
+- <Config values to set, feature flags, and anything that must deploy first. "None" if there are none.>
+
+## Spec
+<The spec this implements, per `specs/README.md`, or "N/A".>
+
+## Database (delete if no schema change)
+
+- [ ] migration verified per `db/CLAUDE.md`'s merge gate — up → down → up on a scratch DB by default; if the active stack pack binds a different gate, that one (see its conflict register) — or the irreversible change is justified in the spec
+
+## UI checklist (if UI changed)
+
+- [ ] all four data states verified (loading / error / empty / success) — see `apps/frontend/CLAUDE.md`
+- [ ] keyboard-only pass done (reachable, visible focus, modals trap/restore)
+- [ ] new screen compared to its `design/` mockup (mockups are the **initial-build** reference only); existing-screen change built to convention — see `design/README.md`
+- [ ] all user-facing strings via i18n (keys added to every locale) or the project's single strings/copy module — see `apps/frontend/CLAUDE.md`
+- [ ] verified at the minimum supported width — no overflow / clipping / horizontal scroll, fixed chrome clears content — see `apps/frontend/CLAUDE.md` *Responsive layout*
+- [ ] before/after screenshots attached at the primary form factor and the narrow width
+
+## Additional notes
+- <For example, refactoring, self-review findings you did not fix and why, or for each new abstraction, dependency or config key, the simpler option and why it was rejected.>
+```
+
+#### Step 9. Ask for review
+
+Write the review request message below for the user to send to the reviewer, for example in Slack. Ask for the names of the reviewer and anyone to CC if the user has not already provided them. Proofread the message.
 
 Remove any lines that have no content.
 
@@ -265,6 +293,15 @@ Thanks!
 
 CC: @<others>
 ```
+
+#### Step 10. Follow review through to merge
+
+- Wait for all CI checks to pass and make sure all branch protection rules on `main` are met before merging.
+- If a CI check fails, fix the underlying cause and push the fix. Never bypass a check to make it pass.
+- Reply to each review comment explaining what changed, then resolve the thread.
+- Before reporting that the PR is ready, check its merge state and confirm that no review threads remain unresolved.
+- Rebase onto `origin/main`, run step 5 again, and merge using a rebase or fast-forward merge. Never create a merge commit.
+- After merging, stop any dev servers you started and delete the worktree and its branch.
 
 ## Learnings
 
