@@ -184,10 +184,10 @@ setup is complete.
 
 ## From specification to verified change
 
-For each non-trivial change:
+For each change:
 
-1. Write a short specification under `specs/`.
-2. Build the smallest independently shippable slice.
+1. If it is not straightforward, write a short specification under `specs/`.
+2. Build a change that can be verified and ships on its own.
 3. Run the relevant lint, typecheck, tests, build, migration, accessibility, and visual checks.
 4. Observe the result in the running product.
 5. Rebase and merge only when the integrated change is green.

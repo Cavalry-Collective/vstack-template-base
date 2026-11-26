@@ -1,6 +1,6 @@
 # Specs
 
-Non-trivial features start from a short written spec here before implementation.
+Consider writing a short spec here before implementing a change that is not straightforward.
 
 ## Convention
 
@@ -21,4 +21,4 @@ Non-trivial features start from a short written spec here before implementation.
 
 ## Workflow
 
-Feature work starts with a spec. Once approved, create a short-lived branch and open a PR that links the spec. A story is done only when every acceptance criterion has been demonstrated by its stated verification; capture that evidence in the PR's Test plan checklist. When merged, the spec stays as a record of the decision.
+For spec-backed work, follow *Development workflow* in root `CLAUDE.md` once the spec is approved, and link the spec in the PR. A story is done only when every acceptance criterion has been demonstrated by its stated verification; capture that evidence in the PR's Evidence section. When merged, the spec stays as a record of the decision.

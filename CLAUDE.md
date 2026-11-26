@@ -95,9 +95,9 @@ Reference examples: `add-ons/saas-billing/README.md` (add-on with implementation
 Load-bearing engineering rules; honor them on every change. They are stack- and tooling-agnostic.
 
 - **Think before coding.** Don't assume, don't hide confusion, surface tradeoffs. State your assumptions and ask when uncertain; present multiple interpretations rather than silently picking one; suggest simpler alternatives and respectfully push back when warranted; stop and name what's confusing rather than proceeding on unclear requirements.
-- **Simplicity first / YAGNI.** Write the minimum code that solves the problem. No unrequested features, no abstractions for single-use code, no configurability or error handling for cases that can't occur. "We might want it later" is not a reason. If 200 lines could be 50, rewrite. Every added layer, dependency, or config key must pass the self-review justification (see *Self-review before merge*).
+- **Simplicity first / YAGNI.** Write the minimum code that solves the problem. No unrequested features, no abstractions for single-use code, no configurability or error handling for cases that can't occur. "We might want it later" is not a reason. If 200 lines could be 50, rewrite. Every added layer, dependency, or config key must pass the self-review justification (see *Step 7. Self-review* in *Development workflow*).
 - **Change the right place, surgically.** First identify *where* a change belongs — the correct layer and boundary — and make it there; don't patch wherever is convenient. Keep business logic out of controllers, repos, UI, jobs, and utilities where it doesn't belong, and don't leak infrastructure details into the wrong layer. Then touch only what you must: match the surrounding style and conventions (error handling, logging, validation), don't reformat or refactor unrelated working code, flag unrelated dead code without removing it, and remove only the imports/variables your own change orphaned.
-- **Goal-driven execution.** Define success criteria and loop until verified. Turn requests into measurable objectives with a brief plan and a verification step per phase, so each phase can iterate to a clear success marker. Verified means observed, not inferred: before calling a change done, run it and state the evidence you saw. What "run it" means per change type lives in each app's `CLAUDE.md` (frontend/backend) and in `infra/CLAUDE.md` for infrastructure; record the evidence in the PR's Test plan checklist.
+- **Goal-driven execution.** Define success criteria and loop until verified. Turn requests into measurable objectives with a brief plan and a verification step per phase, so each phase can iterate to a clear success marker. Verified means observed, not inferred: before calling a change done, run it and state the evidence you saw. What "run it" means per change type lives in each app's `CLAUDE.md` (frontend/backend) and in `infra/CLAUDE.md` for infrastructure; record the evidence in the PR's Evidence section.
 - **Don't reinvent existing solutions.** Use established libraries and project utilities for dates, money, validation, retry, pagination, parsing, and formatting rather than hand-rolling them — especially date/timezone math. Don't duplicate existing abstractions or wrap a library without a clear reason. Before adding a new dependency, confirm an existing dependency or shared util doesn't already cover it, and prefer well-maintained, widely-used, permissively-licensed packages. Weigh the cost the YAGNI rule already requires you to justify: for the frontend, bundle and transitive weight (a few lines can beat a large dep for a cached SPA); for the backend, transitive and security surface. A trivial, stable one-liner doesn't earn a dependency — but dates, money, timezones, auth, and crypto always do; never hand-roll those.
 - **Don't overfit to the immediate request.** Solve the general problem, not just the demonstrated case. Avoid hardcoding strings, IDs, statuses, roles, or regions; handle the empty, invalid, duplicate, retry, timeout, and permission cases, not only the happy path; and write tests that assert behavior rather than mirror the implementation.
 - **Keep implementations clean, not mechanical.** No noisy logs, no broad `try/catch` that hides errors, no unused parameters or dead branches, no defensive code without a clear failure model. (Comment rules: *Readability and Naming*.)
@@ -130,42 +130,129 @@ The concrete bar for *Goal-driven execution*: do not report work as done until a
 
 ## Development workflow
 
-How work flows from spec to merge. These two rules are load-bearing; the worktree mechanics below are how they're carried out day to day.
+Follow this workflow for every change in this repo: a bug fix, a feature or a refactor. If a change does not look straightforward, consider writing a spec first, with Spec Kit or a similar tool. See `specs/README.md`.
 
-- **Spec-first, independently testable slices.** Non-trivial features start from a short written spec before implementation, kept under `specs/`. User stories are priority-tagged (P1 = MVP) and each slice is shippable / demoable on its own; P1 alone is a viable MVP. Avoid cross-story coupling that breaks that independence. Keep this discipline regardless of which spec tool (if any) you use.
-- **Trunk-based, linear history.** A single long-lived integration branch, `main`. Feature work happens on short-lived branches (see *Working in a git worktree* below); rebase / fast-forward onto trunk to keep history linear. Trunk stays releasable — hide incomplete work behind a flag. A flag here is a boolean key in the app's validated config schema (see *Configuration*), default off — no flag service or SDK unless a project explicitly adopts one and records the choice. Keep PRs small where practical. Commits: imperative subject, one logical change per commit; follow the repo's existing Conventional Commits prefix style (feat/fix/docs/refactor/test/chore, optional scope) so history stays scannable.
+Stop and ask the user if:
 
-**Spikes are sanctioned and never merge.** Exploratory work runs on a `spike/<topic>` branch in its own worktree. Tests, self-review, and the Definition of Done do not apply there. Two rules: a spike branch never merges into trunk, and the real implementation starts on a normal branch at the full bar — even if it copies spike code. Record what you learned in the feature spec, then delete the spike branch and its worktree (a spike skips the merge-back gate below).
+- For a bug, you cannot reproduce it on the local stack or staging, or the new assertion passes before the fix.
+- The change alters behaviour outside the scope of the ticket.
+- A check fails for a reason unrelated to your change.
 
-### Self-review before merge
+### Prepare
 
-Before opening a PR or merging, re-read the full diff end to end — including files you don't remember touching. Do not review from memory. Confirm:
+#### Step 1. Branch
 
-- The change sits in the correct layer/ring, and no business logic leaked outside it (see *Change the right place, surgically*).
-- No unrelated code was reformatted or refactored; only imports your own change orphaned were removed.
-- Names state business meaning (see *Readability and Naming*).
-- Every new abstraction, dependency, or config key has one line in the PR: the simpler option and why it was rejected. If you can't write that line, build the simpler option. No second caller yet → no abstraction.
-- New code follows an existing pattern, named in the PR — or the PR says why none fits. If the pattern itself is wrong, fix it repo-wide in its own change; don't fork it locally.
-- For every UI composition added or changed, the PR names the comparable existing instance or documented pattern used as its baseline — or says why none fits — and confirms that unrelated visual structure was preserved.
+Run `git fetch origin`. Work in a worktree under `.claude/worktrees/<name>` on a branch created from `origin/main`. Name it `feature/<ticket code>-<summary>`, for example `feature/abc-123-invite-limit`. For an urgent fix to production, use `hotfix/<ticket code>-<summary>`. If there is no ticket, leave out the ticket code.
 
-### Working in a git worktree
+#### Step 2. Reproduce
 
-Worktrees are the **default** here — most work runs in parallel with Claude across several worktrees at once. Feature work happens in a git worktree under `.claude/worktrees/<name>` (or your preferred location) on its own short-lived branch.
+For a bug, always reproduce it before changing the code. Use the local stack or staging. Never test against production. For any other change, skip this step.
 
-- **Before anything else in a new worktree, copy over all gitignored runtime config** — a fresh worktree is created without it (root `.env`, any `apps/*/.env*`, local secrets) and anything depending on it will silently misbehave. From the worktree root: `main="$(git worktree list --porcelain | sed -n 's/^worktree //p' | head -1)"; for f in .env apps/backend/.env apps/frontend/.env; do if [ -f "$main/$f" ]; then cp "$main/$f" "./$f" && echo "copied $f"; else echo "not in main checkout (skipped): $f"; fi; done` — it reports each file so a missing one is visible, not silent. Copy every gitignored env file your project uses, not only the three listed.
-- Shared local infrastructure (a containerized DB, etc.) is typically **shared** across worktrees by a fixed name — starting a second copy will conflict; reuse the running one.
-- The shared DB's schema is **global state** across worktrees — a migration, reset, or seed run in one worktree changes every worktree's app. Don't run a reset or destructive migration check while a parallel worktree depends on the current schema; use a throwaway DB for round-trip/destructive checks.
+### Build
 
-**When the work is done** — an ordered merge-back gate; the moment trunk is mutated is the moment quality is enforced:
+#### Step 3. Write the test
 
-1. **Rebase** the branch onto the current default branch and resolve any conflicts — pulling in changes that landed on trunk while you worked.
-2. On the rebased branch, **run the full lint + typecheck + test + build suite and confirm it passes** — never merge red. The suite must run on the integrated state (after the rebase, not before). If no suite exists yet (toolchain still TODO), say so explicitly per the Definition of Done.
-3. **Fast-forward merge** into the default branch (the rebase makes this a clean ff, preserving linear history).
-4. **Stop** any dev servers / test instances started for the work.
-5. **Delete** the worktree (`git worktree remove`) and its merged branch.
-6. **Push** the default branch only after confirming. Once `.github/workflows/deploy.yml` exists it runs after a green CI run on `main` (a `workflow_run` trigger), so a push to the default branch ships to the configured target — confirm with the user before pushing, and read `deploy.yml` to see what its trigger actually is.
+If the change was planned with Spec Kit or a similar framework, follow its test tasks. Otherwise, follow [Testing](#testing), with these additions:
 
-Where `main` is protected (Day-1 step 11) or the work is spec-backed (`specs/README.md`: open a PR that links the spec), steps 3 and 6 run through the platform instead: push the rebased branch, open or update the PR, let CI go green, and merge with a fast-forward/rebase merge — never a merge commit. The local ff-merge + push path applies only to an unprotected repo.
+- Do not force a change into a flow that covers a different behaviour.
+- Do not write a narrow test that covers only this change. Understand the entire flow and test it.
+#### Step 4. Change
+
+Make the change. Update the root or area `CLAUDE.md` where the change makes it out of date. Use Conventional Commits: an imperative subject with a prefix such as `feat:` or `fix:`, and one logical change per commit.
+
+#### Step 5. Check
+
+Run the repo's lint, typecheck, test and build commands, plus any integration tests the change touches. All checks must pass before you continue.
+
+#### Step 6. Proofread
+
+Proofread every user-facing string, error message and documentation change. Use short, plain and readable language. Avoid filler and AI-sounding phrasing. Use a proofreading tool, such as `/vstack:proofread`. Apply the same standard to the PR description and the review request message in steps 9 and 10.
+
+### Ship
+
+#### Step 7. Self-review
+
+Before you open the PR, have the most capable available model review the full diff against `origin/main`, in a fresh context. Use `/code-review high`, or a subagent on the strongest model given only the diff, this file and the area `CLAUDE.md` files the change touches. Ask it to review as a pull request reviewer would:
+
+- Bugs and logic errors, including edge cases and error handling.
+- Security issues, such as missing access checks, injection or leaked secrets.
+- Performance problems, such as extra queries or work inside loops.
+- Missing or weak tests for each changed behaviour.
+- Readability, naming, and departures from the rules in this file.
+- Each new abstraction, dependency or config key: the PR must name the simpler option and why it was rejected.
+
+It returns each finding with the file, the line, the problem and a suggested fix. Fix each real finding, then run step 5 again. List any finding you chose not to fix, and why, in the PR description.
+
+#### Step 8. Record evidence
+
+For each behaviour, record the evidence that proves it: the command or API call you ran and the output you observed, or a video or screenshot for a change users can see. Include it in the PR description in step 9. If you cannot upload a file, give the user its path and ask them to attach it.
+
+#### Step 9. Open the PR
+
+Write the PR description with `.github/PULL_REQUEST_TEMPLATE.md`. Proofread it, show it to the user and wait for confirmation. Once confirmed, push the branch and open the PR.
+
+#### Step 10. Ask for review
+
+Write the [review request message](#review-request-message) for the user to send to the reviewer, for example in Slack. Ask for the reviewer and CC names if the user has not provided them. Proofread the message.
+
+#### Step 11. Follow review through to merge
+
+- Wait for all CI checks to pass and make sure the branch protection rules on `main` are met before merging.
+- If a CI check fails, fix the cause and push the fix. Never skip a check to make it pass.
+- Reply to each review comment explaining what changed, then resolve the thread.
+- Before reporting that a PR is ready, check its merge state and confirm that no review threads remain unresolved.
+- Rebase onto `origin/main`, run step 5 again, and merge with a rebase or fast-forward merge. Never create a merge commit.
+- After the merge, stop any dev servers you started, and delete the worktree and its branch.
+
+### Review request message
+
+Remove any lines that have no content.
+
+Bug fix:
+
+```text
+Hi @<reviewer>, could you help review and approve this PR?
+
+<PR link>
+
+Fixes <ticket link>
+
+Root cause:
+<One or two sentences explaining why the bug occurred.>
+
+Fix:
+<What the app does now, in plain language.>
+
+Additional notes:
+<For example, refactoring. One sentence.>
+
+Thanks!
+
+CC: @<others>
+```
+
+Other change:
+
+```text
+Hi @<reviewer>, could you help review and approve this PR?
+
+<PR link>
+
+<ticket link>
+
+What it does:
+<One or two sentences describing the change.>
+
+Rollout:
+<Feature flag, config values and deployment order.>
+
+Additional notes:
+<For example, refactoring. One sentence.>
+
+Thanks!
+
+CC: @<others>
+```
 
 ## Learnings
 

@@ -8,7 +8,7 @@ Migrations are one of the highest-risk surfaces in any project — irreversible 
 
 ## Migration rules
 
-- **Ordered, timestamp-prefixed naming.** Name each file with a timestamp/sequence prefix and a short description (e.g. `20260601120000_add_orders_table`), monotonic and never reused. Use a timestamp, never a hand-incremented sequence — parallel branches must never both claim the same number. Before merging, rebase onto trunk and re-check that your migration still sorts after every migration already on trunk.
+- **Ordered, timestamp-prefixed naming.** Name each file with a timestamp/sequence prefix and a short description (e.g. `20260601120000_add_orders_table`), monotonic and never reused. Use a timestamp, never a hand-incremented sequence — parallel branches must never both claim the same number. Before merging, rebase onto `main` and re-check that your migration still sorts after every migration already on `main`.
 - **Reversible, or justified.** Every migration is reversible — an `up` paired with a `down` — OR carries an explicit irreversible-change justification comment. Never neither.
 - **Never edit an applied migration.** Once a migration is merged or applied anywhere, treat it as immutable — fix forward with a new migration. Editing an applied migration is the single most common way an agent corrupts a shared or production database.
 - **Separate schema from data.** Keep schema migrations apart from data backfills; backfills live under `db/backfills/` and are invoked explicitly, never inside a schema migration. Make them batched, idempotent, and resumable, so a large or interrupted run never half-applies.
@@ -30,4 +30,4 @@ These hold whatever the engine; the active stack pack binds the mechanics.
 
 ## Shared DB across worktrees
 
-The worktree rules in root `CLAUDE.md` (*Working in a git worktree*) make the local DB shared global state. The db-specific consequence: run round-trip and destructive checks against a throwaway DB, never the shared one, while a parallel worktree depends on the current schema.
+Every worktree shares the local DB, so a migration, reset or seed in one worktree changes the schema for all of them. Run round-trip and destructive checks against a throwaway DB, never the shared one, while a parallel worktree depends on the current schema.

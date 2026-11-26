@@ -1,18 +1,30 @@
-## Summary
+<!--
+Bug fix: start with "Fixes [<TICKET>](<ticket link>): <what users saw, and where>." Keep "Cause".
+Any other change: start with one sentence describing what the PR changes. Delete "Cause".
+If there is no ticket, describe what users saw. Delete any section that does not apply.
+-->
 
-<!-- What changed and why. -->
+<One line: what the PR fixes or changes.>
 
-Spec: specs/<file-or-feature-dir>
-<!-- The spec this implements, per specs/README.md — a dated file or the adopted spec tool's layout — or "N/A" with a one-line reason. -->
+## Cause
+<Bug fix only. Why the bug occurred, in plain language.>
 
-## Test plan
+## Changes
+- <One bullet per user-visible behaviour.>
 
-<!-- Commands you ran and the output you observed — not "tests pass", the actual evidence. -->
+## Evidence
+<The command or call you ran and the output you observed, or a video or screenshot, for each behaviour.>
 
-- [ ] lint / typecheck / test / build pass locally (or note which check is not yet wired up, and why)
-- [ ] every acceptance criterion in the linked spec/issue is demonstrated (evidence above)
-- [ ] tests cover the changed behaviour, where the project has a test harness
-- [ ] states exercised: happy path + the error/empty paths the change can hit
+## Tests
+- <Bug fix: how you reproduced the bug, and what happens on `main` compared with this PR.>
+- <The flow test extended or added. If you added a new flow, explain why no existing flow fits.>
+- <Anything not covered by automated tests, and why.>
+
+## Before release
+- <Config values to set, feature flags, and anything that must deploy first. "None" if there are none.>
+
+## Spec
+<The spec this implements, per `specs/README.md`, or "N/A".>
 
 ## Database (delete if no schema change)
 
@@ -27,10 +39,5 @@ Spec: specs/<file-or-feature-dir>
 - [ ] verified at the minimum supported width — no overflow / clipping / horizontal scroll, fixed chrome clears content — see `apps/frontend/CLAUDE.md` *Responsive layout*
 - [ ] before/after screenshots attached at the primary form factor and the narrow width
 
-## Notes
-
-<!-- Anything reviewers should know: deployment steps, feature flags, follow-ups. Incomplete work must be behind a flag. -->
-
-<!-- Root CLAUDE.md "Self-review before merge" — fill in or delete each line: -->
-- New abstraction / dependency / config key: <!-- the simpler option and why it was rejected — or "none added" -->
-- Pattern followed: <!-- the existing pattern this change follows — or why none fits -->
+## Additional notes
+- <For example, refactoring, self-review findings you did not fix and why, or for each new abstraction, dependency or config key, the simpler option and why it was rejected.>
