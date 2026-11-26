@@ -97,7 +97,7 @@ Load-bearing engineering rules; honor them on every change. They are stack- and 
 - **Think before coding.** Don't assume, don't hide confusion, surface tradeoffs. State your assumptions and ask when uncertain; present multiple interpretations rather than silently picking one; suggest simpler alternatives and respectfully push back when warranted; stop and name what's confusing rather than proceeding on unclear requirements.
 - **Simplicity first / YAGNI.** Write the minimum code that solves the problem. No unrequested features, no abstractions for single-use code, no configurability or error handling for cases that can't occur. "We might want it later" is not a reason. If 200 lines could be 50, rewrite. Every added layer, dependency, or config key must pass the self-review justification (see *Step 7. Self-review* in *Development workflow*).
 - **Change the right place, surgically.** First identify *where* a change belongs — the correct layer and boundary — and make it there; don't patch wherever is convenient. Keep business logic out of controllers, repos, UI, jobs, and utilities where it doesn't belong, and don't leak infrastructure details into the wrong layer. Then touch only what you must: match the surrounding style and conventions (error handling, logging, validation), don't reformat or refactor unrelated working code, flag unrelated dead code without removing it, and remove only the imports/variables your own change orphaned.
-- **Goal-driven execution.** Define success criteria and loop until verified. Turn requests into measurable objectives with a brief plan and a verification step per phase, so each phase can iterate to a clear success marker. Verified means observed, not inferred: before calling a change done, run it and state the evidence you saw. What "run it" means per change type lives in each app's `CLAUDE.md` (frontend/backend) and in `infra/CLAUDE.md` for infrastructure; record the evidence in the PR's Evidence section.
+- **Goal-driven execution.** Define success criteria and loop until verified. Turn requests into measurable objectives with a brief plan and a verification step per phase, so each phase can iterate to a clear success marker. Verified means observed, not inferred: before calling a change done, run it and state the evidence you saw. What "run it" means per change type lives in each app's `CLAUDE.md` (frontend/backend) and in `infra/CLAUDE.md` for infrastructure; record the evidence in the PR's Demo section.
 - **Don't reinvent existing solutions.** Use established libraries and project utilities for dates, money, validation, retry, pagination, parsing, and formatting rather than hand-rolling them — especially date/timezone math. Don't duplicate existing abstractions or wrap a library without a clear reason. Before adding a new dependency, confirm an existing dependency or shared util doesn't already cover it, and prefer well-maintained, widely-used, permissively-licensed packages. Weigh the cost the YAGNI rule already requires you to justify: for the frontend, bundle and transitive weight (a few lines can beat a large dep for a cached SPA); for the backend, transitive and security surface. A trivial, stable one-liner doesn't earn a dependency — but dates, money, timezones, auth, and crypto always do; never hand-roll those.
 - **Don't overfit to the immediate request.** Solve the general problem, not just the demonstrated case. Avoid hardcoding strings, IDs, statuses, roles, or regions; handle the empty, invalid, duplicate, retry, timeout, and permission cases, not only the happy path; and write tests that assert behavior rather than mirror the implementation.
 - **Keep implementations clean, not mechanical.** No noisy logs, no broad `try/catch` that hides errors, no unused parameters or dead branches, no defensive code without a clear failure model. (Comment rules: *Readability and Naming*.)
@@ -194,33 +194,25 @@ The reviewer reports each finding with the file, line, problem and suggested fix
 
 For each behaviour, record the evidence that demonstrates it: the command or API call you ran and the output you observed, or a video or screenshot for a change users can see.
 
-Write the PR description using the template below, with the evidence in it. Proofread it, show it to the user and wait for confirmation. Once confirmed, push the branch and open the PR.
+Write the PR description using the template below. Put the evidence in the Demo section. Proofread it, show it to the user and wait for confirmation. Once confirmed, push the branch and open the PR.
 
 ```markdown
-<!--
-Bug fix: start with "Fixes [<TICKET>](<ticket link>): <what users saw, and where>." Keep "Cause".
-Any other change: start with one sentence describing what the PR changes. Delete "Cause".
-If there is no ticket, describe what users saw. Delete any section that does not apply.
--->
-
-<One line: what the PR fixes or changes.>
-
-## Cause
-<Bug fix only. Why the bug occurred, in plain language.>
-
-## Changes
+<One line: what the PR adds.>
 - <One bullet per user-visible behaviour.>
+- <Who can see it, and the feature flag that hides it.>
 
-## Evidence
-<The command or call you ran and the output you observed, or a video or screenshot, for each behaviour.>
+## Demo
+### 1. <Flow name>
+<video>
+
+### 2. <Flow name>
+<video>
 
 ## Tests
-- <Bug fix: how you reproduced the bug, and what happens on `main` compared with this PR.>
-- <The flow test extended or added. If you added a new flow, explain why no existing flow fits.>
-- <Anything not covered by automated tests, and why.>
+- <Each flow test extended or added, and why a new flow was needed.>
 
 ## Before release
-- <Config values to set, feature flags, and anything that must deploy first. "None" if there are none.>
+- <Config values to set, and anything that must deploy first.>
 
 ## Spec
 <The spec this implements, per `specs/README.md`, or "N/A".>
@@ -237,10 +229,9 @@ If there is no ticket, describe what users saw. Delete any section that does not
 - [ ] all user-facing strings via i18n (keys added to every locale) or the project's single strings/copy module — see `apps/frontend/CLAUDE.md`
 - [ ] verified at the minimum supported width — no overflow / clipping / horizontal scroll, fixed chrome clears content — see `apps/frontend/CLAUDE.md` *Responsive layout*
 - [ ] before/after screenshots attached at the primary form factor and the narrow width
-
-## Additional notes
-- <For example, refactoring, self-review findings you did not fix and why, or for each new abstraction, dependency or config key, the simpler option and why it was rejected.>
 ```
+
+For every new shared helper, config key or dependency, add one line with the simpler option and why it was rejected.
 
 #### Step 9. Ask for review
 
