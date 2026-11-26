@@ -130,11 +130,11 @@ The concrete bar for *Goal-driven execution*: do not report work as done until a
 
 ## Development workflow
 
-Follow this workflow for every change in this repo: a bug fix, a feature or a refactor. If a change does not look straightforward, consider writing a spec first, with Spec Kit or a similar tool. See `specs/README.md`.
+Follow this workflow for every change in this repo, whether it is a bug fix, a feature or a refactor. If a change is not straightforward, consider writing a spec first using Spec Kit or a similar tool. See `specs/README.md`.
 
 Stop and ask the user if:
 
-- For a bug, you cannot reproduce it on the local stack or staging, or the new assertion passes before the fix.
+- You cannot reproduce a bug on the local stack or staging, or the new assertion passes before the fix.
 - The change alters behaviour outside the scope of the ticket.
 - A check fails for a reason unrelated to your change.
 
@@ -142,78 +142,79 @@ Stop and ask the user if:
 
 #### Step 1. Branch
 
-Run `git fetch origin`. Work in a worktree under `.claude/worktrees/<name>` on a branch created from `origin/main`. Name it `feature/<ticket code>-<summary>`, for example `feature/abc-123-invite-limit`. For an urgent fix to production, use `hotfix/<ticket code>-<summary>`. If there is no ticket, leave out the ticket code.
+Run `git fetch origin`. Work in a worktree under `.claude/worktrees/<name>` on a branch created from `origin/main`. Name the branch `feature/<ticket code>-<summary>`, for example `feature/abc-123-invite-limit`. For an urgent production fix, use `hotfix/<ticket code>-<summary>`. If there is no ticket, omit the ticket code.
 
-Worktrees are the default here, because most work runs in parallel across several worktrees at once.
+Worktrees are the default because several tasks often run in parallel across separate worktrees.
 
-- **Before anything else in a new worktree, copy over all gitignored runtime config.** A fresh worktree is created without it (root `.env`, any `apps/*/.env*`, local secrets), and anything that depends on it will silently misbehave. Copy every gitignored env file your project uses from the main checkout.
-- Shared local infrastructure, such as a containerized DB, is usually **shared** across worktrees by a fixed name. Starting a second copy will conflict, so reuse the running one.
-- The shared DB's schema is **global state** across worktrees. A migration, reset or seed run in one worktree changes every worktree's app. Do not run a reset or destructive migration check while a parallel worktree depends on the current schema. Use a throwaway DB for round-trip and destructive checks.
+- **Before anything else in a new worktree, copy over all gitignored runtime config.** A fresh worktree does not contain these files (root `.env`, any `apps/*/.env*`, local secrets), and anything that depends on them may silently misbehave. Copy every gitignored env file the project uses from the main checkout.
+- Local infrastructure, such as a containerized DB, is usually **shared** across worktrees under a fixed name. Starting a second instance causes conflicts, so reuse the running one.
+- The shared DB schema is **global state** across worktrees. A migration, reset or seed in one worktree affects every worktree's app. Do not run a reset or destructive migration check while another worktree depends on the current schema. Use a throwaway DB for round-trip and destructive checks.
 
 #### Step 2. Reproduce
 
-For a bug, always reproduce it before changing the code. Use the local stack or staging. Never test against production. For any other change, skip this step.
+For a bug fix, always reproduce the bug before changing the code. Use the local stack or staging. Never test against production. Skip this step for other changes.
 
 ### Build
 
 #### Step 3. Write the test
 
-If the change was planned with Spec Kit or a similar framework, follow its test tasks. Otherwise, follow [Testing](#testing), with these additions:
+If the change was planned using Spec Kit or a similar framework, follow its test tasks. Otherwise, follow [Testing](#testing), with these additional rules:
 
-- Do not force a change into a flow that covers a different behaviour.
-- Do not write a narrow test that covers only this change. Understand the entire flow and test it.
+- Do not force a change into a flow that tests a different behaviour.
+- Do not write a narrow test that covers only the change. Understand and test the entire flow.
+
 #### Step 4. Change
 
-Make the change. Update the root or area `CLAUDE.md` where the change makes it out of date. Use Conventional Commits: an imperative subject with a prefix such as `feat:` or `fix:`, and one logical change per commit.
+Make the change. Update the root or area `CLAUDE.md` if the change makes it outdated. Follow Conventional Commits: use an imperative subject with a prefix such as `feat:` or `fix:`, and keep each commit to one logical change.
 
 #### Step 5. Check
 
-Run the repo's lint, typecheck, test and build commands, plus any integration tests the change touches. All checks must pass before you continue.
+Run the repo's lint, typecheck, test and build commands, along with any integration tests affected by the change. All checks must pass before you continue.
 
 #### Step 6. Proofread
 
-Proofread every user-facing string, error message and documentation change. Use short, plain and readable language. Avoid filler and AI-sounding phrasing. Use a proofreading tool, such as `/vstack:proofread`. Apply the same standard to the PR description and the review request message in steps 9 and 10.
+Proofread every user-facing string, error message and documentation change. Use short, plain and readable language. Avoid filler and AI-sounding phrasing. Use a proofreading tool such as `/vstack:proofread`. Apply the same standard to the PR description and the review request message in steps 9 and 10.
 
 ### Ship
 
 #### Step 7. Self-review
 
-Before you open the PR, have the most capable available model review the full diff against `origin/main`, in a fresh context. Use `/code-review high`, or a subagent on the strongest model given only the diff, this file and the area `CLAUDE.md` files the change touches. Ask it to review as a pull request reviewer would:
+Before opening the PR, have the most capable available model review the full diff against `origin/main` in a fresh context. Use `/code-review high`, or a subagent on the strongest model given only the diff, this file and the area `CLAUDE.md` files the change touches. Ask it to review the change as a pull request reviewer would, checking for:
 
 - Bugs and logic errors, including edge cases and error handling.
 - Security issues, such as missing access checks, injection or leaked secrets.
-- Performance problems, such as extra queries or work inside loops.
+- Performance problems, such as unnecessary queries or work inside loops.
 - Missing or weak tests for each changed behaviour.
-- Readability, naming, and departures from the rules in this file.
+- Readability, naming and compliance with the rules in this file.
 - The change sits in the correct layer or ring, and no business logic leaked outside it (see *Change the right place, surgically*).
-- No unrelated code was reformatted or refactored. Only imports the change orphaned were removed.
+- No unrelated code was reformatted or refactored. Only imports made redundant by the change were removed.
 - Names state business meaning (see *Readability and Naming*).
-- Every new abstraction, dependency or config key has one line in the PR: the simpler option and why it was rejected. If you cannot write that line, build the simpler option. No second caller yet means no abstraction.
-- New code follows an existing pattern, named in the PR, or the PR says why none fits. If the pattern itself is wrong, fix it repo-wide in its own change. Do not fork it locally.
+- Every new abstraction, dependency or config key has one line in the PR: the simpler option and why it was rejected. If you cannot write that line, use the simpler option. Do not add an abstraction before there is a second caller.
+- New code follows an existing pattern, named in the PR, or the PR says why none fits. If the pattern itself is wrong, fix it repo-wide in a separate change. Do not fork it locally.
 - For every UI composition added or changed, the PR names the comparable existing instance or documented pattern used as its baseline, or says why none fits, and confirms that unrelated visual structure was preserved.
 
-It returns each finding with the file, the line, the problem and a suggested fix. Fix each real finding, then run step 5 again. List any finding you chose not to fix, and why, in the PR description.
+The reviewer reports each finding with the file, line, problem and suggested fix. Fix every valid finding, then run step 5 again. List any finding you chose not to fix, and why, in the PR description.
 
 #### Step 8. Record evidence
 
-For each behaviour, record the evidence that proves it: the command or API call you ran and the output you observed, or a video or screenshot for a change users can see. Include it in the PR description in step 9. If you cannot upload a file, give the user its path and ask them to attach it.
+For each behaviour, record the evidence that demonstrates it: the command or API call you ran and the output you observed, or a video or screenshot for a change users can see. Include it in the PR description in step 9. If you cannot upload a file, give the user its path and ask them to attach it.
 
 #### Step 9. Open the PR
 
-Write the PR description with `.github/PULL_REQUEST_TEMPLATE.md`. Proofread it, show it to the user and wait for confirmation. Once confirmed, push the branch and open the PR.
+Write the PR description using `.github/PULL_REQUEST_TEMPLATE.md`. Proofread it, show it to the user and wait for confirmation. Once confirmed, push the branch and open the PR.
 
 #### Step 10. Ask for review
 
-Write the [review request message](#review-request-message) for the user to send to the reviewer, for example in Slack. Ask for the reviewer and CC names if the user has not provided them. Proofread the message.
+Write the [review request message](#review-request-message) for the user to send to the reviewer, for example in Slack. Ask for the names of the reviewer and anyone to CC if the user has not already provided them. Proofread the message.
 
 #### Step 11. Follow review through to merge
 
-- Wait for all CI checks to pass and make sure the branch protection rules on `main` are met before merging.
-- If a CI check fails, fix the cause and push the fix. Never skip a check to make it pass.
+- Wait for all CI checks to pass and make sure all branch protection rules on `main` are met before merging.
+- If a CI check fails, fix the underlying cause and push the fix. Never bypass a check to make it pass.
 - Reply to each review comment explaining what changed, then resolve the thread.
-- Before reporting that a PR is ready, check its merge state and confirm that no review threads remain unresolved.
-- Rebase onto `origin/main`, run step 5 again, and merge with a rebase or fast-forward merge. Never create a merge commit.
-- After the merge, stop any dev servers you started, and delete the worktree and its branch.
+- Before reporting that the PR is ready, check its merge state and confirm that no review threads remain unresolved.
+- Rebase onto `origin/main`, run step 5 again, and merge using a rebase or fast-forward merge. Never create a merge commit.
+- After merging, stop any dev servers you started and delete the worktree and its branch.
 
 ### Review request message
 
