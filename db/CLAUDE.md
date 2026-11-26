@@ -30,4 +30,4 @@ These hold whatever the engine; the active stack pack binds the mechanics.
 
 ## Shared DB across worktrees
 
-Every worktree shares the local DB, so a migration, reset or seed in one worktree changes the schema for all of them. Run round-trip and destructive checks against a throwaway DB, never the shared one, while a parallel worktree depends on the current schema.
+The worktree rules in root `CLAUDE.md` (*Development workflow*, Step 1) make the local DB shared global state. The db-specific consequence: run round-trip and destructive checks against a throwaway DB, never the shared one, while a parallel worktree depends on the current schema.

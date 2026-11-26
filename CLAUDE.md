@@ -144,6 +144,12 @@ Stop and ask the user if:
 
 Run `git fetch origin`. Work in a worktree under `.claude/worktrees/<name>` on a branch created from `origin/main`. Name it `feature/<ticket code>-<summary>`, for example `feature/abc-123-invite-limit`. For an urgent fix to production, use `hotfix/<ticket code>-<summary>`. If there is no ticket, leave out the ticket code.
 
+Worktrees are the default here, because most work runs in parallel across several worktrees at once.
+
+- **Before anything else in a new worktree, copy over all gitignored runtime config.** A fresh worktree is created without it (root `.env`, any `apps/*/.env*`, local secrets), and anything that depends on it will silently misbehave. From the worktree root: `main="$(git worktree list --porcelain | sed -n 's/^worktree //p' | head -1)"; for f in .env apps/backend/.env apps/frontend/.env; do if [ -f "$main/$f" ]; then cp "$main/$f" "./$f" && echo "copied $f"; else echo "not in main checkout (skipped): $f"; fi; done`. It reports each file, so a missing one is visible. Copy every gitignored env file your project uses, not only the three listed.
+- Shared local infrastructure, such as a containerized DB, is usually **shared** across worktrees by a fixed name. Starting a second copy will conflict, so reuse the running one.
+- The shared DB's schema is **global state** across worktrees. A migration, reset or seed run in one worktree changes every worktree's app. Do not run a reset or destructive migration check while a parallel worktree depends on the current schema. Use a throwaway DB for round-trip and destructive checks.
+
 #### Step 2. Reproduce
 
 For a bug, always reproduce it before changing the code. Use the local stack or staging. Never test against production. For any other change, skip this step.
@@ -179,7 +185,12 @@ Before you open the PR, have the most capable available model review the full di
 - Performance problems, such as extra queries or work inside loops.
 - Missing or weak tests for each changed behaviour.
 - Readability, naming, and departures from the rules in this file.
-- Each new abstraction, dependency or config key: the PR must name the simpler option and why it was rejected.
+- The change sits in the correct layer or ring, and no business logic leaked outside it (see *Change the right place, surgically*).
+- No unrelated code was reformatted or refactored. Only imports the change orphaned were removed.
+- Names state business meaning (see *Readability and Naming*).
+- Every new abstraction, dependency or config key has one line in the PR: the simpler option and why it was rejected. If you cannot write that line, build the simpler option. No second caller yet means no abstraction.
+- New code follows an existing pattern, named in the PR, or the PR says why none fits. If the pattern itself is wrong, fix it repo-wide in its own change. Do not fork it locally.
+- For every UI composition added or changed, the PR names the comparable existing instance or documented pattern used as its baseline, or says why none fits, and confirms that unrelated visual structure was preserved.
 
 It returns each finding with the file, the line, the problem and a suggested fix. Fix each real finding, then run step 5 again. List any finding you chose not to fix, and why, in the PR description.
 
