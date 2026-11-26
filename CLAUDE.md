@@ -146,7 +146,7 @@ Run `git fetch origin`. Work in a worktree under `.claude/worktrees/<name>` on a
 
 Worktrees are the default here, because most work runs in parallel across several worktrees at once.
 
-- **Before anything else in a new worktree, copy over all gitignored runtime config.** A fresh worktree is created without it (root `.env`, any `apps/*/.env*`, local secrets), and anything that depends on it will silently misbehave. From the worktree root: `main="$(git worktree list --porcelain | sed -n 's/^worktree //p' | head -1)"; for f in .env apps/backend/.env apps/frontend/.env; do if [ -f "$main/$f" ]; then cp "$main/$f" "./$f" && echo "copied $f"; else echo "not in main checkout (skipped): $f"; fi; done`. It reports each file, so a missing one is visible. Copy every gitignored env file your project uses, not only the three listed.
+- **Before anything else in a new worktree, copy over all gitignored runtime config.** A fresh worktree is created without it (root `.env`, any `apps/*/.env*`, local secrets), and anything that depends on it will silently misbehave. Copy every gitignored env file your project uses from the main checkout.
 - Shared local infrastructure, such as a containerized DB, is usually **shared** across worktrees by a fixed name. Starting a second copy will conflict, so reuse the running one.
 - The shared DB's schema is **global state** across worktrees. A migration, reset or seed run in one worktree changes every worktree's app. Do not run a reset or destructive migration check while a parallel worktree depends on the current schema. Use a throwaway DB for round-trip and destructive checks.
 
