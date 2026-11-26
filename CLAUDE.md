@@ -186,7 +186,7 @@ Before opening the PR, have the most capable available model review the full dif
 - **Performance:** unnecessary queries or redundant work inside loops.
 - **Tests:** missing or weak tests for each changed behaviour.
 - **Fit:** the change belongs in the right layer, and no business logic leaks out of it. It follows existing patterns instead of adding local variations. A flawed pattern is fixed across the repo in a separate change. It does not reformat, refactor or restyle unrelated code or UI, and removes only the imports it made redundant. The code is readable, names convey business meaning, and it follows the rules in this file and the area `CLAUDE.md` files.
-- **Simplicity:** the change adds no abstraction, dependency or config key it does not need (YAGNI). Add an abstraction only when a second caller needs it, because one built for a single caller usually guesses the shape wrong. If a simpler option would work, use it.
+- **Simplicity:** the change adds no abstraction, dependency or setting it does not need (YAGNI). Add an abstraction only when a second caller needs it, because one built for a single caller usually guesses the shape wrong. If a simpler option would work, use it.
 
 The reviewer reports each finding with the file, line number, problem and suggested fix. Fix every valid finding, then run step 5 again. List any finding you chose not to fix, and why, in the PR description.
 
