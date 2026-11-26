@@ -1,6 +1,6 @@
 # Frontend
 
-The frontend contract — read before touching anything under `apps/frontend/`. Repo-wide rules (principles, worktree workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs how the single-page app is structured. **If a stack pack is adopted (a single directory kept under `stacks/`), also read its `frontend.md` appendix before working here** — it adds the concrete bindings, and its conflict register wins over this file, for that stack only.
+The frontend contract — read before touching anything under `apps/frontend/`. Repo-wide rules (principles, development workflow, cross-app standards) live in the root `CLAUDE.md`; this file governs how the single-page app is structured. **If a stack pack is adopted (a single directory kept under `stacks/`), also read its `frontend.md` appendix before working here** — it adds the concrete bindings, and its conflict register wins over this file, for that stack only.
 
 The frontend is organised along two axes that never blur: horizontal **layers** (what a piece of code *is* — store, service, page, component) and vertical **feature slices** (what business capability it serves). Components follow **atomic design** — see *Component structure* below.
 
