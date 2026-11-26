@@ -21,4 +21,4 @@ Consider writing a short spec here before implementing a change that is not stra
 
 ## Workflow
 
-For spec-backed work, follow *Development workflow* in root `CLAUDE.md` once the spec is approved, and link the spec in the PR. A story is done only when every acceptance criterion has been demonstrated by its stated verification; capture that evidence in the PR's Evidence section. When merged, the spec stays as a record of the decision.
+For spec-backed work, follow *Development workflow* in root `CLAUDE.md` once the spec is approved, and link the spec in the PR. A story is done only when every acceptance criterion has been demonstrated by its stated verification; capture that evidence in the PR's Demo section. When merged, the spec stays as a record of the decision.
