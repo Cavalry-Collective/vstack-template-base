@@ -185,8 +185,8 @@ Before opening the PR, have the most capable available model review the full dif
 - **Security:** missing access checks, injection and leaked secrets.
 - **Performance:** unnecessary queries or redundant work inside loops.
 - **Tests:** missing or weak tests for each changed behaviour.
-- **Fit:** the change belongs in the right layer, and no business logic leaks out of it. It follows existing patterns instead of adding local variations. A flawed pattern is fixed across the repo in a separate change. It does not reformat or refactor unrelated code, and removes only the imports it made redundant. The code is readable, names convey business meaning, and it follows the rules in this file and the area `CLAUDE.md` files.
-- **Justification:** for each new abstraction, dependency or config key, the PR names the simpler alternative and why it was rejected. If there is no good reason, the simpler alternative is used. An abstraction is added only when a second caller needs it. The PR names the existing pattern the code follows. For each UI change, it names the baseline it was built from and confirms that unrelated visual structure is unchanged.
+- **Fit:** the change belongs in the right layer, and no business logic leaks out of it. It follows existing patterns instead of adding local variations. A flawed pattern is fixed across the repo in a separate change. It does not reformat, refactor or restyle unrelated code or UI, and removes only the imports it made redundant. The code is readable, names convey business meaning, and it follows the rules in this file and the area `CLAUDE.md` files.
+- **Justification:** each new abstraction, dependency or config key earns its place. The PR explains why a simpler option would not work. If it cannot, use the simpler option. Add an abstraction only when a second caller needs it. The PR also names the existing pattern the code follows and, for each UI change, the screen or component it was modelled on.
 
 The reviewer reports each finding with the file, line number, problem and suggested fix. Fix every valid finding, then run step 5 again. List any finding you chose not to fix, and why, in the PR description.
 
