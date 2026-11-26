@@ -13,4 +13,4 @@
 - <Each flow test extended or added, and why a new flow was needed.>
 
 ## Additional notes
-- <Anything reviewers should know, such as new dependencies, config values, deploy order or refactoring. For each new shared helper, config key or dependency, the simpler option and why it was rejected.>
+- <Anything reviewers should know, such as new dependencies, config values, deploy order or refactoring.>
