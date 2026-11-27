@@ -171,7 +171,7 @@ Make the change. Update the root or area `CLAUDE.md` if the change makes it outd
 
 #### Step 5. Check
 
-Once all work is complete and the findings from the self-review in step 7 have been addressed, run a full regression once using the repository's lint, typecheck, test and build commands, along with the full integration suite. All checks must pass.
+Once all work is complete and the findings from the self-review in step 7 have been addressed, run a full regression once before opening the PR using the repository's lint, typecheck, test and build commands, along with the full integration suite. All checks must pass.
 
 During development, run only the tests relevant to the code being changed. Rerun the full regression only when explicitly requested by the user or a tool such as Spec Kit.
 
