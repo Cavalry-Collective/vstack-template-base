@@ -132,6 +132,8 @@ The concrete bar for *Goal-driven execution*: do not report work as done until a
 
 Follow this workflow for every change in this repo, whether it is a bug fix, a feature or a refactor. If a change is not straightforward, consider writing a spec first using Spec Kit or a similar tool. See `specs/README.md`.
 
+Each piece of work should be a single PR. Split the work into multiple PRs only when the user explicitly requests it.
+
 Stop and ask the user if:
 
 - You cannot reproduce a bug on the local stack or staging, or the new assertion passes before the fix.
@@ -169,7 +171,9 @@ Make the change. Update the root or area `CLAUDE.md` if the change makes it outd
 
 #### Step 5. Check
 
-Run the repo's lint, typecheck, test and build commands, along with any integration tests affected by the change. All checks must pass before you continue.
+When all the work is done, run a full regression once, after addressing the findings from the self-review in step 7: the repo's lint, typecheck, test and build commands and the full integration suite. All checks must pass.
+
+During development, run only the tests relevant to the code you are changing. Rerun the full regression only when explicitly requested by the user or a tool such as Spec Kit.
 
 #### Step 6. Proofread
 
@@ -178,6 +182,8 @@ Proofread every user-facing string, error message and documentation change. Use 
 ### Ship
 
 #### Step 7. Self-review
+
+Review the entire PR once, after completing all the work.
 
 Before opening the PR, have the most capable available model review the full diff against `origin/main` in a fresh context. Use `/code-review high`, or a subagent on the strongest available model, given only the diff, this file and the area `CLAUDE.md` files the change touches. Ask it to review the change as a pull request reviewer would, checking for:
 
@@ -188,7 +194,7 @@ Before opening the PR, have the most capable available model review the full dif
 - **Fit:** the change belongs in the right layer, and no business logic leaks out of it. It follows existing patterns instead of adding local variations. A flawed pattern is fixed across the repo in a separate change. It does not reformat, refactor or restyle unrelated code or UI, and removes only the imports it made redundant. The code is readable, names convey business meaning, and it follows the rules in this file and the area `CLAUDE.md` files.
 - **Simplicity:** the change adds no abstraction, dependency or setting it does not need (YAGNI). Add an abstraction only when a second caller needs it, because one built for a single caller usually guesses the shape wrong. If a simpler option would work, use it.
 
-The reviewer reports each finding with the file, line number, problem and suggested fix. Fix every valid finding, then run step 5 again. List any finding you chose not to fix, and why, in the PR description.
+The reviewer reports each finding with the file, line number, problem and suggested fix. Fix every valid finding, then run the checks in step 5. List any finding you chose not to fix, and why, in the PR description.
 
 #### Step 8. Open the PR
 
