@@ -132,7 +132,7 @@ The concrete bar for *Goal-driven execution*: do not report work as done until a
 
 Follow this workflow for every change in this repo, whether it is a bug fix, a feature or a refactor. If a change is not straightforward, consider writing a spec first using Spec Kit or a similar tool. See `specs/README.md`.
 
-Each piece of work should be a single PR. Split the work into multiple PRs only when the user explicitly requests it.
+Each piece of work should be completed in a single PR. Split the work into multiple PRs only when the user explicitly requests it.
 
 Stop and ask the user if:
 
@@ -171,9 +171,9 @@ Make the change. Update the root or area `CLAUDE.md` if the change makes it outd
 
 #### Step 5. Check
 
-When all the work is done, run a full regression once, after addressing the findings from the self-review in step 7: the repo's lint, typecheck, test and build commands and the full integration suite. All checks must pass.
+Once all work is complete and the findings from the self-review in step 7 have been addressed, run a full regression once using the repository's lint, typecheck, test and build commands, along with the full integration suite. All checks must pass.
 
-During development, run only the tests relevant to the code you are changing. Rerun the full regression only when explicitly requested by the user or a tool such as Spec Kit.
+During development, run only the tests relevant to the code being changed. Rerun the full regression only when explicitly requested by the user or a tool such as Spec Kit.
 
 #### Step 6. Proofread
 
@@ -183,7 +183,7 @@ Proofread every user-facing string, error message and documentation change. Use 
 
 #### Step 7. Self-review
 
-Review the entire PR once, after completing all the work.
+Review the entire PR once, after all work is complete.
 
 Before opening the PR, have the most capable available model review the full diff against `origin/main` in a fresh context. Use `/code-review high`, or a subagent on the strongest available model, given only the diff, this file and the area `CLAUDE.md` files the change touches. Ask it to review the change as a pull request reviewer would, checking for:
 
